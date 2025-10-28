@@ -5,7 +5,11 @@ using LogPort.ElasticSearch;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
-builder.Services.AddSingleton(ElasticClientFactory.Create());
+builder.Configuration.AddEnvironmentVariables(prefix: "LOGPORT_");
+var logPortConfig = LogPortConfig.LoadFromEnvironment();
+builder.Configuration.GetSection("LOGPORT").Bind(logPortConfig);
+builder.Services.AddSingleton(logPortConfig);
+builder.Services.AddSingleton(ElasticClientFactory.Create(logPortConfig));
 builder.Services.AddScoped<ILogRepository, ElasticLogRepository>();
 
 var app = builder.Build();
@@ -33,31 +37,5 @@ app.MapGet("/logs", async (ILogRepository logRepository, DateTime? from, DateTim
     var logs = await logRepository.GetLogsAsync(from, to, level);
     return Results.Ok(logs);
 });
-
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-    {
-        var forecast = Enumerable.Range(1, 5).Select(index =>
-                new WeatherForecast
-                (
-                    DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                    Random.Shared.Next(-20, 55),
-                    summaries[Random.Shared.Next(summaries.Length)]
-                ))
-            .ToArray();
-        return forecast;
-    })
-    .WithName("GetWeatherForecast");
-
-app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
 
 record LogEntryDto(string Message, DateTime Timestamp, string Level);
