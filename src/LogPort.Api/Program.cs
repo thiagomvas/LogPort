@@ -1,6 +1,8 @@
+using LogPort.Api.Endpoints;
 using LogPort.Core.Interface;
 using LogPort.Core.Models;
 using LogPort.ElasticSearch;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,23 +21,6 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.MapPost("/logs", async (ILogRepository logRepository, LogEntryDto logDto) =>
-{
-    var logEntry = new LogEntry
-    {
-        Message = logDto.Message,
-        Timestamp = logDto.Timestamp,
-        Level = logDto.Level
-    };
+app.MapLogEndpoints();
 
-    await logRepository.AddLogAsync(logEntry);
-    return Results.Created($"/logs/{logEntry.Timestamp.Ticks}", logEntry);
-});
-
-app.MapGet("/logs", async (ILogRepository logRepository, DateTime? from, DateTime? to, string? level) =>
-{
-    var logs = await logRepository.GetLogsAsync(from, to, level);
-    return Results.Ok(logs);
-});
-
-record LogEntryDto(string Message, DateTime Timestamp, string Level);
+app.Run();
