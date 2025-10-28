@@ -15,6 +15,7 @@ public class ElasticLogRepository : ILogRepository
 
     public async Task AddLogAsync(LogEntry log)
     {
+        log.Timestamp = log.Timestamp.ToUniversalTime();
         var indexName = $"logs-{log.Timestamp:yyyy.MM.dd}";
         await _client.IndexAsync(log, i => i.Index(indexName));
     }
@@ -22,7 +23,7 @@ public class ElasticLogRepository : ILogRepository
     public async Task<IEnumerable<LogEntry>> GetLogsAsync(DateTime? from = null, DateTime? to = null, string? level = null)
     {
         var response = await _client.SearchAsync<LogEntry>(s => s
-            .Index("logs-*") // search across all daily indices
+            .Index("logs-*")
             .Query(q =>
             {
                 var must = new List<Func<QueryContainerDescriptor<LogEntry>, QueryContainer>>();
