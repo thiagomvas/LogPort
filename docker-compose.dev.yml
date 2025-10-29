@@ -1,6 +1,19 @@
 version: "3.9"
 
 services:
+  postgres:
+    image: postgres:15
+    container_name: logport-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${LOGPORT_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${LOGPORT_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${LOGPORT_POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
     container_name: logport-elasticsearch
@@ -23,4 +36,5 @@ networks:
   logport-network:
 
 volumes:
+  pgdata:
   esdata:

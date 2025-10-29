@@ -12,7 +12,7 @@ public class ElasticLogRepository : ILogRepository
     {
         _client = client;
 
-        // Ensure index template for ngram exists
+        // Ensure index template exists
         CreateIndexTemplateIfNotExists();
     }
 
@@ -21,7 +21,7 @@ public class ElasticLogRepository : ILogRepository
         var templateExists = _client.Indices.TemplateExists("logs-template").Exists;
         if (!templateExists)
         {
-            var createTemplate = _client.Indices.PutTemplate("logs-template", t => t
+            _client.Indices.PutTemplate("logs-template", t => t
                 .IndexPatterns("logs-*")
                 .Settings(s => s
                     .Analysis(a => a
@@ -56,7 +56,8 @@ public class ElasticLogRepository : ILogRepository
                             .Keyword(k => k.Name(n => n.Level))
                             .Keyword(k => k.Name(n => n.ServiceName))
                             .Keyword(k => k.Name(n => n.Environment))
-                            .Object<Dictionary<string, object>>(o => o.Name(n => n.Metadata))
+                            // <-- Store metadata as dynamic for full round-trip
+                            .Object<dynamic>(o => o.Name(n => n.Metadata))
                         )
                     )
                 )
@@ -71,12 +72,17 @@ public class ElasticLogRepository : ILogRepository
         await _client.IndexAsync(log, i => i.Index(indexName));
     }
 
+    public Task AddLogsAsync(IEnumerable<LogEntry> logs)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<IEnumerable<LogEntry>> GetLogsAsync(LogQueryParameters parameters)
     {
         var response = await _client.SearchAsync<LogEntry>(s => s
             .Index("logs-*")
             .Query(BuildQuery(parameters))
-            .Sort(s => s.Descending(f => f.Timestamp).Descending(SortSpecialField.Score))
+            .Sort(ss => ss.Descending(f => f.Timestamp).Descending(SortSpecialField.Score))
             .From((parameters.Page - 1) * parameters.PageSize)
             .Size(parameters.PageSize)
         );
@@ -100,7 +106,6 @@ public class ElasticLogRepository : ILogRepository
         {
             var must = new List<Func<QueryContainerDescriptor<LogEntry>, QueryContainer>>();
 
-            // Timestamp filter
             if (parameters.From.HasValue || parameters.To.HasValue)
             {
                 must.Add(m => m.DateRange(r =>
@@ -139,9 +144,9 @@ public class ElasticLogRepository : ILogRepository
                 {
                     must.Add(m => m.MultiMatch(mm => mm
                         .Fields(f => f
-                                .Field(fe => fe.Message)       // analyzed field, supports partial
-                                .Field(fe => fe.ServiceName)   // analyzed
-                                .Field(fe => fe.Environment)   // analyzed
+                                .Field(fe => fe.Message)
+                                .Field(fe => fe.ServiceName)
+                                .Field(fe => fe.Environment)
                         )
                         .Query(parameters.Search)
                         .Fuzziness(Fuzziness.Auto)
@@ -149,7 +154,6 @@ public class ElasticLogRepository : ILogRepository
                     ));
                 }
             }
-
 
             if (!must.Any()) return q.MatchAll();
 

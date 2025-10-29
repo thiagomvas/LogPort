@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\LogPort.Core\LogPort.Core.csproj" />
+    </ItemGroup>
+    
+    <ItemGroup>
+        <EmbeddedResource Include="Migrations\001_CreateLogsTable.sql" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Npgsql" Version="9.0.4" />
+    </ItemGroup>
+
+</Project>
