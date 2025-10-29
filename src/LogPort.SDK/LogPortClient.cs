@@ -52,7 +52,6 @@ public sealed class LogPortClient : IDisposable
     /// </summary>
     /// <param name="serverUrl">The WebSocket URL of the LogPort server (e.g., ws://localhost:5000/logs).</param>
     /// <exception cref="ArgumentException">Thrown if <paramref name="serverUrl"/> is null or empty.</exception>
-
     public static LogPortClient FromServerUrl(string serverUrl)
     {
         if (string.IsNullOrWhiteSpace(serverUrl))
@@ -93,7 +92,13 @@ public sealed class LogPortClient : IDisposable
     /// <param name="message">The log message.</param>
     public void Log(string level, string message)
     {
-        Log(new LogEntry());
+        Log(new LogEntry() { Level = level, Message = message, Timestamp = DateTime.UtcNow });
+    }
+
+    public void AttachToConsole()
+    {
+        Console.SetOut(new LogPortTextWriterDecorator(Console.Out, this));
+        Console.SetError(new LogPortTextWriterDecorator(Console.Error, this));
     }
 
     private async Task ProcessQueueAsync(CancellationToken token)

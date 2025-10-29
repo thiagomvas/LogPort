@@ -39,7 +39,7 @@ public class PostgresLogRepository : ILogRepository
             parameters.AddRange(new[]
             {
                 new NpgsqlParameter($"ts{i}", log.Timestamp),
-                new NpgsqlParameter($"svc{i}", log.ServiceName),
+                new NpgsqlParameter($"svc{i}", (object?)log.ServiceName ?? DBNull.Value),
                 new NpgsqlParameter($"lvl{i}", log.Level),
                 new NpgsqlParameter($"msg{i}", log.Message),
                 new NpgsqlParameter($"meta{i}", NpgsqlDbType.Jsonb) { Value = JsonSerializer.Serialize(log.Metadata, _jsonOptions) },

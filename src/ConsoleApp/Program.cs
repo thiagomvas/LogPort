@@ -20,6 +20,9 @@ var messages = new[]
 using var client = LogPortClient.FromServerUrl("ws://localhost:8080/stream");
 await client.ConnectAsync();
 
+client.AttachToConsole();
+
+
 Console.WriteLine("Connected to LogPort. Press Enter to send a random log.");
 
 while (true)
