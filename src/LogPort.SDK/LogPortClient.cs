@@ -41,10 +41,9 @@ public sealed class LogPortClient : IDisposable
     /// <exception cref="InvalidOperationException">Thrown if the environment variable is not set.</exception>
     public static LogPortClient FromEnvironment()
     {
-        var url = Environment.GetEnvironmentVariable("LOGPORT_SERVER_URL")
-                  ?? throw new InvalidOperationException("LOGPORT_SERVER_URL environment variable is not set.");
+        var config = LogPortConfig.LoadFromEnvironment();
 
-        return new LogPortClient(url);
+        return new LogPortClient(config.AgentUrl);
     }
 
     /// <summary>
@@ -135,11 +134,10 @@ public sealed class LogPortClient : IDisposable
         }
         catch (OperationCanceledException)
         {
-            // Graceful shutdown
+            
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"LogPortClient error: {ex}");
         }
     }
 

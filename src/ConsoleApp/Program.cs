@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using LogPort.Core.Models;
+﻿using LogPort.Core.Models;
 using LogPort.SDK;
 
 var random = new Random();

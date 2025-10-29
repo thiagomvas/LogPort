@@ -8,13 +8,14 @@ public class LogPortConfig
     public PostgresConfig Postgres { get; set; } = new();
     
     public uint Port { get; set; } = 8080;
+    public string AgentUrl { get; set; }
 
     public static LogPortConfig LoadFromEnvironment()
     {
         var config = new LogPortConfig();
 
-        // App port
         config.Port = GetEnvUInt("LOGPORT_PORT", 8080);
+        config.AgentUrl = Environment.GetEnvironmentVariable("LOGPORT_AGENT_URL") ?? $"http://localhost:{config.Port}";
 
         // Elastic
         config.Elastic.Use = GetEnvBool("LOGPORT_USE_ELASTICSEARCH");
