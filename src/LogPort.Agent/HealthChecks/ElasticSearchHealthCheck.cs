@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Nest;
 
-namespace LogPort.Api.HealthChecks;
+namespace LogPort.Agent.HealthChecks;
 
 public class ElasticsearchHealthCheck : IHealthCheck
 {

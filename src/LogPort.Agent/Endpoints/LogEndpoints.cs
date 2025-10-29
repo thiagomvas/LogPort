@@ -6,7 +6,7 @@ using LogPort.Core;
 using LogPort.Internal.Common.Interface;
 using Microsoft.Extensions.Logging;
 
-namespace LogPort.Api.Endpoints;
+namespace LogPort.Agent.Endpoints;
 
 public static class LogEndpoints
 {

@@ -1,7 +1,7 @@
 using LogPort.Core;
 using LogPort.Internal.Common.Interface;
 
-namespace LogPort.Api.Services;
+namespace LogPort.Agent.Services;
 
 public class LogBatchProcessor : BackgroundService
 {

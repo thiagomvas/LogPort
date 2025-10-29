@@ -2,7 +2,7 @@ using LogPort.Core.Models;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Npgsql;
 
-namespace LogPort.Api.HealthChecks;
+namespace LogPort.Agent.HealthChecks;
 
 public class PostgresHealthCheck : IHealthCheck
 {

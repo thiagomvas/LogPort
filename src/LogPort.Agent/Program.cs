@@ -1,7 +1,7 @@
 using System.Text.Json;
-using LogPort.Api.Endpoints;
-using LogPort.Api.HealthChecks;
-using LogPort.Api.Services;
+using LogPort.Agent.Endpoints;
+using LogPort.Agent.HealthChecks;
+using LogPort.Agent.Services;
 using LogPort.Core;
 using LogPort.Internal.Common.Interface;
 using LogPort.Core.Models;

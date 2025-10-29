@@ -4,7 +4,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F099F1E6-CB4
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogPort.Core", "src\LogPort.Core\LogPort.Core.csproj", "{C539DE40-F06C-4B16-B4D3-9966DAD1715F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogPort.Api", "src\LogPort.Api\LogPort.Api.csproj", "{6CEBA8C7-E1F5-4878-9E66-71B1931EA0C4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogPort.Agent", "src\LogPort.Agent\LogPort.Agent.csproj", "{6CEBA8C7-E1F5-4878-9E66-71B1931EA0C4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogPort.Internal.ElasticSearch", "src\LogPort.Internal.ElasticSearch\LogPort.Internal.ElasticSearch.csproj", "{2CC00864-EEAA-4D7B-885D-DE92D031FADB}"
 EndProject
