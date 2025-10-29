@@ -1,6 +1,8 @@
 using System.Text.Json;
 using LogPort.Api.Endpoints;
 using LogPort.Api.HealthChecks;
+using LogPort.Api.Services;
+using LogPort.Core;
 using LogPort.Core.Interface;
 using LogPort.Core.Models;
 using LogPort.ElasticSearch;
@@ -32,6 +34,10 @@ if (logPortConfig.UsePostgres)
     builder.Services.AddHealthChecks()
         .AddCheck<PostgresHealthCheck>("postgres");
 }
+
+builder.Services.AddSingleton<LogQueue>();
+builder.Services.AddHostedService<LogBatchProcessor>();
+
 
 builder.Services.AddWebSockets(options =>
 {
@@ -76,43 +82,7 @@ app.MapHealthChecks("/health", new HealthCheckOptions
 app.UseWebSockets();
 app.MapLogEndpoints();
 
-app.Map("/stream", async context =>
-{
-    if (!context.WebSockets.IsWebSocketRequest)
-    {
-        context.Response.StatusCode = 400;
-        return;
-    }
 
-    using var webSocket = await context.WebSockets.AcceptWebSocketAsync();
-    var buffer = new byte[8192];
-    var logRepository = context.RequestServices.GetRequiredService<ILogRepository>();
-    var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
-
-    while (webSocket.State == System.Net.WebSockets.WebSocketState.Open)
-    {
-        var result = await webSocket.ReceiveAsync(buffer: new ArraySegment<byte>(buffer), cancellationToken: context.RequestAborted);
-        if (result.MessageType == System.Net.WebSockets.WebSocketMessageType.Close)
-        {
-            await webSocket.CloseAsync(System.Net.WebSockets.WebSocketCloseStatus.NormalClosure, "Closing", context.RequestAborted);
-            break;
-        }
-
-        var jsonMessage = System.Text.Encoding.UTF8.GetString(buffer, 0, result.Count);
-        try
-        {
-            var logEntry = JsonSerializer.Deserialize<LogEntry>(jsonMessage);
-            if (logEntry != null)
-            {
-                await logRepository.AddLogAsync(logEntry);
-                logger.LogInformation("Received log: {LogEntry}", jsonMessage);
-            }
-        }
-        catch (JsonException)
-        {
-        }
-    }
-});
 
 // Run on port 5000
 app.Run("http://localhost:5000");
