@@ -14,7 +14,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp", "src\ConsoleAp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogPort.Internal.Common", "src\LogPort.Internal.Common\LogPort.Internal.Common.csproj", "{D453214E-4F33-4A83-99CE-4AEC423B1DC6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogPort.SDK", "LogPort.SDK\LogPort.SDK.csproj", "{C0C54086-733D-47B2-BB59-04C469A26E85}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogPort.SDK", "src\LogPort.SDK\LogPort.SDK.csproj", "{C0C54086-733D-47B2-BB59-04C469A26E85}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
