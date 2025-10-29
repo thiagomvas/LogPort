@@ -18,7 +18,7 @@ builder.Configuration.AddEnvironmentVariables(prefix: "LOGPORT_");
 var logPortConfig = LogPortConfig.LoadFromEnvironment();
 builder.Configuration.GetSection("LOGPORT").Bind(logPortConfig);
 builder.Services.AddSingleton(logPortConfig);
-if (logPortConfig.UseElasticSearch)
+if (logPortConfig.Elastic.Use)
 {
     builder.Services.AddSingleton(ElasticClientFactory.Create(logPortConfig));
     builder.Services.AddScoped<ILogRepository, ElasticLogRepository>();
@@ -26,9 +26,9 @@ if (logPortConfig.UseElasticSearch)
         .AddCheck<ElasticsearchHealthCheck>("elasticsearch");
 }
 
-if (logPortConfig.UsePostgres)
+if (logPortConfig.Postgres.Use)
 {
-    var connectionString = logPortConfig.PostgresConnectionString;
+    var connectionString = logPortConfig.Postgres.ConnectionString;
     await DatabaseInitializer.InitializeAsync(connectionString, true);
     builder.Services.AddScoped<ILogRepository>(sp => new PostgresLogRepository(connectionString));
     builder.Services.AddHealthChecks()

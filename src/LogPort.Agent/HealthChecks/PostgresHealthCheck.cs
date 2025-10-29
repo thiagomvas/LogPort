@@ -10,7 +10,7 @@ public class PostgresHealthCheck : IHealthCheck
     
     public PostgresHealthCheck(LogPortConfig config)
     {
-        _connectionString = config.PostgresConnectionString;
+        _connectionString = config.Postgres.ConnectionString;
     }
 
     public async Task<HealthCheckResult> CheckHealthAsync(

@@ -1,45 +1,74 @@
 namespace LogPort.Core.Models;
 
+using System;
+
 public class LogPortConfig
 {
-    public bool UseElasticSearch { get; set; } = false;
-    public string ElasticUri { get; set; } = null!;
-    public string DefaultIndex { get; set; } = "logs";
-    public string? ElasticUsername { get; set; }
-    public string? ElasticPassword { get; set; }
-    
-    public bool UsePostgres { get; set; } = false;
-    public string? PostgresHost { get; set; }
-    public int? PostgresPort { get; set; }
-    public string? PostgresDatabase { get; set; }
-    public string? PostgresUsername { get; set; }
-    public string? PostgresPassword { get; set; }
+    public ElasticConfig Elastic { get; set; } = new();
+    public PostgresConfig Postgres { get; set; } = new();
     
     public uint Port { get; set; } = 8080;
-    
-    
-    public string PostgresConnectionString =>
-        $"Host={PostgresHost ?? "localhost"};" +
-        $"Port={PostgresPort ?? 5432};" +
-        $"Database={PostgresDatabase ?? "logport"};" +
-        $"Username={PostgresUsername ?? "postgres"};" +
-        $"Password={PostgresPassword ?? "postgres"};";
+
     public static LogPortConfig LoadFromEnvironment()
     {
-        return new LogPortConfig
-        {
-            UseElasticSearch = bool.TryParse(Environment.GetEnvironmentVariable("LOGPORT_USE_ELASTICSEARCH"), out var useEs) && useEs,
-            ElasticUri = Environment.GetEnvironmentVariable("LOGPORT_ELASTIC_URI") ?? throw new InvalidOperationException("LOGPORT_ELASTIC_URI environment variable is not set."),
-            DefaultIndex = Environment.GetEnvironmentVariable("LOGPORT_ELASTIC_DEFAULT_INDEX") ?? "logs",
-            ElasticUsername = Environment.GetEnvironmentVariable("LOGPORT_ELASTIC_USERNAME"),
-            ElasticPassword = Environment.GetEnvironmentVariable("LOGPORT_ELASTIC_PASSWORD"),
-            UsePostgres = bool.TryParse(Environment.GetEnvironmentVariable("LOGPORT_USE_POSTGRES"), out var usePg) && usePg,
-            PostgresHost = Environment.GetEnvironmentVariable("LOGPORT_POSTGRES_HOST"),
-            PostgresPort = int.TryParse(Environment.GetEnvironmentVariable("LOGPORT_POSTGRES_PORT"), out var port) ? port : null,
-            PostgresDatabase = Environment.GetEnvironmentVariable("LOGPORT_POSTGRES_DATABASE"),
-            PostgresUsername = Environment.GetEnvironmentVariable("LOGPORT_POSTGRES_USERNAME"),
-            PostgresPassword = Environment.GetEnvironmentVariable("LOGPORT_POSTGRES_PASSWORD"),
-            Port = uint.TryParse(Environment.GetEnvironmentVariable("LOGPORT_PORT"), out var appPort) ? appPort : 8080
-        };
+        var config = new LogPortConfig();
+
+        // App port
+        config.Port = GetEnvUInt("LOGPORT_PORT", 8080);
+
+        // Elastic
+        config.Elastic.Use = GetEnvBool("LOGPORT_USE_ELASTICSEARCH");
+        config.Elastic.Uri = Environment.GetEnvironmentVariable("LOGPORT_ELASTIC_URI") 
+                             ?? (config.Elastic.Use ? throw new InvalidOperationException("LOGPORT_ELASTIC_URI is required") : null);
+        config.Elastic.DefaultIndex = Environment.GetEnvironmentVariable("LOGPORT_ELASTIC_DEFAULT_INDEX") ?? "logs";
+        config.Elastic.Username = Environment.GetEnvironmentVariable("LOGPORT_ELASTIC_USERNAME");
+        config.Elastic.Password = Environment.GetEnvironmentVariable("LOGPORT_ELASTIC_PASSWORD");
+
+        // Postgres
+        config.Postgres.Use = GetEnvBool("LOGPORT_USE_POSTGRES");
+        config.Postgres.Host = Environment.GetEnvironmentVariable("LOGPORT_POSTGRES_HOST") ?? "localhost";
+        config.Postgres.Port = GetEnvInt("LOGPORT_POSTGRES_PORT", 5432);
+        config.Postgres.Database = Environment.GetEnvironmentVariable("LOGPORT_POSTGRES_DATABASE") ?? "logport";
+        config.Postgres.Username = Environment.GetEnvironmentVariable("LOGPORT_POSTGRES_USERNAME") ?? "postgres";
+        config.Postgres.Password = Environment.GetEnvironmentVariable("LOGPORT_POSTGRES_PASSWORD") ?? "postgres";
+
+        return config;
+    }
+
+    private static bool GetEnvBool(string key, bool defaultValue = false)
+    {
+        return bool.TryParse(Environment.GetEnvironmentVariable(key), out var val) ? val : defaultValue;
+    }
+
+    private static int GetEnvInt(string key, int defaultValue)
+    {
+        return int.TryParse(Environment.GetEnvironmentVariable(key), out var val) ? val : defaultValue;
+    }
+
+    private static uint GetEnvUInt(string key, uint defaultValue)
+    {
+        return uint.TryParse(Environment.GetEnvironmentVariable(key), out var val) ? val : defaultValue;
+    }
+
+    public class ElasticConfig
+    {
+        public bool Use { get; set; } = false;
+        public string? Uri { get; set; }
+        public string DefaultIndex { get; set; } = "logs";
+        public string? Username { get; set; }
+        public string? Password { get; set; }
+    }
+
+    public class PostgresConfig
+    {
+        public bool Use { get; set; } = false;
+        public string Host { get; set; } = "localhost";
+        public int Port { get; set; } = 5432;
+        public string Database { get; set; } = "logport";
+        public string Username { get; set; } = "postgres";
+        public string Password { get; set; } = "postgres";
+
+        public string ConnectionString =>
+            $"Host={Host};Port={Port};Database={Database};Username={Username};Password={Password};";
     }
 }
