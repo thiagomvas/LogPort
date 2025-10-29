@@ -1,7 +1,8 @@
-﻿using System.Net.WebSockets;
-using System.Text;
-using System.Text.Json;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using LogPort.Core.Models;
+using LogPort.SDK;
 
 var random = new Random();
 var services = new[] { "auth-api", "payment-api", "orders-api", "inventory-api" };
@@ -16,13 +17,14 @@ var messages = new[]
     "Timeout while calling external service"
 };
 
-using var client = new ClientWebSocket();
-await client.ConnectAsync(new Uri("ws://localhost:5000/stream"), CancellationToken.None);
+using var client = LogPortClient.FromServerUrl("ws://localhost:8080/stream");
+await client.ConnectAsync();
+
 Console.WriteLine("Connected to LogPort. Press Enter to send a random log.");
 
 while (true)
 {
-    Console.ReadLine(); // wait for Enter
+    Console.ReadLine(); 
 
     var log = new LogEntry
     {
@@ -41,10 +43,7 @@ while (true)
         Environment = "development"
     };
 
-    var json = JsonSerializer.Serialize(log);
-    var bytes = Encoding.UTF8.GetBytes(json);
+    client.Log(log);
 
-    await client.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, CancellationToken.None);
-
-    Console.WriteLine($"Log sent: {log.Level} - {log.ServiceName} - {log.Message}");
+    Console.WriteLine($"Log queued: {log.Level} - {log.ServiceName} - {log.Message}");
 }

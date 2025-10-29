@@ -14,6 +14,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp", "src\ConsoleAp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogPort.Internal.Common", "src\LogPort.Internal.Common\LogPort.Internal.Common.csproj", "{D453214E-4F33-4A83-99CE-4AEC423B1DC6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogPort.SDK", "LogPort.SDK\LogPort.SDK.csproj", "{C0C54086-733D-47B2-BB59-04C469A26E85}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,6 +28,7 @@ Global
 		{F6772277-149F-4834-B5A6-EC15B63F96B4} = {F099F1E6-CB4D-4712-B015-A22F9ACA50E8}
 		{669F4D34-3BEA-4A2C-8805-CF918902B88D} = {F099F1E6-CB4D-4712-B015-A22F9ACA50E8}
 		{D453214E-4F33-4A83-99CE-4AEC423B1DC6} = {F099F1E6-CB4D-4712-B015-A22F9ACA50E8}
+		{C0C54086-733D-47B2-BB59-04C469A26E85} = {F099F1E6-CB4D-4712-B015-A22F9ACA50E8}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{C539DE40-F06C-4B16-B4D3-9966DAD1715F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -52,5 +55,9 @@ Global
 		{D453214E-4F33-4A83-99CE-4AEC423B1DC6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D453214E-4F33-4A83-99CE-4AEC423B1DC6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D453214E-4F33-4A83-99CE-4AEC423B1DC6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C0C54086-733D-47B2-BB59-04C469A26E85}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C0C54086-733D-47B2-BB59-04C469A26E85}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C0C54086-733D-47B2-BB59-04C469A26E85}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C0C54086-733D-47B2-BB59-04C469A26E85}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
