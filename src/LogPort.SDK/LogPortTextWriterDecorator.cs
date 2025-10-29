@@ -6,7 +6,7 @@ using System;
 using System.IO;
 using System.Text;
 
-public class LogPortTextWriterDecorator : TextWriter
+internal class LogPortTextWriterDecorator : TextWriter
 {
     private readonly TextWriter _original;
     private readonly LogPort.SDK.LogPortClient _logger;

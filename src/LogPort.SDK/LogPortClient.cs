@@ -95,6 +95,16 @@ public sealed class LogPortClient : IDisposable
         Log(new LogEntry() { Level = level, Message = message, Timestamp = DateTime.UtcNow });
     }
 
+    /// <summary>
+    /// Attaches the client to the standard console output and error streams.
+    /// </summary>
+    /// <remarks>
+    /// This redirects all console output to the LogPort server as log entries by adding a
+    /// <see cref="LogPortTextWriterDecorator"/> to the console streams. Due to that, it will
+    /// lose the attached behaviour if the console streams are changed afterwards. Be careful
+    /// if you plan on using other libraries that might change the console output and also
+    /// redirecting the Console streams to LogPort.
+    /// </remarks>
     public void AttachToConsole()
     {
         Console.SetOut(new LogPortTextWriterDecorator(Console.Out, this));
