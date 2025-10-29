@@ -4,6 +4,7 @@
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     </PropertyGroup>
 
     <ItemGroup>
@@ -14,6 +15,12 @@
       <ProjectReference Include="..\LogPort.Core\LogPort.Core.csproj" />
       <ProjectReference Include="..\LogPort.ElasticSearch\LogPort.ElasticSearch.csproj" />
       <ProjectReference Include="..\LogPort.Postgres\LogPort.Postgres.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="..\..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
     </ItemGroup>
 
 </Project>

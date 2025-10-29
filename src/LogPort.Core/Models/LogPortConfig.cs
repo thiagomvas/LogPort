@@ -15,6 +15,8 @@ public class LogPortConfig
     public string? PostgresUsername { get; set; }
     public string? PostgresPassword { get; set; }
     
+    public uint Port { get; set; } = 8080;
+    
     
     public string PostgresConnectionString =>
         $"Host={PostgresHost ?? "localhost"};" +
@@ -37,6 +39,7 @@ public class LogPortConfig
             PostgresDatabase = Environment.GetEnvironmentVariable("LOGPORT_POSTGRES_DATABASE"),
             PostgresUsername = Environment.GetEnvironmentVariable("LOGPORT_POSTGRES_USERNAME"),
             PostgresPassword = Environment.GetEnvironmentVariable("LOGPORT_POSTGRES_PASSWORD"),
+            Port = uint.TryParse(Environment.GetEnvironmentVariable("LOGPORT_PORT"), out var appPort) ? appPort : 8080
         };
     }
 }

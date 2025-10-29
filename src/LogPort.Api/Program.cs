@@ -82,7 +82,4 @@ app.MapHealthChecks("/health", new HealthCheckOptions
 app.UseWebSockets();
 app.MapLogEndpoints();
 
-
-
-// Run on port 5000
-app.Run("http://localhost:5000");
+app.Run($"http://0.0.0.0:{logPortConfig.Port}");
