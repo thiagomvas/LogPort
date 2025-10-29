@@ -1,5 +1,5 @@
 using LogPort.Core;
-using LogPort.Core.Interface;
+using LogPort.Internal.Common.Interface;
 
 namespace LogPort.Api.Services;
 

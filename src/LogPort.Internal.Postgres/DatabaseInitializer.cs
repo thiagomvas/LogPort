@@ -1,7 +1,7 @@
 using System.Reflection;
 using Npgsql;
 
-namespace LogPort.Postgres;
+namespace LogPort.Data.Postgres;
 
 public static class DatabaseInitializer
 {

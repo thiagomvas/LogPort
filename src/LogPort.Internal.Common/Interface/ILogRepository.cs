@@ -1,6 +1,6 @@
 using LogPort.Core.Models;
 
-namespace LogPort.Core.Interface;
+namespace LogPort.Internal.Common.Interface;
 
 public interface ILogRepository
 {

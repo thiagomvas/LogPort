@@ -4,10 +4,12 @@
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <RootNamespace>LogPort.Data.Postgres</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\LogPort.Core\LogPort.Core.csproj" />
+      <ProjectReference Include="..\LogPort.Internal.Common\LogPort.Internal.Common.csproj" />
     </ItemGroup>
     
     <ItemGroup>

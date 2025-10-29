@@ -1,8 +1,8 @@
-using LogPort.Core.Interface;
 using LogPort.Core.Models;
+using LogPort.Internal.Common.Interface;
 using Nest;
 
-namespace LogPort.ElasticSearch;
+namespace LogPort.Internal.ElasticSearch;
 
 public class ElasticLogRepository : ILogRepository
 {

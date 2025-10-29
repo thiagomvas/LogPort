@@ -1,12 +1,12 @@
-using LogPort.Core.Interface;
 using LogPort.Core.Models;
 using Npgsql;
 using NpgsqlTypes;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
+using LogPort.Internal.Common.Interface;
 
-namespace LogPort.Postgres;
+namespace LogPort.Data.Postgres;
 
 public class PostgresLogRepository : ILogRepository
 {

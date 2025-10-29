@@ -2,7 +2,7 @@ using System.Collections.Specialized;
 using LogPort.Core.Models;
 using Nest;
 
-namespace LogPort.ElasticSearch;
+namespace LogPort.Internal.ElasticSearch;
 
 public static class ElasticClientFactory
 {

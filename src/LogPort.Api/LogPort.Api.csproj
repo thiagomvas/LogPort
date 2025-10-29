@@ -13,8 +13,8 @@
 
     <ItemGroup>
       <ProjectReference Include="..\LogPort.Core\LogPort.Core.csproj" />
-      <ProjectReference Include="..\LogPort.ElasticSearch\LogPort.ElasticSearch.csproj" />
-      <ProjectReference Include="..\LogPort.Postgres\LogPort.Postgres.csproj" />
+      <ProjectReference Include="..\LogPort.Internal.ElasticSearch\LogPort.Internal.ElasticSearch.csproj" />
+      <ProjectReference Include="..\LogPort.Internal.Postgres\LogPort.Internal.Postgres.csproj" />
     </ItemGroup>
 
     <ItemGroup>

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.WebSockets;
 using System.Text;
 using System.Text.Json;
 using LogPort.Core;
-using LogPort.Core.Interface;
+using LogPort.Internal.Common.Interface;
 using Microsoft.Extensions.Logging;
 
 namespace LogPort.Api.Endpoints;
