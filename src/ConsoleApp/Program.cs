@@ -1,45 +1,28 @@
-﻿using System.Text.Json;
-using System.Text.Json.Serialization.Metadata;
-using LogPort.Core.Models;
-using LogPort.Postgres;
+﻿using System.Net.WebSockets;
+using System.Text;
+using System.Text.Json;
 
-var connectionString = "Host=localhost;Username=postgres;Password=postgres;Database=logport";
+using var client = new ClientWebSocket();
+await client.ConnectAsync(new Uri("ws://localhost:5000/stream"), CancellationToken.None);
+Console.WriteLine("Connected to LogPort. Press Enter to send a log.");
 
-await DatabaseInitializer.InitializeAsync(connectionString);
-
-var repo = new PostgresLogRepository(connectionString);
-
-var log = new LogEntry
+while (true)
 {
-    Timestamp = DateTime.UtcNow,
-    ServiceName = "auth-api",
-    Level = "INFO",
-    Message = "Test log entry",
-    Metadata = new Dictionary<string, object>
+    Console.ReadLine(); // wait for Enter
+
+    var log = new
     {
-        { "userId", 123 },
-        { "action", "login" }
-    },
-    Hostname = "localhost",
-    Environment = "dev"
-};
+        Timestamp = DateTime.UtcNow,
+        ServiceName = "auth-api",
+        Level = "INFO",
+        Message = "User pressed Enter",
+        UserId = "1234"
+    };
 
-await repo.AddLogAsync(log);
-Console.WriteLine("Inserted log entry.");
+    var json = JsonSerializer.Serialize(log);
+    var bytes = Encoding.UTF8.GetBytes(json);
 
-var queryParams = new LogQueryParameters
-{
-    ServiceName = "auth-api",
-    Page = 1,
-    PageSize = 10
-};
+    await client.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, CancellationToken.None);
 
-var logs = await repo.GetLogsAsync(queryParams);
-var count = await repo.CountLogsAsync(queryParams);
-
-Console.WriteLine($"Found {count} logs for service {queryParams.ServiceName}:");
-
-foreach (var l in logs)
-{
-    Console.WriteLine($"{l.Timestamp:u} [{l.Level}] {l.ServiceName} - {l.Message} | Metadata: {JsonSerializer.Serialize(l.Metadata)}");
+    Console.WriteLine("Log sent!");
 }

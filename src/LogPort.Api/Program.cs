@@ -7,6 +7,7 @@ using LogPort.ElasticSearch;
 using LogPort.Postgres;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebSockets;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,11 +27,18 @@ if (logPortConfig.UseElasticSearch)
 if (logPortConfig.UsePostgres)
 {
     var connectionString = logPortConfig.PostgresConnectionString;
-    await DatabaseInitializer.InitializeAsync(connectionString);
+    await DatabaseInitializer.InitializeAsync(connectionString, true);
     builder.Services.AddScoped<ILogRepository>(sp => new PostgresLogRepository(connectionString));
     builder.Services.AddHealthChecks()
         .AddCheck<PostgresHealthCheck>("postgres");
 }
+
+builder.Services.AddWebSockets(options =>
+{
+    options.KeepAliveInterval = TimeSpan.FromSeconds(30);
+});
+
+
 
 var app = builder.Build();
 
@@ -65,7 +73,46 @@ app.MapHealthChecks("/health", new HealthCheckOptions
         }));
     }
 });
-
+app.UseWebSockets();
 app.MapLogEndpoints();
 
-app.Run();
+app.Map("/stream", async context =>
+{
+    if (!context.WebSockets.IsWebSocketRequest)
+    {
+        context.Response.StatusCode = 400;
+        return;
+    }
+
+    using var webSocket = await context.WebSockets.AcceptWebSocketAsync();
+    var buffer = new byte[8192];
+    var logRepository = context.RequestServices.GetRequiredService<ILogRepository>();
+    var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+
+    while (webSocket.State == System.Net.WebSockets.WebSocketState.Open)
+    {
+        var result = await webSocket.ReceiveAsync(buffer: new ArraySegment<byte>(buffer), cancellationToken: context.RequestAborted);
+        if (result.MessageType == System.Net.WebSockets.WebSocketMessageType.Close)
+        {
+            await webSocket.CloseAsync(System.Net.WebSockets.WebSocketCloseStatus.NormalClosure, "Closing", context.RequestAborted);
+            break;
+        }
+
+        var jsonMessage = System.Text.Encoding.UTF8.GetString(buffer, 0, result.Count);
+        try
+        {
+            var logEntry = JsonSerializer.Deserialize<LogEntry>(jsonMessage);
+            if (logEntry != null)
+            {
+                await logRepository.AddLogAsync(logEntry);
+                logger.LogInformation("Received log: {LogEntry}", jsonMessage);
+            }
+        }
+        catch (JsonException)
+        {
+        }
+    }
+});
+
+// Run on port 5000
+app.Run("http://localhost:5000");
