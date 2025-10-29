@@ -7,7 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\src\LogPort.Core\LogPort.Core.csproj" />
+      <ProjectReference Include="..\LogPort.Core\LogPort.Core.csproj" />
     </ItemGroup>
 
 </Project>

@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\LogPort.SDK\LogPort.SDK.csproj" />
+      <ProjectReference Include="..\LogPort.SDK\LogPort.SDK.csproj" />
       <ProjectReference Include="..\LogPort.Internal.Postgres\LogPort.Internal.Postgres.csproj" />
     </ItemGroup>
 
