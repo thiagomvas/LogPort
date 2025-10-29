@@ -4,6 +4,7 @@ using LogPort.Api.HealthChecks;
 using LogPort.Core.Interface;
 using LogPort.Core.Models;
 using LogPort.ElasticSearch;
+using LogPort.Postgres;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,16 +15,30 @@ builder.Configuration.AddEnvironmentVariables(prefix: "LOGPORT_");
 var logPortConfig = LogPortConfig.LoadFromEnvironment();
 builder.Configuration.GetSection("LOGPORT").Bind(logPortConfig);
 builder.Services.AddSingleton(logPortConfig);
-builder.Services.AddSingleton(ElasticClientFactory.Create(logPortConfig));
-builder.Services.AddScoped<ILogRepository, ElasticLogRepository>();
-builder.Services.AddHealthChecks()
-    .AddCheck<ElasticsearchHealthCheck>("elasticsearch");
+if (logPortConfig.UseElasticSearch)
+{
+    builder.Services.AddSingleton(ElasticClientFactory.Create(logPortConfig));
+    builder.Services.AddScoped<ILogRepository, ElasticLogRepository>();
+    builder.Services.AddHealthChecks()
+        .AddCheck<ElasticsearchHealthCheck>("elasticsearch");
+}
+
+if (logPortConfig.UsePostgres)
+{
+    var connectionString = logPortConfig.PostgresConnectionString;
+    await DatabaseInitializer.InitializeAsync(connectionString);
+    builder.Services.AddScoped<ILogRepository>(sp => new PostgresLogRepository(connectionString));
+    builder.Services.AddHealthChecks()
+        .AddCheck<PostgresHealthCheck>("postgres");
+}
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
 app.MapHealthChecks("/health", new HealthCheckOptions
 {
     ResponseWriter = async (context, report) =>
