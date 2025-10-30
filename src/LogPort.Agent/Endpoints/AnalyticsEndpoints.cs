@@ -17,6 +17,12 @@ public static class AnalyticsEndpoints
         .WithTags("Analytics")
         .WithName("GetLogHistogram")
         .WithSummary("Retrieves a histogram of log entries over time based on the provided query parameters.");
+
+        app.MapPost("/analytics/count-by-type", async ([FromServices] AnalyticsService service,
+            LogQueryParameters? parameters) =>
+        {
+            return await GetCountByType(service, parameters);
+        });
     }
 
     private static async Task<IResult> GetHistogram(AnalyticsService service, LogQueryParameters? parameters)
@@ -25,6 +31,14 @@ public static class AnalyticsEndpoints
         var histogram = await service.GetLogHistogramAsync(parameters);
 
         return Results.Ok(histogram);
+    }
+
+    public static async Task<IResult> GetCountByType(AnalyticsService service, LogQueryParameters? parameters)
+    {
+        parameters ??= new LogQueryParameters();
+        var counts = await service.GetCountByTypeAsync(parameters);
+
+        return Results.Ok(counts);
     }
     
 }

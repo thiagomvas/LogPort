@@ -17,31 +17,23 @@ var messages = new[]
 using var client = LogPortClient.FromServerUrl("ws://localhost:8080/stream");
 await client.ConnectAsync();
 
+const int LOGS_PER_DAY = 1000;
+const int DAYS = 7;
 
-Console.WriteLine("Connected to LogPort. Press Enter to send a random log.");
-
-while (true)
+for (int day = 0; day < DAYS; day++)
 {
-    Console.ReadLine(); 
-
-    var log = new LogEntry
+    var date = DateTime.UtcNow.Date.AddDays(-day);
+    for (int i = 0; i < LOGS_PER_DAY; i++)
     {
-        Timestamp = DateTime.UtcNow.AddHours(random.Next(0, 10) * -1),
-        ServiceName = services[random.Next(services.Length)],
-        Level = levels[random.Next(levels.Length)],
-        Message = messages[random.Next(messages.Length)],
-        Metadata = new Dictionary<string, object>
+        var log = new LogEntry
         {
-            { "UserId", random.Next(1, 10000) },
-            { "SessionId", Guid.NewGuid().ToString() }
-        },
-        TraceId = Guid.NewGuid().ToString(),
-        SpanId = Guid.NewGuid().ToString(),
-        Hostname = "localhost",
-        Environment = "development"
-    };
+            Timestamp = date.AddSeconds(random.Next(0, 86400)),
+            ServiceName = services[random.Next(services.Length)],
+            Level = levels[random.Next(levels.Length)],
+            Message = messages[random.Next(messages.Length)]
+        };
 
-    client.Log(log);
-
-    Console.WriteLine($"Log queued: {log.Level} - {log.ServiceName} - {log.Message}");
+        client.Log(log);
+        Thread.Sleep(5);
+    }
 }

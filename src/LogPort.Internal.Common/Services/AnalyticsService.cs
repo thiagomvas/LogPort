@@ -51,6 +51,29 @@ public class AnalyticsService
             .ToList();
     }
 
+    public async Task<IReadOnlyDictionary<string, ulong>> GetCountByTypeAsync(LogQueryParameters parameters)
+    {
+        var counts = new Dictionary<string, ulong>(StringComparer.OrdinalIgnoreCase);
+
+        await foreach (var batch in _logRepository.GetBatchesAsync(parameters, 1000))
+        {
+            foreach (var log in batch)
+            {
+                if (log.Timestamp < (parameters.From ?? DateTime.MinValue) ||
+                    log.Timestamp > (parameters.To ?? DateTime.MaxValue))
+                    continue;
+
+                if (!counts.ContainsKey(log.Level))
+                    counts[log.Level] = 0;
+
+                counts[log.Level]++;
+            }
+        }
+
+        return counts;
+        
+    }
+
 
     private static DateTime AlignToStep(DateTime timestamp, DateTime start, TimeSpan step)
     {
