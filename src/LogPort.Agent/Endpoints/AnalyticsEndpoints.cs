@@ -9,26 +9,19 @@ public static class AnalyticsEndpoints
 {
     public static void MapAnalyticsEndpoints(this WebApplication app)
     {
-        app.MapPost("/analytics/histogram", async ([FromServices] AnalyticsService service,
-            LogQueryParameters? parameters) =>
-        {
-            return await GetHistogram(service, parameters);
-        })
+        app.MapPost("/analytics/histogram", GetHistogram)
         .WithTags("Analytics")
         .WithName("GetLogHistogram")
         .WithSummary("Retrieves a histogram of log entries over time based on the provided query parameters.");
 
-        app.MapPost("/analytics/count-by-type", async ([FromServices] AnalyticsService service,
-            LogQueryParameters? parameters) =>
-        {
-            return await GetCountByType(service, parameters);
-        });
+        app.MapPost("/analytics/count-by-type", GetCountByType);
     }
 
-    private static async Task<IResult> GetHistogram(AnalyticsService service, LogQueryParameters? parameters)
+    private static async Task<IResult> GetHistogram(AnalyticsService service, LogQueryParameters? parameters, [FromQuery] TimeSpan? interval)
     {
         parameters ??= new LogQueryParameters();
-        var histogram = await service.GetLogHistogramAsync(parameters);
+        interval ??= TimeSpan.FromHours(1);
+        var histogram = await service.GetLogHistogramAsync(parameters, interval);
 
         return Results.Ok(histogram);
     }
