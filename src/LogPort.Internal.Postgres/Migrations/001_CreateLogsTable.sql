@@ -1,4 +1,4 @@
-CREATE TABLE logs (
+CREATE TABLE IF NOT EXISTS logs (
     id BIGSERIAL NOT NULL,
     timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     service_name TEXT,
