@@ -32,6 +32,7 @@ public class LogPortConfig
         config.Postgres.Database = Environment.GetEnvironmentVariable("LOGPORT_POSTGRES_DATABASE") ?? "logport";
         config.Postgres.Username = Environment.GetEnvironmentVariable("LOGPORT_POSTGRES_USERNAME") ?? "postgres";
         config.Postgres.Password = Environment.GetEnvironmentVariable("LOGPORT_POSTGRES_PASSWORD") ?? "postgres";
+        config.Postgres.PartitionLength = GetEnvInt("LOGPORT_POSTGRES_PARTITION_LENGTH", 1);
 
         return config;
     }
@@ -71,5 +72,7 @@ public class LogPortConfig
 
         public string ConnectionString =>
             $"Host={Host};Port={Port};Database={Database};Username={Username};Password={Password};";
+
+        public int PartitionLength { get; set; } = 1;
     }
 }

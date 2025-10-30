@@ -9,5 +9,5 @@ CREATE TABLE logs (
     span_id TEXT,
     hostname TEXT,
     environment TEXT,
-    PRIMARY KEY (id, timestamp)   -- include partition column
+    PRIMARY KEY (id, timestamp)  
 ) PARTITION BY RANGE (timestamp);

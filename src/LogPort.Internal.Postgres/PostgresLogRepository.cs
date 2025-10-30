@@ -14,17 +14,15 @@ public class PostgresLogRepository : ILogRepository
     private readonly JsonSerializerOptions _jsonOptions;
     private readonly int _partitionLengthInDays;
 
-    public PostgresLogRepository(string connectionString, JsonSerializerOptions? jsonOptions = null)
+    public PostgresLogRepository(LogPortConfig config, JsonSerializerOptions? jsonOptions = null)
     {
-        _connectionString = connectionString;
-        _partitionLengthInDays = 1;
+        _connectionString = config.Postgres.ConnectionString;
+        _partitionLengthInDays = config.Postgres.PartitionLength;
         _jsonOptions = jsonOptions ?? new JsonSerializerOptions
         {
             TypeInfoResolver = new DefaultJsonTypeInfoResolver()
         };
     }
-
-    // ---------------- Insert ----------------
 
     public Task AddLogAsync(LogEntry log) => AddLogsAsync(new[] { log });
 
@@ -33,7 +31,6 @@ public class PostgresLogRepository : ILogRepository
         var logList = logs.ToList();
         if (!logList.Any()) return;
 
-        // Ensure all needed partitions exist
         var uniquePeriods = logList
             .Select(l => l.Timestamp.Date)
             .Distinct();
@@ -41,7 +38,6 @@ public class PostgresLogRepository : ILogRepository
         foreach (var day in uniquePeriods)
             await EnsurePartitionAsync(day);
 
-        // Build SQL
         var sqlValues = new List<string>();
         var parameters = new List<NpgsqlParameter>();
         int i = 0;
@@ -73,8 +69,6 @@ public class PostgresLogRepository : ILogRepository
         cmd.Parameters.AddRange(parameters.ToArray());
         await cmd.ExecuteNonQueryAsync();
     }
-
-    // ---------------- Queries ----------------
 
     public async Task<IEnumerable<LogEntry>> GetLogsAsync(LogQueryParameters parameters)
     {
@@ -118,11 +112,8 @@ public class PostgresLogRepository : ILogRepository
         return (long)await cmd.ExecuteScalarAsync();
     }
 
-    // ---------------- Partition Helper ----------------
-
     private async Task EnsurePartitionAsync(DateTime timestamp)
     {
-        // Align to start of partition
         var startDate = timestamp.Date.AddDays(-((timestamp.Date - DateTime.MinValue.Date).Days % _partitionLengthInDays));
         var endDate = startDate.AddDays(_partitionLengthInDays);
 
@@ -151,8 +142,6 @@ public class PostgresLogRepository : ILogRepository
         await using var cmd = new NpgsqlCommand(sql, conn);
         await cmd.ExecuteNonQueryAsync();
     }
-
-    // ---------------- Filters & Mapping ----------------
 
     private void BuildFilters(StringBuilder sql, List<NpgsqlParameter> parameters, LogQueryParameters query)
     {
