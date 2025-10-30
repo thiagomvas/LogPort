@@ -17,6 +17,9 @@ public class LogBatchProcessor : BackgroundService
         _services = services;
         _queue = queue;
         _logger = logger;
+        
+        var config = services.GetRequiredService<LogPortConfig>();
+        _batchSize = config.BatchSize > 0 ? config.BatchSize : _batchSize;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
