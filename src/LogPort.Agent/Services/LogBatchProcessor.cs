@@ -1,4 +1,5 @@
 using LogPort.Core;
+using LogPort.Core.Models;
 using LogPort.Internal.Common.Interface;
 
 namespace LogPort.Agent.Services;
@@ -9,7 +10,6 @@ public class LogBatchProcessor : BackgroundService
     private readonly ILogger<LogBatchProcessor> _logger;
     private readonly LogQueue _queue;
 
-    private readonly TimeSpan _interval = TimeSpan.FromSeconds(1);
     private readonly int _batchSize = 100;
 
     public LogBatchProcessor(IServiceProvider services, LogQueue queue, ILogger<LogBatchProcessor> logger)
@@ -23,8 +23,6 @@ public class LogBatchProcessor : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            await Task.Delay(_interval, stoppingToken);
-
             var batch = _queue.DequeueBatch(_batchSize).ToList();
             if (batch.Count == 0) continue;
 
