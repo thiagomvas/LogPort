@@ -26,7 +26,7 @@ while (true)
 
     var log = new LogEntry
     {
-        Timestamp = DateTime.UtcNow.AddDays(random.Next(0, 10) * -1),
+        Timestamp = DateTime.UtcNow.AddHours(random.Next(0, 10) * -1),
         ServiceName = services[random.Next(services.Length)],
         Level = levels[random.Next(levels.Length)],
         Message = messages[random.Next(messages.Length)],

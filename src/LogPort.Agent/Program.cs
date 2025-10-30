@@ -7,6 +7,7 @@ using LogPort.Internal.Common.Interface;
 using LogPort.Core.Models;
 using LogPort.Internal.ElasticSearch;
 using LogPort.Data.Postgres;
+using LogPort.Internal.Common.Services;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebSockets;
@@ -37,7 +38,7 @@ if (logPortConfig.Postgres.Use)
 
 builder.Services.AddSingleton<LogQueue>();
 builder.Services.AddHostedService<LogBatchProcessor>();
-
+builder.Services.AddScoped<AnalyticsService>();
 
 builder.Services.AddWebSockets(options =>
 {
@@ -81,5 +82,7 @@ app.MapHealthChecks("/health", new HealthCheckOptions
 });
 app.UseWebSockets();
 app.MapLogEndpoints();
+app.MapAnalyticsEndpoints();
+
 
 app.Run($"http://0.0.0.0:{logPortConfig.Port}");
