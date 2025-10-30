@@ -30,7 +30,7 @@ if (logPortConfig.Elastic.Use)
 if (logPortConfig.Postgres.Use)
 {
     var connectionString = logPortConfig.Postgres.ConnectionString;
-    await DatabaseInitializer.InitializeAsync(connectionString, false);
+    await DatabaseInitializer.InitializeAsync(connectionString);
     builder.Services.AddScoped<ILogRepository, PostgresLogRepository>();
     builder.Services.AddHealthChecks()
         .AddCheck<PostgresHealthCheck>("postgres");

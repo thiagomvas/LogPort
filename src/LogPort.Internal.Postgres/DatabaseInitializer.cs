@@ -30,8 +30,6 @@ public static class DatabaseInitializer
 
             await using var dropCmd = new NpgsqlCommand(dropSql, conn);
             await dropCmd.ExecuteNonQueryAsync();
-
-            Console.WriteLine("Existing tables dropped.");
         }
 
         foreach (var scriptName in scripts)
@@ -45,7 +43,5 @@ public static class DatabaseInitializer
             await using var cmd = new NpgsqlCommand(sql, conn);
             await cmd.ExecuteNonQueryAsync();
         }
-
-        Console.WriteLine("Database initialization complete.");
     }
 }
