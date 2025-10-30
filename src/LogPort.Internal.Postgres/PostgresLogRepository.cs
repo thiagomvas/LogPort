@@ -12,15 +12,19 @@ public class PostgresLogRepository : ILogRepository
 {
     private readonly string _connectionString;
     private readonly JsonSerializerOptions _jsonOptions;
+    private readonly int _partitionLengthInDays;
 
     public PostgresLogRepository(string connectionString, JsonSerializerOptions? jsonOptions = null)
     {
         _connectionString = connectionString;
+        _partitionLengthInDays = 1;
         _jsonOptions = jsonOptions ?? new JsonSerializerOptions
         {
             TypeInfoResolver = new DefaultJsonTypeInfoResolver()
         };
     }
+
+    // ---------------- Insert ----------------
 
     public Task AddLogAsync(LogEntry log) => AddLogsAsync(new[] { log });
 
@@ -29,6 +33,15 @@ public class PostgresLogRepository : ILogRepository
         var logList = logs.ToList();
         if (!logList.Any()) return;
 
+        // Ensure all needed partitions exist
+        var uniquePeriods = logList
+            .Select(l => l.Timestamp.Date)
+            .Distinct();
+
+        foreach (var day in uniquePeriods)
+            await EnsurePartitionAsync(day);
+
+        // Build SQL
         var sqlValues = new List<string>();
         var parameters = new List<NpgsqlParameter>();
         int i = 0;
@@ -60,6 +73,8 @@ public class PostgresLogRepository : ILogRepository
         cmd.Parameters.AddRange(parameters.ToArray());
         await cmd.ExecuteNonQueryAsync();
     }
+
+    // ---------------- Queries ----------------
 
     public async Task<IEnumerable<LogEntry>> GetLogsAsync(LogQueryParameters parameters)
     {
@@ -103,7 +118,41 @@ public class PostgresLogRepository : ILogRepository
         return (long)await cmd.ExecuteScalarAsync();
     }
 
-    // ------------------ Helpers ------------------
+    // ---------------- Partition Helper ----------------
+
+    private async Task EnsurePartitionAsync(DateTime timestamp)
+    {
+        // Align to start of partition
+        var startDate = timestamp.Date.AddDays(-((timestamp.Date - DateTime.MinValue.Date).Days % _partitionLengthInDays));
+        var endDate = startDate.AddDays(_partitionLengthInDays);
+
+        var partitionName = $"logs_{startDate:yyyy_MM_dd}_{_partitionLengthInDays}d";
+
+        var sql = $@"
+            DO $$
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_class WHERE relname = '{partitionName}'
+                ) THEN
+                    EXECUTE format(
+                        'CREATE TABLE IF NOT EXISTS %I PARTITION OF logs
+                         FOR VALUES FROM (%L) TO (%L);',
+                        '{partitionName}', '{startDate:yyyy-MM-dd}', '{endDate:yyyy-MM-dd}'
+                    );
+
+                    EXECUTE format('CREATE INDEX IF NOT EXISTS %I_ts_idx ON %I (timestamp);',
+                                   '{partitionName}_ts_idx', '{partitionName}');
+                END IF;
+            END $$;
+        ";
+
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+    // ---------------- Filters & Mapping ----------------
 
     private void BuildFilters(StringBuilder sql, List<NpgsqlParameter> parameters, LogQueryParameters query)
     {
@@ -157,7 +206,7 @@ public class PostgresLogRepository : ILogRepository
         new LogEntry
         {
             Timestamp = reader.GetDateTime(0),
-            ServiceName = reader.GetString(1),
+            ServiceName = reader.IsDBNull(1) ? null : reader.GetString(1),
             Level = reader.GetString(2),
             Message = reader.GetString(3),
             Metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(reader.GetString(4), _jsonOptions)!,

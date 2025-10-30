@@ -17,8 +17,6 @@ var messages = new[]
 using var client = LogPortClient.FromServerUrl("ws://localhost:8080/stream");
 await client.ConnectAsync();
 
-client.AttachToConsole();
-
 
 Console.WriteLine("Connected to LogPort. Press Enter to send a random log.");
 
@@ -28,7 +26,7 @@ while (true)
 
     var log = new LogEntry
     {
-        Timestamp = DateTime.UtcNow,
+        Timestamp = DateTime.UtcNow.AddDays(random.Next(0, 10) * -1),
         ServiceName = services[random.Next(services.Length)],
         Level = levels[random.Next(levels.Length)],
         Message = messages[random.Next(messages.Length)],
