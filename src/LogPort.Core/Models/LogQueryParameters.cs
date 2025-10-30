@@ -1,3 +1,6 @@
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+
 namespace LogPort.Core.Models;
 
 public class LogQueryParameters
@@ -12,7 +15,7 @@ public class LogQueryParameters
     
     public string? TraceId { get; set; }
     public string? SpanId { get; set; }
-    public int Page { get; set; } = 1;
-    public bool SearchExact { get; set; } = true;
-    public int PageSize { get; set; } = 100;
+    public int? Page { get; set; } = 1;
+    public bool? SearchExact { get; set; } = true;
+    public int? PageSize { get; set; } = 100;
 }

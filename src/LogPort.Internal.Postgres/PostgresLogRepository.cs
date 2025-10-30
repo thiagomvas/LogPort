@@ -81,9 +81,9 @@ public class PostgresLogRepository : ILogRepository
 
         sql.Append(" ORDER BY timestamp DESC");
 
-        int offset = (parameters.Page - 1) * parameters.PageSize;
+        var offset = ((parameters.Page ?? 1) - 1) * (parameters.PageSize ?? 100);
         sql.Append(" LIMIT @limit OFFSET @offset");
-        sqlParams.Add(new NpgsqlParameter("limit", parameters.PageSize));
+        sqlParams.Add(new NpgsqlParameter("limit", parameters.PageSize ?? 100));
         sqlParams.Add(new NpgsqlParameter("offset", offset));
 
         var results = new List<LogEntry>();
@@ -214,7 +214,7 @@ public class PostgresLogRepository : ILogRepository
 
         if (!string.IsNullOrWhiteSpace(query.Search))
         {
-            if (query.SearchExact)
+            if (query.SearchExact is true)
             {
                 sql.Append($" AND message = @p{idx}");
                 parameters.Add(new NpgsqlParameter($"p{idx}", query.Search));

@@ -16,8 +16,6 @@ public static class LogEndpoints
 
         app.MapGet("/logs", GetLogsAsync);
 
-        app.MapPost("/logs/search", SearchLogsAsync);
-
         MapStreamEndpoint(app);
     }
 
@@ -70,35 +68,9 @@ public static class LogEndpoints
         return Results.Created($"/logs", log);
     }
 
-    // GET /logs?From=...&To=...&Level=...&Search=...
     private static async Task<IResult> GetLogsAsync(
         ILogRepository logRepository,
-        DateTime? From,
-        DateTime? To,
-        string? Level,
-        string? Search,
-        bool SearchExact = true,
-        int Page = 1,
-        int PageSize = 100)
-    {
-        var parameters = new LogQueryParameters
-        {
-            From = From,
-            To = To,
-            Level = Level,
-            Search = Search,
-            SearchExact = SearchExact,
-            Page = Page,
-            PageSize = PageSize
-        };
-
-        var logs = await logRepository.GetLogsAsync(parameters);
-        return Results.Ok(logs);
-    }
-
-    private static async Task<IResult> SearchLogsAsync(
-        ILogRepository logRepository,
-        LogQueryParameters parameters)
+        [AsParameters] LogQueryParameters parameters)
     {
         var logs = await logRepository.GetLogsAsync(parameters);
         return Results.Ok(logs);

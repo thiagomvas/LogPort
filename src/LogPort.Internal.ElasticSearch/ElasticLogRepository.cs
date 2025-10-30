@@ -133,7 +133,7 @@ public class ElasticLogRepository : ILogRepository
 
             if (!string.IsNullOrWhiteSpace(parameters.Search))
             {
-                if (parameters.SearchExact)
+                if (parameters.SearchExact is true)
                 {
                     must.Add(m => m.MultiMatch(mm => mm
                         .Fields(f => f
