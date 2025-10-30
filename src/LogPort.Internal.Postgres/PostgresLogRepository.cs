@@ -1,3 +1,4 @@
+using System.Data;
 using LogPort.Core.Models;
 using Npgsql;
 using NpgsqlTypes;
@@ -97,6 +98,42 @@ public class PostgresLogRepository : ILogRepository
 
         return results;
     }
+
+    public async IAsyncEnumerable<IReadOnlyList<LogEntry>> GetBatchesAsync(
+        LogQueryParameters parameters,
+        int batchSize)
+    {
+        var sql = new StringBuilder(
+            "SELECT timestamp, service_name, level, message, metadata, trace_id, span_id, hostname, environment FROM logs WHERE 1=1");
+        var sqlParams = new List<NpgsqlParameter>();
+        BuildFilters(sql, sqlParams, parameters);
+
+        sql.Append(" ORDER BY timestamp ASC"); 
+
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        await using var cmd = new NpgsqlCommand(sql.ToString(), conn);
+        cmd.Parameters.AddRange(sqlParams.ToArray());
+
+        await using var reader = await cmd.ExecuteReaderAsync(CommandBehavior.SequentialAccess);
+
+        var batch = new List<LogEntry>(batchSize);
+        while (await reader.ReadAsync())
+        {
+            batch.Add(MapReader(reader));
+
+            if (batch.Count >= batchSize)
+            {
+                yield return batch;
+                batch = new List<LogEntry>(batchSize);
+            }
+        }
+
+        if (batch.Count > 0)
+            yield return batch;
+    }
+
 
     public async Task<long> CountLogsAsync(LogQueryParameters parameters)
     {

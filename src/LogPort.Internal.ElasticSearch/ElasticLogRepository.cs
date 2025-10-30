@@ -90,6 +90,11 @@ public class ElasticLogRepository : ILogRepository
         return response.Documents;
     }
 
+    public IAsyncEnumerable<IReadOnlyList<LogEntry>> GetBatchesAsync(LogQueryParameters parameters, int batchSize)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<long> CountLogsAsync(LogQueryParameters parameters)
     {
         var response = await _client.CountAsync<LogEntry>(c => c
