@@ -10,6 +10,7 @@ public class LogPortConfig
     public uint Port { get; set; } = 8080;
     public string AgentUrl { get; set; }
     public int BatchSize { get; set; } = 100;
+    public int FlushIntervalMs { get; set; } = 250;
 
     public static LogPortConfig LoadFromEnvironment()
     {
@@ -18,6 +19,8 @@ public class LogPortConfig
         config.Port = GetEnvUInt("LOGPORT_PORT", 8080);
         config.AgentUrl = Environment.GetEnvironmentVariable("LOGPORT_AGENT_URL") ?? $"http://localhost:{config.Port}";
         config.BatchSize = GetEnvInt("LOGPORT_BATCH_SIZE", 100);
+        config.FlushIntervalMs = GetEnvInt("LOGPORT_FLUSH_INTERVAL_MS", 250);
+        
         // Elastic
         config.Elastic.Use = GetEnvBool("LOGPORT_USE_ELASTICSEARCH");
         config.Elastic.Uri = Environment.GetEnvironmentVariable("LOGPORT_ELASTIC_URI") 

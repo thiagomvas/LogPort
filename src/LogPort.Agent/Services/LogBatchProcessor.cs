@@ -11,6 +11,7 @@ public class LogBatchProcessor : BackgroundService
     private readonly LogQueue _queue;
 
     private readonly int _batchSize = 100;
+    private readonly TimeSpan _flushInterval = TimeSpan.FromSeconds(1);
 
     public LogBatchProcessor(IServiceProvider services, LogQueue queue, ILogger<LogBatchProcessor> logger)
     {
@@ -20,12 +21,14 @@ public class LogBatchProcessor : BackgroundService
         
         var config = services.GetRequiredService<LogPortConfig>();
         _batchSize = config.BatchSize > 0 ? config.BatchSize : _batchSize;
+        _flushInterval = config.FlushIntervalMs > 0 ? TimeSpan.FromMilliseconds(config.FlushIntervalMs) : _flushInterval;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
         {
+            await Task.Delay(_flushInterval, stoppingToken);
             var batch = _queue.DequeueBatch(_batchSize).ToList();
             if (batch.Count == 0) continue;
 
