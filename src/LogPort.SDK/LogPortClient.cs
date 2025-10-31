@@ -134,10 +134,12 @@ public sealed class LogPortClient : IDisposable
         }
         catch (OperationCanceledException)
         {
-            
+            Dispose();
         }
         catch (Exception ex)
         {
+            Dispose();
+            throw;
         }
     }
 
