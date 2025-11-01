@@ -15,7 +15,6 @@ var messages = new[]
 };
 
 using var client = LogPortClient.FromServerUrl("ws://localhost:8080/stream");
-await client.ConnectAsync();
 
 const int LOGS_PER_DAY = 1000;
 const int DAYS = 7;

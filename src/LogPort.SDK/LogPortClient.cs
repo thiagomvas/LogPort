@@ -13,7 +13,7 @@ namespace LogPort.SDK;
 /// Represents a client for sending structured logs to a LogPort server over WebSocket.
 /// </summary>
 /// <remarks>
-/// Supports asynchronous, non-blocking logging with an internal queue. Use <see cref="ConnectAsync"/> 
+/// Supports asynchronous, non-blocking logging with an internal queue. Use <see cref="EnsureConnectedAsync"/> 
 /// before sending logs. Call <see cref="FlushAsync"/> to ensure all queued logs are sent before shutdown.
 /// Implements <see cref="IDisposable"/> to clean up WebSocket and cancellation resources.
 /// </remarks>
@@ -65,7 +65,7 @@ public sealed class LogPortClient : IDisposable
     /// <remarks>
     /// Must be called before sending logs. Subsequent calls when already connected have no effect.
     /// </remarks>
-    public async Task ConnectAsync()
+    public async Task EnsureConnectedAsync()
     {
         if (_webSocket.State == WebSocketState.Open) return;
 
@@ -116,6 +116,7 @@ public sealed class LogPortClient : IDisposable
         {
             while (!token.IsCancellationRequested)
             {
+                await EnsureConnectedAsync();
                 while (_messageQueue.TryDequeue(out var entry))
                 {
                     string json = JsonSerializer.Serialize(entry);
