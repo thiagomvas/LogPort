@@ -20,11 +20,15 @@ namespace LogPort.SDK;
 public sealed class LogPortClient : IDisposable
 {
     private readonly Uri _serverUri;
-    private readonly ClientWebSocket _webSocket;
+    private ClientWebSocket _webSocket;
     private readonly ConcurrentQueue<LogEntry> _messageQueue;
     private readonly CancellationTokenSource _cts;
     private Task? _senderTask;
+    private readonly TimeSpan _maxReconnectDelay = TimeSpan.FromSeconds(30);
+    private readonly TimeSpan _heartbeatTimeout = TimeSpan.FromSeconds(10);
+    private readonly TimeSpan _heartbeatInterval = TimeSpan.FromSeconds(10);
 
+    
     private const int SendDelayMs = 50;
 
     private LogPortClient(string serverUrl)
@@ -70,13 +74,15 @@ public sealed class LogPortClient : IDisposable
     /// <remarks>
     /// Must be called before sending logs. Subsequent calls when already connected have no effect.
     /// </remarks>
-    public async Task EnsureConnectedAsync()
+    public async Task EnsureConnectedAsync(CancellationToken token = default)
     {
-        if (_webSocket.State == WebSocketState.Open) return;
+        if (_senderTask is { IsCompleted: false })
+            return; // already running
 
-        await _webSocket.ConnectAsync(_serverUri, CancellationToken.None).ConfigureAwait(false);
-        _senderTask = Task.Run(() => ProcessQueueAsync(_cts.Token));
+        await EnsureSocketConnectedAsync(token).ConfigureAwait(false);
+        _senderTask = Task.Run(() => ProcessQueueAsync(_cts.Token), token);
     }
+
 
     /// <summary>
     /// Enqueues a <see cref="LogEntry"/> to be sent asynchronously to the server.
@@ -116,13 +122,18 @@ public sealed class LogPortClient : IDisposable
     }
 
     private async Task ProcessQueueAsync(CancellationToken token)
+{
+    var lastHeartbeat = DateTime.UtcNow;
+
+    while (!token.IsCancellationRequested)
     {
-        try
+        await EnsureSocketConnectedAsync(token);
+
+        while (_webSocket.State == WebSocketState.Open && !token.IsCancellationRequested)
         {
-            while (!token.IsCancellationRequested)
+            if (_messageQueue.TryDequeue(out var entry))
             {
-                await EnsureConnectedAsync();
-                while (_messageQueue.TryDequeue(out var entry))
+                try
                 {
                     string json = JsonSerializer.Serialize(entry);
                     var bytes = Encoding.UTF8.GetBytes(json);
@@ -133,21 +144,42 @@ public sealed class LogPortClient : IDisposable
                         true,
                         token
                     ).ConfigureAwait(false);
+
+                }
+                catch (Exception ex)
+                {
+                    _webSocket.Abort();
+                    _webSocket.Dispose();
+                    break; // exit inner loop, outer loop will reconnect
+                }
+            }
+            else
+            {
+                var now = DateTime.UtcNow;
+                if (now - lastHeartbeat >= _heartbeatInterval)
+                {
+                    bool alive = await SendHeartbeatAsync(token);
+                    lastHeartbeat = now;
+
+                    if (!alive)
+                    {
+                        _webSocket.Abort();
+                        _webSocket.Dispose();
+                        break; // exit inner loop, outer loop will reconnect
+                    }
                 }
 
                 await Task.Delay(SendDelayMs, token).ConfigureAwait(false);
             }
         }
-        catch (OperationCanceledException)
+
+        if (_webSocket.State != WebSocketState.Open)
         {
-            Dispose();
-        }
-        catch (Exception ex)
-        {
-            Dispose();
-            throw;
+            // Small delay before retrying connection
+            await Task.Delay(1000, token).ConfigureAwait(false);
         }
     }
+}
 
     /// <summary>
     /// Waits until all queued logs have been sent to the server.
@@ -171,4 +203,63 @@ public sealed class LogPortClient : IDisposable
         _webSocket.Dispose();
         _cts.Dispose();
     }
+    
+    private async Task<bool> SendHeartbeatAsync(CancellationToken token)
+    {
+        try
+        {
+            var pingBytes = Encoding.UTF8.GetBytes("ping");
+            var sendTask = _webSocket.SendAsync(
+                new ArraySegment<byte>(pingBytes),
+                WebSocketMessageType.Text,
+                true,
+                token
+            );
+
+            var completed = await Task.WhenAny(sendTask, Task.Delay(_heartbeatTimeout, token));
+            if (completed != sendTask)
+            {
+                return false;
+            }
+
+            await sendTask;
+            return true;
+
+        }
+        catch
+        {
+            return false; 
+        }
+    }
+    
+    
+    private async Task EnsureSocketConnectedAsync(CancellationToken token)
+    {
+        if (_webSocket == null || _webSocket.State != WebSocketState.Open)
+        {
+            try { _webSocket?.Abort(); } catch { }
+            try { _webSocket?.Dispose(); } catch { }
+
+            var delay = TimeSpan.FromSeconds(1);
+            var random = new Random();
+
+            while (_webSocket.State != WebSocketState.Open && !token.IsCancellationRequested)
+            {
+                _webSocket = new ClientWebSocket();
+                try
+                {
+                    await _webSocket.ConnectAsync(_serverUri, token).ConfigureAwait(false);
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    await Task.Delay(delay + TimeSpan.FromMilliseconds(random.Next(0, 500)), token);
+                    delay = TimeSpan.FromSeconds(Math.Min(delay.TotalSeconds * 2, _maxReconnectDelay.TotalSeconds));
+                }
+            }
+        }
+    }
+
+
+
 }

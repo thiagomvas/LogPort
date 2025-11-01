@@ -15,7 +15,25 @@ var messages = new[]
 };
 
 using var client = LogPortClient.FromServerUrl("ws://localhost:8080/stream");
+await client.EnsureConnectedAsync();
 
+// Send a log every time a key is pressed
+while (Console.ReadKey().Key != ConsoleKey.Escape)
+{
+    var log = new LogEntry
+    {
+        Timestamp = DateTime.UtcNow,
+        ServiceName = services[random.Next(services.Length)],
+        Level = levels[random.Next(levels.Length)],
+        Message = messages[random.Next(messages.Length)]
+    };
+
+    client.Log(log);
+    Console.WriteLine($"Sent log: {log.Timestamp} [{log.ServiceName}] {log.Level} - {log.Message}");
+    
+}
+
+return;
 const int LOGS_PER_DAY = 1000;
 const int DAYS = 7;
 

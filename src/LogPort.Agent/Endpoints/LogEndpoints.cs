@@ -44,6 +44,10 @@ public static class LogEndpoints
                 }
 
                 var jsonMessage = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                
+                if (jsonMessage == "ping")
+                    continue;
+                
                 try
                 {
                     var logEntry = JsonSerializer.Deserialize<LogEntry>(jsonMessage);
