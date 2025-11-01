@@ -131,7 +131,7 @@ public sealed class LogPortClient : IDisposable
 
         while (_webSocket.State == WebSocketState.Open && !token.IsCancellationRequested)
         {
-            if (_messageQueue.TryDequeue(out var entry))
+            if (_messageQueue.TryPeek(out var entry))
             {
                 try
                 {
@@ -144,7 +144,7 @@ public sealed class LogPortClient : IDisposable
                         true,
                         token
                     ).ConfigureAwait(false);
-
+                    _messageQueue.TryDequeue(out _);
                 }
                 catch (Exception ex)
                 {
