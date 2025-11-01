@@ -35,6 +35,11 @@ public sealed class LogPortClient : IDisposable
         _cts = new CancellationTokenSource();
     }
 
+    public LogPortClient(LogPortConfig config) : this(config.AgentUrl)
+    {
+        
+    }
+
     /// <summary>
     /// Creates a <see cref="LogPortClient"/> using the server URL specified in the environment variable LOGPORT_SERVER_URL.
     /// </summary>
