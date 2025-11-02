@@ -36,4 +36,4 @@ jobs:
         context: .
         file: ./src/LogPort.Agent/Dockerfile
         push: true
-        tags: yourdockerhubusername/yourimage:${{ env.IMAGE_TAG }}
+        tags: thiagomvas/logport:${{ env.IMAGE_TAG }}
