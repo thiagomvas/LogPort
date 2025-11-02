@@ -20,7 +20,8 @@ namespace LogPort.SDK;
 public sealed class LogPortClient : IDisposable
 {
     private readonly Uri _serverUri;
-    private ClientWebSocket _webSocket;
+    private IWebSocketClient _webSocket;
+    private readonly Func<IWebSocketClient> _socketFactory;
     private readonly ConcurrentQueue<LogEntry> _messageQueue;
     private readonly CancellationTokenSource _cts;
     private Task? _senderTask;
@@ -31,15 +32,16 @@ public sealed class LogPortClient : IDisposable
     
     private const int SendDelayMs = 50;
 
-    private LogPortClient(string serverUrl)
+    private LogPortClient(string serverUrl, Func<IWebSocketClient>? socketFactory = null)
     {
         _serverUri = new Uri(serverUrl);
-        _webSocket = new ClientWebSocket();
+        _socketFactory = socketFactory ?? (() => new WebSocketClientAdapter());
+        _webSocket = _socketFactory();
         _messageQueue = new ConcurrentQueue<LogEntry>();
         _cts = new CancellationTokenSource();
     }
 
-    public LogPortClient(LogPortConfig config) : this(config.AgentUrl)
+    public LogPortClient(LogPortConfig config, Func<IWebSocketClient>? socketFactory = null) : this(config.AgentUrl, socketFactory)
     {
         
     }
@@ -243,9 +245,9 @@ public sealed class LogPortClient : IDisposable
             var delay = TimeSpan.FromSeconds(1);
             var random = new Random();
 
-            while (_webSocket.State != WebSocketState.Open && !token.IsCancellationRequested)
+            do
             {
-                _webSocket = new ClientWebSocket();
+                _webSocket = _socketFactory?.Invoke();
                 try
                 {
                     await _webSocket.ConnectAsync(_serverUri, token).ConfigureAwait(false);
@@ -256,7 +258,7 @@ public sealed class LogPortClient : IDisposable
                     await Task.Delay(delay + TimeSpan.FromMilliseconds(random.Next(0, 500)), token);
                     delay = TimeSpan.FromSeconds(Math.Min(delay.TotalSeconds * 2, _maxReconnectDelay.TotalSeconds));
                 }
-            }
+            } while (_webSocket.State != WebSocketState.Open && !token.IsCancellationRequested);
         }
     }
 
