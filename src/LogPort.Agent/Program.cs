@@ -41,9 +41,12 @@ if (logPortConfig.Postgres.Use)
     builder.Services.AddHostedService<PostgresInitializerHostedService>();
 }
 
+if (logPortConfig.Docker.Use)
+{
+    builder.Services.AddHostedService<DockerLogService>();
+}
 builder.Services.AddSingleton<LogQueue>();
 builder.Services.AddHostedService<LogBatchProcessor>();
-builder.Services.AddHostedService<DockerLogService>();
 builder.Services.AddScoped<AnalyticsService>();
 builder.Services.AddSingleton<WebSocketManager>();
 
