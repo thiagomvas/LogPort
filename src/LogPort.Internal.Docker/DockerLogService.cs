@@ -35,6 +35,10 @@ public class DockerLogService : BackgroundService
             _logger?.LogInformation("Starting log stream for container {ContainerId} ({ContainerNames})", container.ID, string.Join(", ", container.Names));
             _ = Task.Run(() => StreamContainerLogsAsync(client, container.ID, stoppingToken), stoppingToken);
         }
+        
+        _ = Task.Run(() => WatchForNewContainersAsync(client, stoppingToken), stoppingToken);
+
+        await Task.Delay(Timeout.Infinite, stoppingToken);
     }
     
     private async Task StreamContainerLogsAsync(DockerClient client, string containerId, CancellationToken stoppingToken)
@@ -66,9 +70,36 @@ public class DockerLogService : BackgroundService
                 Hostname = Environment.MachineName,
                 Environment = "docker"
             };
-            _logger?.LogInformation("Docker log: {LogMessage}", line);
-
-            //_logQueue.Enqueue(logEntry);
+            _logQueue.Enqueue(logEntry);
         }
     }
+    
+    private async Task WatchForNewContainersAsync(DockerClient client, CancellationToken stoppingToken)
+    {
+        await client.System.MonitorEventsAsync(
+            new ContainerEventsParameters(),
+            new Progress<Message>(async message =>
+            {
+                if (message.Type == "container" && message.Action == "start")
+                {
+                    try
+                    {
+                        var inspect = await client.Containers.InspectContainerAsync(message.ID, stoppingToken);
+                        if (inspect.Config?.Labels?.TryGetValue("com.logport.monitor", out var val) == true && val == "true")
+                        {
+                            _logger?.LogInformation("New container detected: {ContainerId} ({Name})",
+                                inspect.ID, inspect.Name);
+                            _ = Task.Run(() => StreamContainerLogsAsync(client, inspect.ID, stoppingToken), stoppingToken);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogError(ex, "Error inspecting container {ContainerId}", message.ID);
+                    }
+                }
+            }),
+            stoppingToken
+        );
+    }
+
 }
