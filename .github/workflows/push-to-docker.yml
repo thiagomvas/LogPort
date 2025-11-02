@@ -3,9 +3,9 @@ name: Docker Build & Push
 on:
   push:
     branches:
-      - dev        
+    - dev
     tags:
-      - '*'        
+    - '*'
 
 jobs:
   build:
@@ -33,8 +33,7 @@ jobs:
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
       with:
-        context: ./src          
+        context: .
         file: ./src/LogPort.Agent/Dockerfile
         push: true
         tags: yourdockerhubusername/yourimage:${{ env.IMAGE_TAG }}
-

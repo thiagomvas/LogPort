@@ -11,9 +11,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Reference Include="Microsoft.Extensions.Logging.Abstractions">
-        <HintPath>..\..\..\..\.dotnet\packs\Microsoft.AspNetCore.App.Ref\9.0.8\ref\net9.0\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
-      </Reference>
+      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10" />
     </ItemGroup>
 
 </Project>
