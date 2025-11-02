@@ -1,6 +1,7 @@
 using LogPort.Core;
 using LogPort.Core.Models;
 using LogPort.Internal.Common.Interface;
+using WebSocketManager = LogPort.Internal.Common.Services.WebSocketManager;
 
 namespace LogPort.Agent.Services;
 
@@ -9,15 +10,17 @@ public class LogBatchProcessor : BackgroundService
     private readonly IServiceProvider _services;
     private readonly ILogger<LogBatchProcessor> _logger;
     private readonly LogQueue _queue;
+    private readonly WebSocketManager _socketManager;
 
     private readonly int _batchSize = 100;
     private readonly TimeSpan _flushInterval = TimeSpan.FromSeconds(1);
 
-    public LogBatchProcessor(IServiceProvider services, LogQueue queue, ILogger<LogBatchProcessor> logger)
+    public LogBatchProcessor(IServiceProvider services, LogQueue queue, WebSocketManager socketManager, ILogger<LogBatchProcessor> logger)
     {
         _services = services;
         _queue = queue;
         _logger = logger;
+        _socketManager = socketManager;
         
         var config = services.GetRequiredService<LogPortConfig>();
         _batchSize = config.BatchSize > 0 ? config.BatchSize : _batchSize;
@@ -34,10 +37,15 @@ public class LogBatchProcessor : BackgroundService
 
             try
             {
+                foreach (var log in batch)
+                {
+                    await _socketManager.BroadcastAsync(log);
+                }
+                
                 using var scope = _services.CreateScope();
                 var repo = scope.ServiceProvider.GetRequiredService<ILogRepository>();
                 await repo.AddLogsAsync(batch);
-                _logger.LogInformation("Inserted {Count} logs", batch.Count);
+                _logger.LogDebug("Inserted {Count} logs", batch.Count);
             }
             catch (Exception ex)
             {

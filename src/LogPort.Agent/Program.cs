@@ -11,14 +11,17 @@ using LogPort.Internal.Common.Services;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebSockets;
+using WebSocketManager = LogPort.Internal.Common.Services.WebSocketManager;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
+
 builder.Configuration.AddEnvironmentVariables(prefix: "LOGPORT_");
 var logPortConfig = LogPortConfig.LoadFromEnvironment();
 builder.Configuration.GetSection("LOGPORT").Bind(logPortConfig);
 builder.Services.AddSingleton(logPortConfig);
+
 if (logPortConfig.Elastic.Use)
 {
     builder.Services.AddSingleton(ElasticClientFactory.Create(logPortConfig));
@@ -40,6 +43,7 @@ if (logPortConfig.Postgres.Use)
 builder.Services.AddSingleton<LogQueue>();
 builder.Services.AddHostedService<LogBatchProcessor>();
 builder.Services.AddScoped<AnalyticsService>();
+builder.Services.AddSingleton<WebSocketManager>();
 
 builder.Services.AddWebSockets(options =>
 {
