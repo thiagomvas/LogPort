@@ -25,25 +25,31 @@ public sealed class LogPortClient : IDisposable
     private readonly ConcurrentQueue<LogEntry> _messageQueue;
     private readonly CancellationTokenSource _cts;
     private Task? _senderTask;
-    private readonly TimeSpan _maxReconnectDelay = TimeSpan.FromSeconds(30);
-    private readonly TimeSpan _heartbeatTimeout = TimeSpan.FromSeconds(10);
-    private readonly TimeSpan _heartbeatInterval = TimeSpan.FromSeconds(10);
+    private readonly TimeSpan _maxReconnectDelay;
+    private readonly TimeSpan _heartbeatTimeout;
+    private readonly TimeSpan _heartbeatInterval;
 
     
     private const int SendDelayMs = 50;
 
-    private LogPortClient(string serverUrl, Func<IWebSocketClient>? socketFactory = null)
+    public LogPortClient(LogPortConfig config, Func<IWebSocketClient>? socketFactory = null)
     {
-        _serverUri = new Uri(serverUrl);
+        ArgumentNullException.ThrowIfNull(config);
+
+        _serverUri = new Uri(config.AgentUrl);
         _socketFactory = socketFactory ?? (() => new WebSocketClientAdapter());
         _webSocket = _socketFactory();
         _messageQueue = new ConcurrentQueue<LogEntry>();
         _cts = new CancellationTokenSource();
+        
+        _maxReconnectDelay = config.ClientMaxReconnectDelay;
+        _heartbeatInterval = config.ClientHeartbeatInterval;
+        _heartbeatTimeout = config.ClientHeartbeatTimeout;
     }
 
-    public LogPortClient(LogPortConfig config, Func<IWebSocketClient>? socketFactory = null) : this(config.AgentUrl, socketFactory)
+    private LogPortClient(string serverUrl, Func<IWebSocketClient>? socketFactory = null)
+        : this(new LogPortConfig { AgentUrl = serverUrl }, socketFactory)
     {
-        
     }
 
     /// <summary>

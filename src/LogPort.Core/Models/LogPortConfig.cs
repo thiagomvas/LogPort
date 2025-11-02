@@ -8,9 +8,12 @@ public class LogPortConfig
     public PostgresConfig Postgres { get; set; } = new();
     
     public uint Port { get; set; } = 8080;
-    public string AgentUrl { get; set; }
+    public string AgentUrl { get; set; } = "http://localhost:8080";
     public int BatchSize { get; set; } = 100;
     public int FlushIntervalMs { get; set; } = 250;
+    public TimeSpan ClientMaxReconnectDelay { get; set; } = TimeSpan.FromSeconds(30);
+    public TimeSpan ClientHeartbeatInterval { get; set; } = TimeSpan.FromSeconds(10);
+    public TimeSpan ClientHeartbeatTimeout { get; set; } = TimeSpan.FromSeconds(10);
 
     public static LogPortConfig LoadFromEnvironment()
     {
@@ -20,6 +23,10 @@ public class LogPortConfig
         config.AgentUrl = Environment.GetEnvironmentVariable("LOGPORT_AGENT_URL") ?? $"http://localhost:{config.Port}";
         config.BatchSize = GetEnvInt("LOGPORT_BATCH_SIZE", 100);
         config.FlushIntervalMs = GetEnvInt("LOGPORT_FLUSH_INTERVAL_MS", 250);
+        
+        config.ClientMaxReconnectDelay = TimeSpan.FromMilliseconds(GetEnvInt("LOGPORT_CLIENT_MAX_RECONNECT_DELAY_MS", 30000));
+        config.ClientHeartbeatInterval = TimeSpan.FromMilliseconds(GetEnvInt("LOGPORT_CLIENT_HEARTBEAT_INTERVAL_MS", 10000));
+        config.ClientHeartbeatTimeout = TimeSpan.FromMilliseconds(GetEnvInt("LOGPORT_CLIENT_HEARTBEAT_TIMEOUT_MS", 10000));
         
         // Elastic
         config.Elastic.Use = GetEnvBool("LOGPORT_USE_ELASTICSEARCH");
