@@ -64,7 +64,7 @@ public class DockerLogService : BackgroundService
             var logEntry = new LogEntry
             {
                 Timestamp = DateTime.UtcNow,
-                Message = line,
+                Message = SanitizeLogMessage(line),
                 ServiceName = containerId,
                 Level = "INFO",
                 Hostname = Environment.MachineName,
@@ -101,5 +101,17 @@ public class DockerLogService : BackgroundService
             stoppingToken
         );
     }
+    
+    private string SanitizeLogMessage(string message)
+    {
+        if (string.IsNullOrEmpty(message))
+            return message;
+
+        message = message.Replace("\0", string.Empty);
+
+
+        return message;
+    }
+
 
 }
