@@ -42,9 +42,17 @@ public class WebSocketManager
         }
     }
 
-    public async Task BroadcastAsync(LogEntry log)
+    public Task BroadcastAsync(LogEntry log)
     {
-        var message = System.Text.Json.JsonSerializer.Serialize(log);
+        return BroadcastBatchAsync(new[] { log });
+    }
+
+    public async Task BroadcastBatchAsync(IEnumerable<LogEntry> logs)
+    {
+        if (logs == null || !logs.Any())
+            return;
+
+        var message = System.Text.Json.JsonSerializer.Serialize(logs);
         var buffer = System.Text.Encoding.UTF8.GetBytes(message);
         var segment = new ArraySegment<byte>(buffer);
 
@@ -68,7 +76,7 @@ public class WebSocketManager
                 }
             }
         }
-        
     }
+
 
 }

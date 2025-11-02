@@ -37,10 +37,7 @@ public class LogBatchProcessor : BackgroundService
 
             try
             {
-                foreach (var log in batch)
-                {
-                    await _socketManager.BroadcastAsync(log);
-                }
+                await _socketManager.BroadcastBatchAsync(batch);
                 
                 using var scope = _services.CreateScope();
                 var repo = scope.ServiceProvider.GetRequiredService<ILogRepository>();
