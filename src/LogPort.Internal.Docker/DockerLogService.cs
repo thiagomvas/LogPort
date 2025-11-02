@@ -51,7 +51,10 @@ public class DockerLogService : BackgroundService
             Timestamps = true,
             Tail = "0"
         };
-
+        
+        // Get container name, default to id if not found
+        var inspect = await client.Containers.InspectContainerAsync(containerId, stoppingToken);
+        var containerName = inspect.Name?.TrimStart('/') ?? containerId;
         using var logStream = await client.Containers.GetContainerLogsAsync(containerId, parameters, stoppingToken);
         using var reader = new StreamReader(logStream);
 
@@ -65,7 +68,7 @@ public class DockerLogService : BackgroundService
             {
                 Timestamp = DateTime.UtcNow,
                 Message = SanitizeLogMessage(line),
-                ServiceName = containerId,
+                ServiceName = containerName,
                 Level = "INFO",
                 Hostname = Environment.MachineName,
                 Environment = "docker"
