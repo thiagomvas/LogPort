@@ -32,9 +32,10 @@ public sealed class LogPortClient : IDisposable
     
     private const int SendDelayMs = 50;
 
-    public LogPortClient(LogPortConfig config, Func<IWebSocketClient>? socketFactory = null)
+    public LogPortClient(LogPortClientConfig config, Func<IWebSocketClient>? socketFactory = null)
     {
         ArgumentNullException.ThrowIfNull(config);
+        ArgumentNullException.ThrowIfNullOrEmpty(config.AgentUrl);
 
         _serverUri = new Uri(config.AgentUrl);
         _socketFactory = socketFactory ?? (() => new WebSocketClientAdapter());
@@ -48,7 +49,7 @@ public sealed class LogPortClient : IDisposable
     }
 
     private LogPortClient(string serverUrl, Func<IWebSocketClient>? socketFactory = null)
-        : this(new LogPortConfig { AgentUrl = serverUrl }, socketFactory)
+        : this(new LogPortClientConfig() { AgentUrl = serverUrl }, socketFactory)
     {
     }
 

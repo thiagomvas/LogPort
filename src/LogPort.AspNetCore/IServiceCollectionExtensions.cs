@@ -8,9 +8,9 @@ namespace LogPort.AspNetCore;
 
 public static class IServiceCollectionExtensions
 {
-    public static WebApplicationBuilder AddLogPort(this WebApplicationBuilder builder, Action<LogPortConfig>? configure = null)
+    public static WebApplicationBuilder AddLogPort(this WebApplicationBuilder builder, Action<LogPortClientConfig>? configure = null)
     {
-        var config = LogPortConfig.LoadFromEnvironment();
+        var config = LogPortClientConfig.LoadFromEnvironment();
         configure?.Invoke(config);
         builder.Services.AddSingleton(config);
         
