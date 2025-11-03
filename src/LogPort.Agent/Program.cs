@@ -8,6 +8,7 @@ using LogPort.Core.Models;
 using LogPort.Internal.ElasticSearch;
 using LogPort.Data.Postgres;
 using LogPort.Internal.Common.Services;
+using LogPort.Internal.Docker;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebSockets;
@@ -40,6 +41,10 @@ if (logPortConfig.Postgres.Use)
     builder.Services.AddHostedService<PostgresInitializerHostedService>();
 }
 
+if (logPortConfig.Docker.Use)
+{
+    builder.Services.AddHostedService<DockerLogService>();
+}
 builder.Services.AddSingleton<LogQueue>();
 builder.Services.AddHostedService<LogBatchProcessor>();
 builder.Services.AddScoped<AnalyticsService>();
