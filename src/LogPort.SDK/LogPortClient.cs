@@ -89,7 +89,17 @@ public sealed class LogPortClient : IDisposable
             return; // already running
 
         await EnsureSocketConnectedAsync(token).ConfigureAwait(false);
-        _senderTask = Task.Run(() => ProcessQueueAsync(_cts.Token), token);
+        _senderTask = Task.Run(async () =>
+        {
+            try
+            {
+                await ProcessQueueAsync(_cts.Token);
+            }
+            catch (TaskCanceledException)
+            {
+                
+            }
+        }, token);
     }
 
 
