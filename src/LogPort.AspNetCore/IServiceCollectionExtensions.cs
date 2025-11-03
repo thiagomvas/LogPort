@@ -27,7 +27,7 @@ public static class IServiceCollectionExtensions
         var client = new LogPortClient(config);
         
         builder.Services.AddSingleton<LogPortClient>(client);
-        builder.Logging.AddLogPort(client);
+        builder.Logging.AddLogPort(client, config);
         
         return builder;
     }
@@ -73,10 +73,11 @@ public static class IServiceCollectionExtensions
     /// </summary>
     /// <param name="builder">The <see cref="ILoggingBuilder"/> used to configure logging providers.</param>
     /// <param name="client">The <see cref="LogPortClient"/> instance used to send log entries.</param>
+    /// <param name="config">The <see cref="LogPortClientConfig"/> used to configure the client.</param>
     /// <returns>The same <see cref="ILoggingBuilder"/> instance for chaining.</returns>
-    private static ILoggingBuilder AddLogPort(this ILoggingBuilder builder, LogPortClient client)
+    private static ILoggingBuilder AddLogPort(this ILoggingBuilder builder, LogPortClient client, LogPortClientConfig config)
     {
-        builder.AddProvider(new LogPortLoggerProvider(client));
+        builder.AddProvider(new LogPortLoggerProvider(client, config));
         return builder;
     }
 }

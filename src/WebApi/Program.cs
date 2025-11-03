@@ -10,6 +10,7 @@ builder.Logging.AddConsole();
 builder.AddLogPort(options =>
 {
     options.AgentUrl = "ws://localhost:8080/stream";
+    options.ServiceName = "logport-testapi";
 });
 
 var app = builder.Build();

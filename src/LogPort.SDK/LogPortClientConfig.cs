@@ -3,7 +3,7 @@ namespace LogPort.SDK;
 public sealed class LogPortClientConfig
 {
     public string AgentUrl { get; set; }
-
+    public string? ServiceName { get; set; }
     public TimeSpan ClientMaxReconnectDelay { get; set; } = TimeSpan.FromSeconds(30);
 
     public TimeSpan ClientHeartbeatInterval { get; set; } = TimeSpan.FromSeconds(10);
@@ -20,6 +20,8 @@ public sealed class LogPortClientConfig
         {
             config.AgentUrl = agentUrl;
         }
+
+        config.ServiceName = Environment.GetEnvironmentVariable("LOGPORT_SERVICE_NAME");
 
         var maxReconnectDelayStr = Environment.GetEnvironmentVariable("LOGPORT_CLIENT_MAX_RECONNECT_DELAY");
         if (TimeSpan.TryParse(maxReconnectDelayStr, out var maxReconnectDelay))
