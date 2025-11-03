@@ -6,7 +6,8 @@ public class LogPortConfig
 {
     public ElasticConfig Elastic { get; set; } = new();
     public PostgresConfig Postgres { get; set; } = new();
-    
+    public DockerConfig Docker { get; set; } = new();
+
     public uint Port { get; set; } = 8080;
     public string AgentUrl { get; set; } = "http://localhost:8080";
     public int BatchSize { get; set; } = 100;
@@ -23,15 +24,20 @@ public class LogPortConfig
         config.AgentUrl = Environment.GetEnvironmentVariable("LOGPORT_AGENT_URL") ?? $"http://localhost:{config.Port}";
         config.BatchSize = GetEnvInt("LOGPORT_BATCH_SIZE", 100);
         config.FlushIntervalMs = GetEnvInt("LOGPORT_FLUSH_INTERVAL_MS", 250);
-        
-        config.ClientMaxReconnectDelay = TimeSpan.FromMilliseconds(GetEnvInt("LOGPORT_CLIENT_MAX_RECONNECT_DELAY_MS", 30000));
-        config.ClientHeartbeatInterval = TimeSpan.FromMilliseconds(GetEnvInt("LOGPORT_CLIENT_HEARTBEAT_INTERVAL_MS", 10000));
-        config.ClientHeartbeatTimeout = TimeSpan.FromMilliseconds(GetEnvInt("LOGPORT_CLIENT_HEARTBEAT_TIMEOUT_MS", 10000));
-        
+
+        config.ClientMaxReconnectDelay =
+            TimeSpan.FromMilliseconds(GetEnvInt("LOGPORT_CLIENT_MAX_RECONNECT_DELAY_MS", 30000));
+        config.ClientHeartbeatInterval =
+            TimeSpan.FromMilliseconds(GetEnvInt("LOGPORT_CLIENT_HEARTBEAT_INTERVAL_MS", 10000));
+        config.ClientHeartbeatTimeout =
+            TimeSpan.FromMilliseconds(GetEnvInt("LOGPORT_CLIENT_HEARTBEAT_TIMEOUT_MS", 10000));
+
         // Elastic
         config.Elastic.Use = GetEnvBool("LOGPORT_USE_ELASTICSEARCH");
-        config.Elastic.Uri = Environment.GetEnvironmentVariable("LOGPORT_ELASTIC_URI") 
-                             ?? (config.Elastic.Use ? throw new InvalidOperationException("LOGPORT_ELASTIC_URI is required") : null);
+        config.Elastic.Uri = Environment.GetEnvironmentVariable("LOGPORT_ELASTIC_URI")
+                             ?? (config.Elastic.Use
+                                 ? throw new InvalidOperationException("LOGPORT_ELASTIC_URI is required")
+                                 : null);
         config.Elastic.DefaultIndex = Environment.GetEnvironmentVariable("LOGPORT_ELASTIC_DEFAULT_INDEX") ?? "logs";
         config.Elastic.Username = Environment.GetEnvironmentVariable("LOGPORT_ELASTIC_USERNAME");
         config.Elastic.Password = Environment.GetEnvironmentVariable("LOGPORT_ELASTIC_PASSWORD");
@@ -45,6 +51,10 @@ public class LogPortConfig
         config.Postgres.Password = Environment.GetEnvironmentVariable("LOGPORT_POSTGRES_PASSWORD") ?? "postgres";
         config.Postgres.PartitionLength = GetEnvInt("LOGPORT_POSTGRES_PARTITION_LENGTH", 1);
 
+        // Docker
+        config.Docker.Use = GetEnvBool("LOGPORT_USE_DOCKER");
+        config.Docker.SocketPath = Environment.GetEnvironmentVariable("LOGPORT_DOCKER_SOCKET_PATH") ?? "unix:///var/run/docker.sock";
+        config.Docker.ExtractorConfigPath = Environment.GetEnvironmentVariable("LOGPORT_DOCKER_EXTRACTOR_CONFIG_PATH");
         return config;
     }
 
@@ -86,4 +96,12 @@ public class LogPortConfig
 
         public int PartitionLength { get; set; } = 1;
     }
+
+    public class DockerConfig
+    {
+        public bool Use { get; set; } = false;
+        public string SocketPath { get; set; } = "unix:///var/run/docker.sock";
+        public string? ExtractorConfigPath { get; set; }
+    }
+
 }
