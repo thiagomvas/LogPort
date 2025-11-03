@@ -17,7 +17,7 @@ namespace LogPort.SDK;
 /// before sending logs. Call <see cref="FlushAsync"/> to ensure all queued logs are sent before shutdown.
 /// Implements <see cref="IDisposable"/> to clean up WebSocket and cancellation resources.
 /// </remarks>
-public sealed class LogPortClient : IDisposable
+public sealed class LogPortClient : IDisposable, IAsyncDisposable
 {
     private readonly Uri _serverUri;
     private IWebSocketClient _webSocket;
@@ -281,5 +281,20 @@ public sealed class LogPortClient : IDisposable
     }
 
 
+    public async ValueTask DisposeAsync()
+    {
+        await _webSocket.CloseConnectionAsync(WebSocketCloseStatus.NormalClosure, "Client disposed", CancellationToken.None);
+        await CastAndDispose(_cts);
+        if (_senderTask != null) await CastAndDispose(_senderTask);
 
+        return;
+
+        static async ValueTask CastAndDispose(IDisposable resource)
+        {
+            if (resource is IAsyncDisposable resourceAsyncDisposable)
+                await resourceAsyncDisposable.DisposeAsync();
+            else
+                resource.Dispose();
+        }
+    }
 }
