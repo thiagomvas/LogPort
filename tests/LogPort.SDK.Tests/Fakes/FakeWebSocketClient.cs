@@ -36,6 +36,18 @@ public class FakeWebSocketClient : IWebSocketClient
         return Task.CompletedTask;
     }
 
+    public Task CloseConnectionAsync(WebSocketCloseStatus closeStatus, string statusDescription,
+        CancellationToken cancellationToken)
+    {
+        State = WebSocketState.Closed;
+        return Task.CompletedTask;
+    }
+
+    public void CloseConnection(WebSocketCloseStatus closeStatus, string statusDescription)
+    {
+        State = WebSocketState.Closed;
+    }
+
     public void Abort()
     {
         AbortCalled = true;

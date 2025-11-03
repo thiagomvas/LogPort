@@ -219,6 +219,7 @@ public sealed class LogPortClient : IDisposable
     {
         _cts.Cancel();
         _senderTask?.Wait();
+        _webSocket.CloseConnection(WebSocketCloseStatus.NormalClosure, "Client disposed");
         _webSocket.Dispose();
         _cts.Dispose();
     }
