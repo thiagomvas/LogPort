@@ -14,7 +14,7 @@ public static class AnalyticsEndpoints
         .WithName("GetLogHistogram")
         .WithSummary("Retrieves a histogram of log entries over time based on the provided query parameters.");
 
-        app.MapPost("/analytics/count-by-type", GetCountByType);
+        app.MapGet("/analytics/count-by-type", GetCountByType);
     }
 
     private static async Task<IResult> GetHistogram(AnalyticsService service, [AsParameters] LogQueryParameters parameters, [FromQuery] TimeSpan? interval)

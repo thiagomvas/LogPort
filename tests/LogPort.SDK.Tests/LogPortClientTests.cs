@@ -6,7 +6,7 @@ public class LogPortClientTests
     public async Task LogMessage_ShouldSend_LogEntry()
     {
         var fakeWebSocket = new Fakes.FakeWebSocketClient();
-        var client = new LogPortClient(new(), () => fakeWebSocket);
+        var client = new LogPortClient(new() { AgentUrl = "ws://localhost" }, () => fakeWebSocket);
 
         const string logMessage = "Test log message";
         const string logLevel = "INFO";
@@ -33,7 +33,7 @@ public class LogPortClientTests
     public async Task LogEntry_ShouldSend_LogEntry()
     {
         var fakeWebSocket = new Fakes.FakeWebSocketClient();
-        var client = new LogPortClient(new(), () => fakeWebSocket);
+        var client = new LogPortClient(new() { AgentUrl = "ws://localhost" }, () => fakeWebSocket);
 
         var logEntry = new Core.Models.LogEntry
         {
@@ -65,7 +65,7 @@ public class LogPortClientTests
     {
         var fakeWebSocket = new Fakes.FakeWebSocketClient();
         fakeWebSocket.Server.IsOnline = false; 
-        var client = new LogPortClient(new(), () => fakeWebSocket);
+        var client = new LogPortClient(new() { AgentUrl = "ws://localhost" }, () => fakeWebSocket);
 
         const string logMessage = "Test log message while server is offline";
         const string logLevel = "WARN";
@@ -86,7 +86,7 @@ public class LogPortClientTests
     public async Task Logs_ShouldBeSent_AfterReconnection()
     {
         var fakeWebSocket = new Fakes.FakeWebSocketClient();
-        var client = new LogPortClient(new(), () => fakeWebSocket);
+        var client = new LogPortClient(new(){ AgentUrl = "ws://localhost" }, () => fakeWebSocket);
 
         await client.EnsureConnectedAsync();
 
