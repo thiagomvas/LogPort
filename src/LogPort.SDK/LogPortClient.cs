@@ -37,7 +37,8 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
         ArgumentNullException.ThrowIfNull(config);
         ArgumentNullException.ThrowIfNullOrEmpty(config.AgentUrl);
 
-        _serverUri = new Uri(config.AgentUrl);
+        var baseUrl = config.AgentUrl.Trim('/');
+        _serverUri = new Uri($"{baseUrl}/stream");
         _socketFactory = socketFactory ?? (() => new WebSocketClientAdapter());
         _webSocket = _socketFactory();
         _messageQueue = new ConcurrentQueue<LogEntry>();
