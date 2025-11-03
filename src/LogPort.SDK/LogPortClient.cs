@@ -68,7 +68,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     /// <summary>
     /// Creates a <see cref="LogPortClient"/> with a specific server URL.
     /// </summary>
-    /// <param name="serverUrl">The WebSocket URL of the LogPort server (e.g., ws://localhost:5000/logs).</param>
+    /// <param name="serverUrl">The WebSocket URL of the LogPort server (e.g., ws://localhost:8080).</param>
     /// <exception cref="ArgumentException">Thrown if <paramref name="serverUrl"/> is null or empty.</exception>
     public static LogPortClient FromServerUrl(string serverUrl)
     {
