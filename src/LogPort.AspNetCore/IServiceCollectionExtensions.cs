@@ -2,6 +2,7 @@ using LogPort.Core.Models;
 using LogPort.SDK;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace LogPort.AspNetCore;
@@ -18,7 +19,7 @@ public static class IServiceCollectionExtensions
     /// This method only registers the services, they must be initialized by calling either <see cref="UseLogPortAsync"/> or <see cref="UseLogPort"/>.
     /// By default, it'll load the configuration from environment variables before calling the <paramref name="configure"/> action.
     /// </remarks>
-    public static WebApplicationBuilder AddLogPort(this WebApplicationBuilder builder, Action<LogPortClientConfig>? configure = null)
+    public static IHostApplicationBuilder AddLogPort(this IHostApplicationBuilder builder, Action<LogPortClientConfig>? configure = null)
     {
         var config = LogPortClientConfig.LoadFromEnvironment();
         configure?.Invoke(config);
@@ -41,12 +42,15 @@ public static class IServiceCollectionExtensions
     /// <remarks>
     /// This function requires the LogPort services to be registered beforehand. Use this in conjunction with <see cref="AddLogPort"/>.
     /// </remarks>
-    public static async Task<WebApplication> UseLogPortAsync(this WebApplication app, CancellationToken cancellationToken = default)
+    public static async Task<IApplicationBuilder> UseLogPortAsync(this IApplicationBuilder app, CancellationToken cancellationToken = default)
     {
-        var client = app.Services.GetRequiredService<LogPortClient>();
+        var client = app.ApplicationServices.GetRequiredService<LogPortClient>();
         await client.EnsureConnectedAsync(cancellationToken);
+
+        app.UseMiddleware<LogPortHttpRequestMiddleware>();
         
-        app.Lifetime.ApplicationStopping.Register(() =>
+        var lifetime = app.ApplicationServices.GetRequiredService<IHostApplicationLifetime>();
+        lifetime.ApplicationStopping.Register(() =>
         {
             client.FlushAsync().GetAwaiter().GetResult();
             client.Dispose();
@@ -63,7 +67,7 @@ public static class IServiceCollectionExtensions
     /// <remarks>
     /// This function requires the LogPort services to be registered beforehand. Use this in conjunction with <see cref="AddLogPort"/>.
     /// </remarks>
-    public static WebApplication UseLogPort(this WebApplication app)
+    public static IApplicationBuilder UseLogPort(this IApplicationBuilder app)
     {
         return UseLogPortAsync(app).GetAwaiter().GetResult();
     }
