@@ -57,7 +57,7 @@ public class LogPortConfig
         config.Docker.ExtractorConfigPath = Environment.GetEnvironmentVariable("LOGPORT_DOCKER_EXTRACTOR_CONFIG_PATH");
         
         
-        if (!config.Postgres.Use || !config.Elastic.Use)
+        if (!config.Postgres.Use && !config.Elastic.Use)
             throw new InvalidOperationException("At least one storage backend must be enabled.");
         return config;
     }
