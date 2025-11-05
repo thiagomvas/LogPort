@@ -14,11 +14,11 @@ const levelColors: Record<string, string> = {
 
 export const LogRow: React.FC<LogRowProps> = ({ log }) => {
     return (
-        <tr className={`row ${log.level}`}>
-            <td>{new Date(log.timestamp).toLocaleString()}</td>
-            <td style={{ color: levelColors[log.level] || "#000" }}>{log.level}</td>
-            <td>{log.serviceName || "-"}</td>
-            <td>{log.message}</td>
+        <tr className={`row ${log.Level}`}>
+            <td>{new Date(log.Timestamp || "N/A").toLocaleString()}</td>
+            <td style={{ color: "#000" }}>{log.Level}</td>
+            <td>{log.ServiceName || "-"}</td>
+            <td>{log.Message}</td>
         </tr>
     );
 };

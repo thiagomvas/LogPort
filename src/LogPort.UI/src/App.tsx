@@ -1,45 +1,47 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useState, useEffect, useRef } from 'react'
 import './App.css'
 import { LogViewer } from './components/logViewer'
 import type { LogEntry } from './lib/types/logEntry'
 
 function App() {
+  const [logs, setLogs] = useState<LogEntry[]>([])
+  const wsRef = useRef<WebSocket | null>(null)
 
-  const logs: LogEntry[] = [
-    {
-      message: "User login successful",
-      level: "info",
-      timestamp: new Date(),
-      serviceName: "AuthService",
-    },
-    {
-      message: "Database connection error",
-      level: "error",
-      timestamp: new Date(),
-      serviceName: "DatabaseService",
-    },
-    {
-      message: "Payment processed",
-      level: "info",
-      timestamp: new Date(),
-      serviceName: "PaymentService",
-    },
-    {
-      message: "Cache miss for key user_123",
-      level: "debug",
-      timestamp: new Date(),
-      serviceName: "CacheService",
-    },
-  ]
+  useEffect(() => {
+    // Open WebSocket connection
+    wsRef.current = new WebSocket('ws://localhost:8080/api/live-logs')
+
+    wsRef.current.onopen = () => {
+      console.log('WebSocket connected')
+    }
+
+    wsRef.current.onmessage = (event) => {
+      try {
+        const newLogs: LogEntry[] = JSON.parse(event.data)
+
+        setLogs((prevLogs) => [...newLogs, ...prevLogs]) // prepend to current state safely
+      } catch (err) {
+        console.error('Failed to parse log', err)
+      }
+    }
+
+    wsRef.current.onerror = (err) => {
+      console.error('WebSocket error', err)
+    }
+
+    wsRef.current.onclose = () => {
+      console.log('WebSocket disconnected')
+    }
+
+    return () => {
+      wsRef.current?.close()
+    }
+  }, [])
 
   return (
-    <>
-      <div className='fullscreen'>
-        <LogViewer logs={logs} />
-      </div>
-    </>
+    <div className="fullscreen">
+      <LogViewer logs={logs} />
+    </div>
   )
 }
 

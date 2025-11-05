@@ -15,7 +15,7 @@ public static class LogEndpoints
     {
         app.MapPost("api/logs", AddLogAsync);
 
-        app.MapGet("ali/logs", GetLogsAsync);
+        app.MapGet("api/logs", GetLogsAsync);
 
         MapStreamEndpoint(app);
         MapLiveLogsEndpoint(app);
