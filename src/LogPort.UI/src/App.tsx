@@ -30,7 +30,7 @@ function App() {
         setLogs(prev => [...prev, ...newLogs])
         // update lastUpdatedRef to newest log timestamp
         const latest = newLogs.reduce((max, log) => {
-          const logDate = new Date(log.timestamp)
+          const logDate = new Date(log.timestamp || 0)
           return logDate > max ? logDate : max
         }, lastUpdatedRef.current ?? new Date(0))
         lastUpdatedRef.current = latest
