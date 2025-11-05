@@ -12,7 +12,7 @@ public class LogQueryParameters
     public string? ServiceName { get; set; }
     public string? Hostname { get; set; }
     public string? Environment { get; set; }
-    
+    public string? Metadata { get; set; }
     public string? TraceId { get; set; }
     public string? SpanId { get; set; }
     public int? Page { get; set; } = 1;

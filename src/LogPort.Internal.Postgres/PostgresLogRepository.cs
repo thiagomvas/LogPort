@@ -226,6 +226,21 @@ public class PostgresLogRepository : ILogRepository
             }
             idx++;
         }
+
+        if (!string.IsNullOrWhiteSpace(query.Metadata))
+        {
+            var metadataFilter = JsonSerializer.Deserialize<Dictionary<string, object>>(query.Metadata, _jsonOptions);
+            if (metadataFilter != null)
+            {
+                foreach (var kvp in metadataFilter)
+                {
+                    sql.Append($" AND metadata ->> @p{idx} = @p{idx + 1}");
+                    parameters.Add(new NpgsqlParameter($"p{idx}", kvp.Key));
+                    parameters.Add(new NpgsqlParameter($"p{idx + 1}", kvp.Value.ToString() ?? ""));
+                    idx += 2;
+                }
+            }
+        }
     }
 
     private LogEntry MapReader(NpgsqlDataReader reader) =>
