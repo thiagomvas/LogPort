@@ -24,6 +24,7 @@ export interface LogQueryParameters {
     page?: number;
     searchExact?: boolean;
     pageSize?: number;
+    interval?: string;
   }
 
   export function toQueryString(params: LogQueryParameters): string {
@@ -42,6 +43,7 @@ export interface LogQueryParameters {
     if (params.page !== undefined) query.append('page', params.page.toString());
     if (params.searchExact !== undefined) query.append('searchExact', params.searchExact.toString());
     if (params.pageSize !== undefined) query.append('pageSize', params.pageSize.toString());
+    if (params.interval) query.append('interval', params.interval);
   
     return query.toString();
   }

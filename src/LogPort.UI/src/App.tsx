@@ -2,14 +2,17 @@ import { useState, useEffect, useRef } from 'react'
 import { LogViewer } from './components/logViewer'
 import { placeholderLogs, type LogEntry, type LogQueryParameters } from './lib/types/log'
 import { getLogs, normalizeLog } from './lib/services/logs.service'
+import type { LogBucket } from './lib/types/analytics'
+import { getHistogramData } from './lib/services/analytics.service'
+import { HistogramChart } from './components/histogram'
 
 function App() {
   const [logs, setLogs] = useState<LogEntry[]>([])
+  const [histogram, setHistogram] = useState<LogBucket[]>([])
   const [loading, setLoading] = useState(false)
   const [tailing, setTailing] = useState(false)
   const lastUpdatedRef = useRef<Date | null>(null)
   const wsRef = useRef<WebSocket | null>(null)
-
 
   // Initial fetch
   useEffect(() => {
@@ -21,8 +24,6 @@ function App() {
 
   // Fetch logs from backend
   const fetchLogs = async () => {
-    setLogs(placeholderLogs);
-    return;
     setLoading(true)
     try {
       const params: LogQueryParameters = {
@@ -45,6 +46,16 @@ function App() {
         }, lastUpdatedRef.current ?? new Date(0))
         lastUpdatedRef.current = latest
       }
+
+      const histogramParams: LogQueryParameters = {
+        from: new Date(Date.now() - 1000 * 60 * 60 * 2), // last 1 hour
+        to: new Date(),
+        interval: '00:05:00',
+      }
+      const histogramData = await getHistogramData({})
+      console.log(histogramData)
+      setHistogram(histogramData)
+
     } catch (err) {
       console.error('Failed to fetch logs', err)
     } finally {
@@ -98,6 +109,9 @@ function App() {
             </span>
           )}
         </div>
+
+
+        <HistogramChart data={histogram} />
         <LogViewer logs={logs} />
       </div>
     </>
