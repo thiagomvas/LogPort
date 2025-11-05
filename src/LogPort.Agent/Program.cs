@@ -91,6 +91,10 @@ app.MapHealthChecks("/health", new HealthCheckOptions
     }
 });
 app.UseWebSockets();
+
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 app.MapLogEndpoints();
 app.MapAnalyticsEndpoints();
 
