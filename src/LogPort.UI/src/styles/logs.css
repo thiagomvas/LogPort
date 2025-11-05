@@ -1,0 +1,68 @@
+/* logViewer.css */
+
+/* Make table fill the container */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: auto;
+    /* Allows columns to size based on content */
+    font-family: monospace;
+    /* Optional: better for log readability */
+}
+
+/* Header styling */
+th {
+    text-align: left;
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--color-surface-alt);
+    border-right: 1px solid var(--color-surface-alt);
+    border-left: 1px solid var(--color-surface-alt);
+    background-color: var(--color-surface);
+}
+
+/* Cell styling */
+td {
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--color-surface-alt);
+    border-right: 1px solid var(--color-surface-alt);
+    border-left: 1px solid var(--color-surface-alt);
+    white-space: pre;
+    /* Preserve spacing in messages */
+}
+
+/* Make columns shrink to fit content */
+td:not(:last-child),
+th:not(:last-child) {
+    width: 1%;
+    /* Trick to make column shrink to fit content */
+    white-space: nowrap;
+}
+
+/* Message column stretches to fill remaining space */
+td:last-child,
+th:last-child {
+    width: auto;
+    white-space: normal;
+    /* Wrap text if needed */
+}
+
+/* Row colors by log level */
+.error {
+    color: #f87171;
+}
+
+.warn {
+    color: #fbbf24;
+}
+
+.info {
+    color: #3b82f6;
+}
+
+.debug {
+    color: #9ca3af;
+}
+
+tbody tr:nth-child(even) {
+    background-color: var(--color-surface);
+}

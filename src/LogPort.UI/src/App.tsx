@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
-import './App.css'
 import { LogViewer } from './components/logViewer'
-import type { LogEntry, LogQueryParameters } from './lib/types/log'
+import { placeholderLogs, type LogEntry, type LogQueryParameters } from './lib/types/log'
 import { getLogs, normalizeLog } from './lib/services/logs.service'
 
 function App() {
@@ -10,6 +9,7 @@ function App() {
   const [tailing, setTailing] = useState(false)
   const lastUpdatedRef = useRef<Date | null>(null)
   const wsRef = useRef<WebSocket | null>(null)
+
 
   // Initial fetch
   useEffect(() => {
@@ -21,6 +21,8 @@ function App() {
 
   // Fetch logs from backend
   const fetchLogs = async () => {
+    setLogs(placeholderLogs);
+    return;
     setLoading(true)
     try {
       const params: LogQueryParameters = {
@@ -81,22 +83,25 @@ function App() {
   }
 
   return (
-    <div className="fullscreen">
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-        <button onClick={fetchLogs} disabled={loading} style={{ marginRight: '12px' }}>
-          {loading ? 'Loading...' : 'Fetch New Logs'}
-        </button>
-        <button onClick={enableTailing} disabled={tailing}>
-          {tailing ? 'Tailing Enabled' : 'Enable Tailing'}
-        </button>
-        {lastUpdatedRef.current && (
-          <span style={{ marginLeft: '12px' }}>
-            Last updated: {lastUpdatedRef.current.toLocaleString()}
-          </span>
-        )}
+    <>
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+          <button onClick={fetchLogs} disabled={loading} style={{ marginRight: '12px' }}>
+            {loading ? 'Loading...' : 'Fetch New Logs'}
+          </button>
+          <button onClick={enableTailing} disabled={tailing}>
+            {tailing ? 'Tailing Enabled' : 'Enable Tailing'}
+          </button>
+          {lastUpdatedRef.current && (
+            <span style={{ marginLeft: '12px' }}>
+              Last updated: {lastUpdatedRef.current.toLocaleString()}
+            </span>
+          )}
+        </div>
+        <LogViewer logs={logs} />
       </div>
-      <LogViewer logs={logs} />
-    </div>
+    </>
+
   )
 }
 

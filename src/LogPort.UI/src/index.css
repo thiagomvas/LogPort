@@ -5,7 +5,6 @@
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -17,11 +16,49 @@
   --color-info: #3b82f6;
   --color-debug: #6b7280;
 
-  --bg-hover: #f9fafb;
-  --text-main: #111827;
-  --text-secondary: #6b7280;
-  --text-service: #374151;
+  --color-primary: #6366f1;
+  --color-primary-light: #818cf8;
+  --color-primary-dark: #4f46e5;
+
+  --color-secondary: #14b8a6;
+  --color-secondary-light: #2dd4bf;
+  --color-secondary-dark: #0d9488;
+
+  --color-accent: #f472b6;
+  --color-accent-light: #f9a8d4;
+  --color-accent-dark: #db2777;
+
+  --color-background: #111827;
+  --color-surface: #1f2937;
+  --color-surface-alt: #272e3b;
+
+  --text-main: #f9fafb;
+  --text-secondary: #d1d5db;
+  --text-tertiary: #9ca3af;
+  --text-inverse: #111827;
+
+  --bg-hover: #374151;
+  --border-color: #374151;
+
   --font-size-small: 0.85rem;
+
+  --accent-success: #34d399;
+  --accent-warning: #fbbf24;
+  --accent-error: #f87171;
+  --accent-info: #3b82f6;
+
+  /* Shadows */
+  --shadow-small: 0 1px 3px rgba(0, 0, 0, 0.12);
+  --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.15);
+  --shadow-large: 0 10px 15px rgba(0, 0, 0, 0.2);
+
+
+  background-color: var(--color-background);
+}
+
+html,
+body {
+  margin: 10px;
 }
 
 a {
@@ -64,10 +101,8 @@ button:focus-visible {
 .fullscreen {
   height: 100%;
   width: 100%;
-  display: flex;
   flex-direction: column;
   padding: 0;
-  border: 1px solid red;
 }
 
 @media (prefers-color-scheme: light) {
