@@ -33,7 +33,7 @@ function App() {
       if (newLogs && newLogs.length > 0) {
         console.log(`Fetched ${newLogs.length} new logs`)
 
-        setLogs([...newLogs, ...logs]);
+        setLogs(prevLogs => [...newLogs, ...prevLogs])
 
 
         // Update lastUpdatedRef using the latest timestamp
@@ -70,7 +70,8 @@ function App() {
         const newLogs: LogEntry[] = rawLogs.map(normalizeLog).reverse()
 
         console.log(`Received ${newLogs.length} live logs via WebSocket`)
-        setLogs([...newLogs, ...logs]) // prepend to current state safely
+        setLogs(prevLogs => [...newLogs, ...prevLogs])
+
       } catch (err) {
         console.error('Failed to parse log', err)
       }
