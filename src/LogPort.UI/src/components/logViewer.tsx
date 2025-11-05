@@ -35,8 +35,8 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logs }) => {
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                     <thead>
                         <tr>
+                            <th>Severity</th>
                             <th>Timestamp</th>
-                            <th>Level</th>
                             <th>Service</th>
                             <th>Message</th>
                         </tr>
