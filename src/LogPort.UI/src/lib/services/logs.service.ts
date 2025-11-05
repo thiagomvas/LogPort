@@ -8,7 +8,7 @@ export async function getLogs(params: LogQueryParameters): Promise<LogEntry[]> {
     return result.map(normalizeLog);
   }
   
-  function normalizeLog(log: Record<string, any>): LogEntry {
+  export function normalizeLog(log: Record<string, any>): LogEntry {
     return {
       timestamp: log.Timestamp ? new Date(log.Timestamp)
                  : log.timestamp ? new Date(log.timestamp)

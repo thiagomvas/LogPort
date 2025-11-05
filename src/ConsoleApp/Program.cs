@@ -14,7 +14,7 @@ var messages = new[]
     "Timeout while calling external service"
 };
 
-using var client = LogPortClient.FromServerUrl("ws://localhost:8080/stream");
+using var client = LogPortClient.FromServerUrl("ws://localhost:8080/");
 await client.EnsureConnectedAsync();
 
 // Send a log every time a key is pressed
