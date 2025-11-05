@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import type { LogEntry } from "../lib/types/logEntry";
+import type { LogEntry } from "../lib/types/log";
 import { LogRow } from "./logRow";
 
 interface LogViewerProps {
@@ -12,9 +12,9 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logs }) => {
 
     const filteredLogs = logs.filter(
         (log) =>
-            log.Message?.toLowerCase().includes(filter.toLowerCase()) ||
-            log.ServiceName?.toLowerCase().includes(filter.toLowerCase()) ||
-            log.Level?.toLowerCase().includes(filter.toLowerCase())
+            log.message?.toLowerCase().includes(filter.toLowerCase()) ||
+            log.serviceName?.toLowerCase().includes(filter.toLowerCase()) ||
+            log.level?.toLowerCase().includes(filter.toLowerCase())
     );
 
     // Auto-scroll to bottom on new logs
@@ -42,8 +42,8 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logs }) => {
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredLogs.map((log) => (
-                            <LogRow key={(log.Timestamp?.toString() ?? "unknown") + log.ServiceName} log={log} />
+                        {filteredLogs.map((log, index) => (
+                            <LogRow key={(log.timestamp?.toString() ?? "unknown") + index} log={log} />
                         ))}
                     </tbody>
                 </table>
