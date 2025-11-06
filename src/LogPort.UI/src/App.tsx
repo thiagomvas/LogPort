@@ -5,6 +5,7 @@ import { getLogs, normalizeLog } from './lib/services/logs.service'
 import type { LogBucket } from './lib/types/analytics'
 import { getHistogramData } from './lib/services/analytics.service'
 import { HistogramChart } from './components/histogram'
+import './styles/logsPage.css'
 
 function App() {
   const [logs, setLogs] = useState<LogEntry[]>([])
@@ -111,8 +112,10 @@ function App() {
         </div>
 
 
-        <HistogramChart data={histogram} />
-        <LogViewer logs={logs} />
+        <div className='log-container'>
+          <HistogramChart data={histogram} />
+          <LogViewer logs={logs} />
+        </div>
       </div>
     </>
 
