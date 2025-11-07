@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { LogViewer } from './components/logViewer'
-import { placeholderLogs, type LogEntry, type LogQueryParameters } from './lib/types/log'
+import { type LogEntry, type LogQueryParameters } from './lib/types/log'
 import { getLogs, normalizeLog } from './lib/services/logs.service'
 import type { LogBucket } from './lib/types/analytics'
 import { getHistogramData } from './lib/services/analytics.service'
@@ -12,8 +12,18 @@ function App() {
   const [histogram, setHistogram] = useState<LogBucket[]>([])
   const [loading, setLoading] = useState(false)
   const [tailing, setTailing] = useState(false)
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+
   const lastUpdatedRef = useRef<Date | null>(null)
   const wsRef = useRef<WebSocket | null>(null)
+  const loadingRef = useRef(false)        // prevent concurrent fetches
+  const pageRef = useRef(1)               // ✅ track current page synchronously
+
+  // keep pageRef in sync with state
+  useEffect(() => {
+    pageRef.current = page
+  }, [page])
 
   // Initial fetch
   useEffect(() => {
@@ -23,54 +33,74 @@ function App() {
     }
   }, [])
 
-  // Fetch logs from backend
+  // Infinite scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      if (loadingRef.current || !hasMore) return
+
+      const nearBottom =
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 300
+
+      if (nearBottom) {
+        console.log('Reached bottom, fetching next page...')
+        fetchLogs()
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [hasMore])
+
+  // Fetch logs
   const fetchLogs = async () => {
+    if (loadingRef.current) return
+    loadingRef.current = true
     setLoading(true)
+
     try {
+      const currentPage = pageRef.current
       const params: LogQueryParameters = {
-        from: lastUpdatedRef.current ?? undefined,
-        to: new Date(),
-        pageSize: logs.length > 0 ? 99999 : 100,
+        page: currentPage,
+        pageSize: 100,
       }
 
       const newLogs = await getLogs(params)
-      if (newLogs && newLogs.length > 0) {
-        console.log(`Fetched ${newLogs.length} new logs`)
-
-        setLogs(prevLogs => [...newLogs, ...prevLogs])
-
-
-        // Update lastUpdatedRef using the latest timestamp
-        const latest = newLogs.reduce((max, log) => {
-          const ts = log.timestamp ? new Date(log.timestamp) : new Date(0)
-          return ts > max ? ts : max
-        }, lastUpdatedRef.current ?? new Date(0))
-        lastUpdatedRef.current = latest
+      if (!newLogs || newLogs.length === 0) {
+        console.log('No more logs available')
+        setHasMore(false)
+        return
       }
 
-      const histogramParams: LogQueryParameters = {
-        from: new Date(Date.now() - 1000 * 60 * 60 * 2), // last 1 hour
-        to: new Date(),
-        interval: '00:05:00',
-      }
-      const histogramData = await getHistogramData({})
-      console.log(histogramData)
-      setHistogram(histogramData)
+      console.log(`Fetched ${newLogs.length} logs (page ${currentPage})`)
+      setLogs(prev => [...prev, ...newLogs])
+      setPage(prev => prev + 1) // will update pageRef via useEffect
 
+      // Track latest timestamp
+      const latest = newLogs.reduce((max, log) => {
+        const ts = log.timestamp ? new Date(log.timestamp) : new Date(0)
+        return ts > max ? ts : max
+      }, lastUpdatedRef.current ?? new Date(0))
+      lastUpdatedRef.current = latest
+
+      // Refresh histogram occasionally
+      if (currentPage === 1 || currentPage % 3 === 0) {
+        const histogramData = await getHistogramData({})
+        setHistogram(histogramData)
+      }
     } catch (err) {
       console.error('Failed to fetch logs', err)
     } finally {
+      loadingRef.current = false
       setLoading(false)
     }
   }
 
   // Enable WebSocket tailing
   const enableTailing = () => {
-    if (tailing) return // already enabled
+    if (tailing) return
 
-    // Build WebSocket URL from env
     const wsProtocol = import.meta.env.USE_SSL === 'true' ? 'wss' : 'ws'
-    const wsHost = import.meta.env.LOGPORT_AGENT_URL // host:port
+    const wsHost = import.meta.env.LOGPORT_AGENT_URL
     const wsUrl = `${wsProtocol}://${wsHost}/api/live-logs`
 
     wsRef.current = new WebSocket(wsUrl)
@@ -84,8 +114,7 @@ function App() {
         const newLogs: LogEntry[] = rawLogs.map(normalizeLog).reverse()
 
         console.log(`Received ${newLogs.length} live logs via WebSocket`)
-        setLogs(prevLogs => [...newLogs, ...prevLogs])
-
+        setLogs(prev => [...newLogs, ...prev])
       } catch (err) {
         console.error('Failed to parse log', err)
       }
@@ -95,30 +124,27 @@ function App() {
   }
 
   return (
-    <>
-      <div>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-          <button onClick={fetchLogs} disabled={loading} style={{ marginRight: '12px' }}>
-            {loading ? 'Loading...' : 'Fetch New Logs'}
-          </button>
-          <button onClick={enableTailing} disabled={tailing}>
-            {tailing ? 'Tailing Enabled' : 'Enable Tailing'}
-          </button>
-          {lastUpdatedRef.current && (
-            <span style={{ marginLeft: '12px' }}>
-              Last updated: {lastUpdatedRef.current.toLocaleString()}
-            </span>
-          )}
-        </div>
-
-
-        <div className='log-container'>
-          <HistogramChart data={histogram} />
-          <LogViewer logs={logs} />
-        </div>
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+        <button onClick={fetchLogs} disabled={loading} style={{ marginRight: '12px' }}>
+          {loading ? 'Loading...' : 'Fetch New Logs'}
+        </button>
+        <button onClick={enableTailing} disabled={tailing}>
+          {tailing ? 'Tailing Enabled' : 'Enable Tailing'}
+        </button>
+        {lastUpdatedRef.current && (
+          <span style={{ marginLeft: '12px' }}>
+            Last updated: {lastUpdatedRef.current.toLocaleString()}
+          </span>
+        )}
       </div>
-    </>
 
+      <div className="log-container">
+        <HistogramChart data={histogram} />
+        <LogViewer logs={logs} />
+        {loading && <div style={{ textAlign: 'center', margin: '10px' }}>Loading more logs...</div>}
+      </div>
+    </div>
   )
 }
 
