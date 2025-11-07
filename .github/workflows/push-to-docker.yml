@@ -59,8 +59,10 @@ jobs:
           elif [[ "${GITHUB_REF_NAME}" == "master" ]]; then
             echo "IMAGE_TAG=latest" >> $GITHUB_ENV
           else
-            echo "IMAGE_TAG=${{ steps.gitversion.outputs.fullSemVer }}" >> $GITHUB_ENV
+            CLEAN_TAG=$(echo "${{ steps.gitversion.outputs.fullSemVer }}" | cut -d'+' -f1)
+            echo "IMAGE_TAG=$CLEAN_TAG" >> $GITHUB_ENV
           fi
+
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
