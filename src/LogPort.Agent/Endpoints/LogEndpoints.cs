@@ -16,6 +16,7 @@ public static class LogEndpoints
         app.MapPost("api/logs", AddLogAsync);
 
         app.MapGet("api/logs", GetLogsAsync);
+        app.MapGet("api/logs/count", CountLogsAsync);
 
         MapStreamEndpoint(app);
         MapLiveLogsEndpoint(app);
@@ -111,5 +112,12 @@ public static class LogEndpoints
     {
         var logs = await logRepository.GetLogsAsync(parameters);
         return Results.Ok(logs);
+    }
+    private static async Task<IResult> CountLogsAsync(
+        ILogRepository logRepository,
+        [AsParameters] LogQueryParameters parameters)
+    {
+        var count = await logRepository.CountLogsAsync(parameters);
+        return Results.Ok(new { Count = count });
     }
 }
