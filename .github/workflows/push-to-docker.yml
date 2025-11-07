@@ -72,4 +72,5 @@ jobs:
           push: true
           tags: |
             thiagomvas/logport:${{ env.IMAGE_TAG }}
-            thiagomvas/logport:${{ steps.gitversion.outputs.fullSemVer }}
+            thiagomvas/logport:$(echo "${{ steps.gitversion.outputs.fullSemVer }}" | cut -d'+' -f1)
+
