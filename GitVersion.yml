@@ -11,14 +11,12 @@ branches:
     regex: ^dev(elop)?(ment)?$
     tag: nightly
     increment: minor
-    isPreRelease: true
     prevent-increment-of-merged-branch-version: true
 
   cicd/semver:
     regex: ^cicd[/-]semver$
     tag: semver
     increment: patch
-    isPreRelease: true
     prevent-increment-of-merged-branch-version: true
 
 ignore:
