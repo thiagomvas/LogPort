@@ -1,19 +1,28 @@
 mode: ContinuousDeployment
+
 branches:
   master:
-    regex: ^master$
-    increment: patch
+    regex: ^master$|^main$
     tag: ''
+    increment: patch
+    prevent-increment-of-merged-branch-version: true
+
   dev:
     regex: ^dev(elop)?(ment)?$
-    increment: minor
     tag: nightly
-    is-pre-release: true
+    increment: minor
+    isPreRelease: true
+    prevent-increment-of-merged-branch-version: true
+
   cicd/semver:
     regex: ^cicd[/-]semver$
+    tag: semver
     increment: patch
-    tag: semver-test
-    is-pre-release: true
+    isPreRelease: true
+    prevent-increment-of-merged-branch-version: true
+
 ignore:
   sha: []
+
 commit-message-incrementing: Enabled
+merge-message-strategy: MergeMessage
