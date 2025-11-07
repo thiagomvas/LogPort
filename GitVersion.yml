@@ -1,0 +1,19 @@
+mode: ContinuousDeployment
+branches:
+  master:
+    regex: ^master$
+    increment: patch
+    tag: ''
+  dev:
+    regex: ^dev(elop)?(ment)?$
+    increment: minor
+    tag: nightly
+    is-pre-release: true
+  cicd/semver:
+    regex: ^cicd[/-]semver$
+    increment: patch
+    tag: semver-test
+    is-pre-release: true
+ignore:
+  sha: []
+commit-message-incrementing: Enabled
