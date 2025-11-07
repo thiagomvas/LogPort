@@ -63,6 +63,10 @@ jobs:
             echo "IMAGE_TAG=$CLEAN_TAG" >> $GITHUB_ENV
           fi
 
+      - name: Sanitize version for Docker
+        run: |
+          CLEAN_TAG=$(echo "${{ steps.gitversion.outputs.fullSemVer }}" | cut -d'+' -f1)
+          echo "CLEAN_TAG=$CLEAN_TAG" >> $GITHUB_ENV
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -72,5 +76,4 @@ jobs:
           push: true
           tags: |
             thiagomvas/logport:${{ env.IMAGE_TAG }}
-            thiagomvas/logport:$(echo "${{ steps.gitversion.outputs.fullSemVer }}" | cut -d'+' -f1)
-
+            thiagomvas/logport:${{ env.CLEAN_TAG }}
