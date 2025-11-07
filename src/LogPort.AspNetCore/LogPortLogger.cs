@@ -15,13 +15,12 @@ internal class LogPortLogger : ILogger
 
     private readonly string _category;
     private readonly LogPortClient _client;
-    private readonly string? _serviceName;
-
+    private readonly LogPortClientConfig _config;
     public LogPortLogger(string category, LogPortClient client, LogPortClientConfig config)
     {
         _category = category;
         _client = client;
-        _serviceName = config.ServiceName;
+        _config = config;
     }
 
     public IDisposable BeginScope<TState>(TState state) => default!;
@@ -51,9 +50,9 @@ internal class LogPortLogger : ILogger
                 { "EventId", eventId.Id },
                 { "EventName", eventId.Name ?? string.Empty },
             },
-            ServiceName = _serviceName,
-            Environment = environment,
-            Hostname = hostname
+            ServiceName = _config.ServiceName,
+            Environment = _config.Environment,
+            Hostname = _config.Hostname
         };
         if (exception is not null)
         {

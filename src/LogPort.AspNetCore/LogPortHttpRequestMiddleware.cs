@@ -9,11 +9,13 @@ internal sealed class LogPortHttpRequestMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly LogPortClient _client;
+    private readonly LogPortClientConfig _config;
     
-    public LogPortHttpRequestMiddleware(RequestDelegate next, LogPortClient client)
+    public LogPortHttpRequestMiddleware(RequestDelegate next, LogPortClient client, LogPortClientConfig config)
     {
         _next = next;
         _client = client;
+        _config = config;
     }
     
     public async Task InvokeAsync(HttpContext context)
@@ -31,7 +33,10 @@ internal sealed class LogPortHttpRequestMiddleware
                 { "QueryString", request.QueryString.ToString() },
                 { "Headers", request.Headers.ToDictionary(h => h.Key, h => h.Value.ToString()) },
                 { "RemoteIpAddress", context.Connection.RemoteIpAddress?.ToString() ?? "Unknown" }
-            }
+            },
+            ServiceName = _config.ServiceName,
+            Environment = _config.Environment ?? Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production",
+            Hostname = _config.Hostname ?? Environment.MachineName
         };
         
         var bodyStream = new MemoryStream();
