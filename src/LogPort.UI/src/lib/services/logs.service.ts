@@ -1,5 +1,5 @@
 import { baseFetch } from "../api";
-import { toQueryString, type LogEntry, type LogQueryParameters } from "../types/log";
+import { toQueryString, type LogEntry, type LogMetadata, type LogQueryParameters } from "../types/log";
 
 export async function getLogs(params: LogQueryParameters): Promise<LogEntry[]> {
     const queryString = toQueryString(params);
@@ -23,3 +23,7 @@ export async function getLogs(params: LogQueryParameters): Promise<LogEntry[]> {
       spanId: log.SpanId ?? log.spanId,
     };
   }
+
+export function getMetadata(): Promise<LogMetadata> {
+    return baseFetch<LogMetadata>('/api/logs/metadata');
+}

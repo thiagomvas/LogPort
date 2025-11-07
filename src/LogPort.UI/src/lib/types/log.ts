@@ -10,6 +10,19 @@ export interface LogEntry {
     environment?: string;
 }
 
+export interface LogMetadata {
+  logLevels: string[]
+  environments: string[]
+  services: string[]
+  hostnames: string[]
+  logCount: number
+  logCountByLevel: Record<string, number>
+  logCountByService: Record<string, number>
+  logCountByEnvironment: Record<string, number>
+  logCountByHostname: Record<string, number>
+}
+
+
 export interface LogQueryParameters {
     from?: Date;
     to?: Date;

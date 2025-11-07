@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { LogViewer } from './components/logViewer'
-import { type LogEntry, type LogQueryParameters } from './lib/types/log'
-import { getLogs, normalizeLog } from './lib/services/logs.service'
+import { type LogEntry, type LogMetadata, type LogQueryParameters } from './lib/types/log'
+import { getLogs, normalizeLog, getMetadata } from './lib/services/logs.service'
 import type { LogBucket } from './lib/types/analytics'
 import { getHistogramData } from './lib/services/analytics.service'
 import { HistogramChart } from './components/histogram'
@@ -14,6 +14,7 @@ function App() {
   const [tailing, setTailing] = useState(false)
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
+  const [metadata, setMetadata] = useState<LogMetadata | null>(null)
 
   const [queryParams, setQueryParams] = useState<LogQueryParameters>({
     page: 1,
@@ -37,6 +38,7 @@ function App() {
   // Initial fetch
   useEffect(() => {
     fetchLogs()
+    getMetadata().then(setMetadata).catch(err => console.error('Failed to load metadata', err))
     return () => {
       wsRef.current?.close()
     }
@@ -143,40 +145,57 @@ function App() {
   return (
     <div>
       {/* --- Filter Controls --- */}
-      <div className="filter-bar" style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
+      <div
+        className="filter-bar"
+        style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}
+      >
         <input
           type="text"
           placeholder="Search logs..."
           value={queryParams.search || ''}
           onChange={(e) => setQueryParams(prev => ({ ...prev, search: e.target.value }))}
         />
+
         <select
           value={queryParams.level || ''}
           onChange={(e) => setQueryParams(prev => ({ ...prev, level: e.target.value }))}
         >
           <option value="">All Levels</option>
-          <option value="info">Info</option>
-          <option value="warn">Warn</option>
-          <option value="error">Error</option>
+          {metadata?.logLevels?.map((lvl, i) => (
+            <option key={i} value={lvl ?? ''}>{lvl ?? '(null)'}</option>
+          ))}
         </select>
-        <input
-          type="text"
-          placeholder="Service Name"
+
+        <select
           value={queryParams.serviceName || ''}
           onChange={(e) => setQueryParams(prev => ({ ...prev, serviceName: e.target.value }))}
-        />
-        <input
-          type="text"
-          placeholder="Hostname"
+        >
+          <option value="">All Services</option>
+          {metadata?.services?.map((s, i) => (
+            <option key={i} value={s ?? ''}>{s ?? '(null)'}</option>
+          ))}
+        </select>
+
+        <select
           value={queryParams.hostname || ''}
           onChange={(e) => setQueryParams(prev => ({ ...prev, hostname: e.target.value }))}
-        />
-        <input
-          type="text"
-          placeholder="Environment"
+        >
+          <option value="">All Hosts</option>
+          {metadata?.hostnames?.map((h, i) => (
+            <option key={i} value={h ?? ''}>{h ?? '(null)'}</option>
+          ))}
+        </select>
+
+        <select
           value={queryParams.environment || ''}
           onChange={(e) => setQueryParams(prev => ({ ...prev, environment: e.target.value }))}
-        />
+        >
+          <option value="">All Environments</option>
+          {metadata?.environments?.map((env, i) => (
+            <option key={i} value={env ?? ''}>{env ?? '(null)'}</option>
+          ))}
+        </select>
+
         <button onClick={applyFilters} disabled={loading}>
           Apply Filters
         </button>
