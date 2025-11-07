@@ -23,7 +23,7 @@ jobs:
       - name: Install GitVersion
         uses: GitTools/actions/gitversion/setup@v0
         with:
-          versionSpec: '5.x'
+          versionSpec: '5.12.0'
 
       - name: Run GitVersion
         id: gitversion
