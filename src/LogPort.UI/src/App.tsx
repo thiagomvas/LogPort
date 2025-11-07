@@ -15,12 +15,21 @@ function App() {
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
 
+  const [queryParams, setQueryParams] = useState<LogQueryParameters>({
+    page: 1,
+    pageSize: 100,
+    level: '',
+    search: '',
+    serviceName: '',
+    hostname: '',
+    environment: '',
+  })
+
   const lastUpdatedRef = useRef<Date | null>(null)
   const wsRef = useRef<WebSocket | null>(null)
-  const loadingRef = useRef(false)        // prevent concurrent fetches
-  const pageRef = useRef(1)               // ✅ track current page synchronously
+  const loadingRef = useRef(false)
+  const pageRef = useRef(1)
 
-  // keep pageRef in sync with state
   useEffect(() => {
     pageRef.current = page
   }, [page])
@@ -58,10 +67,9 @@ function App() {
     setLoading(true)
 
     try {
-      const currentPage = pageRef.current
       const params: LogQueryParameters = {
-        page: currentPage,
-        pageSize: 100,
+        ...queryParams,
+        page: pageRef.current,
       }
 
       const newLogs = await getLogs(params)
@@ -71,9 +79,9 @@ function App() {
         return
       }
 
-      console.log(`Fetched ${newLogs.length} logs (page ${currentPage})`)
+      console.log(`Fetched ${newLogs.length} logs (page ${pageRef.current})`)
       setLogs(prev => [...prev, ...newLogs])
-      setPage(prev => prev + 1) // will update pageRef via useEffect
+      setPage(prev => prev + 1)
 
       // Track latest timestamp
       const latest = newLogs.reduce((max, log) => {
@@ -83,7 +91,7 @@ function App() {
       lastUpdatedRef.current = latest
 
       // Refresh histogram occasionally
-      if (currentPage === 1 || currentPage % 3 === 0) {
+      if (pageRef.current === 1 || pageRef.current % 3 === 0) {
         const histogramData = await getHistogramData({})
         setHistogram(histogramData)
       }
@@ -93,6 +101,15 @@ function App() {
       loadingRef.current = false
       setLoading(false)
     }
+  }
+
+  // Apply filters
+  const applyFilters = () => {
+    setLogs([])
+    setHasMore(true)
+    setPage(1)
+    pageRef.current = 1
+    fetchLogs()
   }
 
   // Enable WebSocket tailing
@@ -125,6 +142,47 @@ function App() {
 
   return (
     <div>
+      {/* --- Filter Controls --- */}
+      <div className="filter-bar" style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
+        <input
+          type="text"
+          placeholder="Search logs..."
+          value={queryParams.search || ''}
+          onChange={(e) => setQueryParams(prev => ({ ...prev, search: e.target.value }))}
+        />
+        <select
+          value={queryParams.level || ''}
+          onChange={(e) => setQueryParams(prev => ({ ...prev, level: e.target.value }))}
+        >
+          <option value="">All Levels</option>
+          <option value="info">Info</option>
+          <option value="warn">Warn</option>
+          <option value="error">Error</option>
+        </select>
+        <input
+          type="text"
+          placeholder="Service Name"
+          value={queryParams.serviceName || ''}
+          onChange={(e) => setQueryParams(prev => ({ ...prev, serviceName: e.target.value }))}
+        />
+        <input
+          type="text"
+          placeholder="Hostname"
+          value={queryParams.hostname || ''}
+          onChange={(e) => setQueryParams(prev => ({ ...prev, hostname: e.target.value }))}
+        />
+        <input
+          type="text"
+          placeholder="Environment"
+          value={queryParams.environment || ''}
+          onChange={(e) => setQueryParams(prev => ({ ...prev, environment: e.target.value }))}
+        />
+        <button onClick={applyFilters} disabled={loading}>
+          Apply Filters
+        </button>
+      </div>
+
+      {/* --- Control Buttons --- */}
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
         <button onClick={fetchLogs} disabled={loading} style={{ marginRight: '12px' }}>
           {loading ? 'Loading...' : 'Fetch New Logs'}
@@ -139,6 +197,7 @@ function App() {
         )}
       </div>
 
+      {/* --- Main Log Section --- */}
       <div className="log-container">
         <HistogramChart data={histogram} />
         <LogViewer logs={logs} />
