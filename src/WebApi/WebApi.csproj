@@ -4,6 +4,7 @@
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
+        <Version>1.0.0-nightly</Version>
     </PropertyGroup>
 
     <ItemGroup>
@@ -13,5 +14,6 @@
     <ItemGroup>
       <ProjectReference Include="..\LogPort.AspNetCore\LogPort.AspNetCore.csproj" />
     </ItemGroup>
+    
 
 </Project>
