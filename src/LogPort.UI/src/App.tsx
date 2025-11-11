@@ -30,12 +30,16 @@ function App() {
   const wsRef = useRef<WebSocket | null>(null)
   const loadingRef = useRef(false)
   const pageRef = useRef(1)
+  const queryParamsRef = useRef(queryParams)
+
+  useEffect(() => {
+    queryParamsRef.current = queryParams
+  }, [queryParams])
 
   useEffect(() => {
     pageRef.current = page
   }, [page])
 
-  // Initial fetch
   useEffect(() => {
     fetchLogs()
     getMetadata().then(setMetadata).catch(err => console.error('Failed to load metadata', err))
@@ -44,25 +48,19 @@ function App() {
     }
   }, [])
 
-  // Infinite scroll
   useEffect(() => {
     const handleScroll = () => {
       if (loadingRef.current || !hasMore) return
-
-      const nearBottom =
-        window.innerHeight + window.scrollY >= document.body.offsetHeight - 300
-
+      const nearBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 300
       if (nearBottom) {
         console.log('Reached bottom, fetching next page...')
         fetchLogs()
       }
     }
-
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [hasMore])
 
-  // Fetch logs
   const fetchLogs = async () => {
     if (loadingRef.current) return
     loadingRef.current = true
@@ -70,7 +68,7 @@ function App() {
 
     try {
       const params: LogQueryParameters = {
-        ...queryParams,
+        ...queryParamsRef.current,
         page: pageRef.current,
       }
 
@@ -85,14 +83,12 @@ function App() {
       setLogs(prev => [...prev, ...newLogs])
       setPage(prev => prev + 1)
 
-      // Track latest timestamp
       const latest = newLogs.reduce((max, log) => {
         const ts = log.timestamp ? new Date(log.timestamp) : new Date(0)
         return ts > max ? ts : max
       }, lastUpdatedRef.current ?? new Date(0))
       lastUpdatedRef.current = latest
 
-      // Refresh histogram occasionally
       if (pageRef.current === 1 || pageRef.current % 3 === 0) {
         const histogramData = await getHistogramData({})
         setHistogram(histogramData)
@@ -105,7 +101,6 @@ function App() {
     }
   }
 
-  // Apply filters
   const applyFilters = () => {
     setLogs([])
     setHasMore(true)
@@ -114,16 +109,13 @@ function App() {
     fetchLogs()
   }
 
-  // Enable WebSocket tailing
   const enableTailing = () => {
     if (tailing) return
-
     const wsProtocol = import.meta.env.USE_SSL === 'true' ? 'wss' : 'ws'
     const wsHost = import.meta.env.LOGPORT_AGENT_URL
     const wsUrl = `${wsProtocol}://${wsHost}/api/live-logs`
 
     wsRef.current = new WebSocket(wsUrl)
-
     wsRef.current.onopen = () => console.log('WebSocket tailing enabled')
     wsRef.current.onclose = () => console.log('WebSocket disconnected')
     wsRef.current.onerror = (err) => console.error('WebSocket error', err)
@@ -131,7 +123,6 @@ function App() {
       try {
         const rawLogs: any[] = JSON.parse(event.data)
         const newLogs: LogEntry[] = rawLogs.map(normalizeLog).reverse()
-
         console.log(`Received ${newLogs.length} live logs via WebSocket`)
         setLogs(prev => [...newLogs, ...prev])
       } catch (err) {
@@ -144,7 +135,6 @@ function App() {
 
   return (
     <div>
-      {/* --- Filter Controls --- */}
       <div
         className="filter-bar"
         style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}
@@ -201,7 +191,6 @@ function App() {
         </button>
       </div>
 
-      {/* --- Control Buttons --- */}
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
         <button onClick={fetchLogs} disabled={loading} style={{ marginRight: '12px' }}>
           {loading ? 'Loading...' : 'Fetch New Logs'}
@@ -216,7 +205,6 @@ function App() {
         )}
       </div>
 
-      {/* --- Main Log Section --- */}
       <div className="log-container">
         <HistogramChart data={histogram} />
         <LogViewer logs={logs} />
