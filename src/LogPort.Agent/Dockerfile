@@ -4,6 +4,13 @@ WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 
+FROM node:20 AS ui-build
+WORKDIR /src/LogPort.UI
+COPY src/LogPort.UI/package*.json ./
+RUN npm ci --verbose
+COPY src/LogPort.UI .
+RUN npm run build
+
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
@@ -24,4 +31,5 @@ RUN dotnet publish "./LogPort.Agent.csproj" -c $BUILD_CONFIGURATION -o /app/publ
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+COPY --from=ui-build /src/LogPort.UI/dist ./wwwroot
 ENTRYPOINT ["dotnet", "LogPort.Agent.dll"]

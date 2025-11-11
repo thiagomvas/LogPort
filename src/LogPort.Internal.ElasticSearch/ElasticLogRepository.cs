@@ -105,6 +105,11 @@ public class ElasticLogRepository : ILogRepository
         return response.Count;
     }
 
+    public Task<LogMetadata> GetLogMetadataAsync()
+    {
+        throw new NotImplementedException();
+    }
+
     private Func<QueryContainerDescriptor<LogEntry>, QueryContainer> BuildQuery(LogQueryParameters parameters)
     {
         return q =>

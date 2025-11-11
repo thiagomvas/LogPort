@@ -13,9 +13,11 @@ public static class LogEndpoints
 {
     public static void MapLogEndpoints(this WebApplication app)
     {
-        app.MapPost("/logs", AddLogAsync);
+        app.MapPost("api/logs", AddLogAsync);
 
-        app.MapGet("/logs", GetLogsAsync);
+        app.MapGet("api/logs", GetLogsAsync);
+        app.MapGet("api/logs/count", CountLogsAsync);
+        app.MapGet("api/logs/metadata", GetLogMetadataAsync);
 
         MapStreamEndpoint(app);
         MapLiveLogsEndpoint(app);
@@ -23,7 +25,7 @@ public static class LogEndpoints
 
     private static void MapStreamEndpoint(WebApplication app)
     {
-        app.Map("/stream", async context =>
+        app.Map("api/stream", async context =>
         {
             if (!context.WebSockets.IsWebSocketRequest)
             {
@@ -69,7 +71,7 @@ public static class LogEndpoints
 
     private static void MapLiveLogsEndpoint(WebApplication app)
     {
-        app.Map("/live-logs", async context =>
+        app.Map("api/live-logs", async context =>
         {
             if (!context.WebSockets.IsWebSocketRequest)
             {
@@ -102,7 +104,7 @@ public static class LogEndpoints
     private static async Task<IResult> AddLogAsync(ILogRepository logRepository, LogEntry log)
     {
         await logRepository.AddLogAsync(log);
-        return Results.Created($"/logs", log);
+        return Results.Created($"api/logs", log);
     }
 
     private static async Task<IResult> GetLogsAsync(
@@ -111,5 +113,18 @@ public static class LogEndpoints
     {
         var logs = await logRepository.GetLogsAsync(parameters);
         return Results.Ok(logs);
+    }
+    private static async Task<IResult> CountLogsAsync(
+        ILogRepository logRepository,
+        [AsParameters] LogQueryParameters parameters)
+    {
+        var count = await logRepository.CountLogsAsync(parameters);
+        return Results.Ok(new { Count = count });
+    }
+
+    private static async Task<IResult> GetLogMetadataAsync(ILogRepository repository)
+    {
+        var metadata = await repository.GetLogMetadataAsync();
+        return Results.Ok(metadata);
     }
 }

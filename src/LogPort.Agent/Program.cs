@@ -17,7 +17,16 @@ using WebSocketManager = LogPort.Internal.Common.Services.WebSocketManager;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
-
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy
+            .AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
+});
 builder.Configuration.AddEnvironmentVariables(prefix: "LOGPORT_");
 var logPortConfig = LogPortConfig.LoadFromEnvironment();
 builder.Configuration.GetSection("LOGPORT").Bind(logPortConfig);
@@ -59,10 +68,13 @@ builder.Services.AddWebSockets(options =>
 
 var app = builder.Build();
 
+app.UseCors("AllowAll");
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
 
 app.MapHealthChecks("/health", new HealthCheckOptions
 {
@@ -91,6 +103,10 @@ app.MapHealthChecks("/health", new HealthCheckOptions
     }
 });
 app.UseWebSockets();
+
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 app.MapLogEndpoints();
 app.MapAnalyticsEndpoints();
 

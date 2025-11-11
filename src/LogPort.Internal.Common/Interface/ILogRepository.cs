@@ -9,4 +9,5 @@ public interface ILogRepository
     Task<IEnumerable<LogEntry>> GetLogsAsync(LogQueryParameters parameters);
     IAsyncEnumerable<IReadOnlyList<LogEntry>> GetBatchesAsync(LogQueryParameters parameters, int batchSize);
     Task<long> CountLogsAsync(LogQueryParameters parameters);
+    Task<LogMetadata> GetLogMetadataAsync();
 }

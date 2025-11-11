@@ -52,7 +52,8 @@ public class PostgresLogRepository : ILogRepository
                 new NpgsqlParameter($"svc{i}", (object?)log.ServiceName ?? DBNull.Value),
                 new NpgsqlParameter($"lvl{i}", log.Level),
                 new NpgsqlParameter($"msg{i}", log.Message),
-                new NpgsqlParameter($"meta{i}", NpgsqlDbType.Jsonb) { Value = JsonSerializer.Serialize(log.Metadata, _jsonOptions) },
+                new NpgsqlParameter($"meta{i}", NpgsqlDbType.Jsonb)
+                    { Value = JsonSerializer.Serialize(log.Metadata, _jsonOptions) },
                 new NpgsqlParameter($"trace{i}", (object?)log.TraceId ?? DBNull.Value),
                 new NpgsqlParameter($"span{i}", (object?)log.SpanId ?? DBNull.Value),
                 new NpgsqlParameter($"host{i}", (object?)log.Hostname ?? DBNull.Value),
@@ -61,8 +62,9 @@ public class PostgresLogRepository : ILogRepository
             i++;
         }
 
-        var sql = "INSERT INTO logs (timestamp, service_name, level, message, metadata, trace_id, span_id, hostname, environment) VALUES "
-                  + string.Join(", ", sqlValues);
+        var sql =
+            "INSERT INTO logs (timestamp, service_name, level, message, metadata, trace_id, span_id, hostname, environment) VALUES "
+            + string.Join(", ", sqlValues);
 
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
@@ -108,7 +110,7 @@ public class PostgresLogRepository : ILogRepository
         var sqlParams = new List<NpgsqlParameter>();
         BuildFilters(sql, sqlParams, parameters);
 
-        sql.Append(" ORDER BY timestamp ASC"); 
+        sql.Append(" ORDER BY timestamp ASC");
 
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
@@ -149,9 +151,84 @@ public class PostgresLogRepository : ILogRepository
         return (long)await cmd.ExecuteScalarAsync();
     }
 
+public async Task<LogMetadata> GetLogMetadataAsync()
+{
+    const string sql = @"
+WITH
+  lvl_counts AS (
+    SELECT jsonb_object_agg(level, count) AS data
+    FROM (SELECT level, COUNT(*) AS count FROM logs WHERE level IS NOT NULL GROUP BY level) t
+  ),
+  svc_counts AS (
+    SELECT jsonb_object_agg(service_name, count) AS data
+    FROM (SELECT service_name, COUNT(*) AS count FROM logs WHERE service_name IS NOT NULL GROUP BY service_name) t
+  ),
+  env_counts AS (
+    SELECT jsonb_object_agg(environment, count) AS data
+    FROM (SELECT environment, COUNT(*) AS count FROM logs WHERE environment IS NOT NULL GROUP BY environment) t
+  ),
+  host_counts AS (
+    SELECT jsonb_object_agg(hostname, count) AS data
+    FROM (SELECT hostname, COUNT(*) AS count FROM logs WHERE hostname IS NOT NULL GROUP BY hostname) t
+  ),
+  distincts AS (
+    SELECT
+      array_agg(DISTINCT level) AS levels,
+      array_agg(DISTINCT environment) AS environments,
+      array_agg(DISTINCT service_name) AS services,
+      array_agg(DISTINCT hostname) AS hostnames,
+      COUNT(*) AS log_count
+    FROM logs
+  )
+SELECT
+  d.levels,
+  d.environments,
+  d.services,
+  d.hostnames,
+  d.log_count,
+  l.data AS log_count_by_level,
+  s.data AS log_count_by_service,
+  e.data AS log_count_by_environment,
+  h.data AS log_count_by_hostname
+FROM distincts d, lvl_counts l, svc_counts s, env_counts e, host_counts h;
+
+";
+
+    await using var conn = new NpgsqlConnection(_connectionString);
+    await conn.OpenAsync();
+    await using var cmd = new NpgsqlCommand(sql, conn);
+    await using var reader = await cmd.ExecuteReaderAsync();
+
+    if (!await reader.ReadAsync())
+        throw new InvalidOperationException("Failed to read log metadata.");
+
+    return new LogMetadata
+    {
+        LogLevels = reader.IsDBNull(0) ? [] : reader.GetFieldValue<string[]>(0),
+        Environments = reader.IsDBNull(1) ? [] : reader.GetFieldValue<string[]>(1),
+        Services = reader.IsDBNull(2) ? [] : reader.GetFieldValue<string[]>(2),
+        Hostnames = reader.IsDBNull(3) ? [] : reader.GetFieldValue<string[]>(3),
+        LogCount = reader.GetInt64(4),
+        LogCountByLevel = reader.IsDBNull(5)
+            ? new()
+            : JsonSerializer.Deserialize<Dictionary<string, int>>(reader.GetString(5))!,
+        LogCountByService = reader.IsDBNull(6)
+            ? new()
+            : JsonSerializer.Deserialize<Dictionary<string, int>>(reader.GetString(6))!,
+        LogCountByEnvironment = reader.IsDBNull(7)
+            ? new()
+            : JsonSerializer.Deserialize<Dictionary<string, int>>(reader.GetString(7))!,
+        LogCountByHostname = reader.IsDBNull(8)
+            ? new()
+            : JsonSerializer.Deserialize<Dictionary<string, int>>(reader.GetString(8))!
+    };
+}
+
+
     private async Task EnsurePartitionAsync(DateTime timestamp)
     {
-        var startDate = timestamp.Date.AddDays(-((timestamp.Date - DateTime.MinValue.Date).Days % _partitionLengthInDays));
+        var startDate =
+            timestamp.Date.AddDays(-((timestamp.Date - DateTime.MinValue.Date).Days % _partitionLengthInDays));
         var endDate = startDate.AddDays(_partitionLengthInDays);
 
         var partitionName = $"logs_{startDate:yyyy_MM_dd}_{_partitionLengthInDays}d";
@@ -205,6 +282,7 @@ public class PostgresLogRepository : ILogRepository
             parameters.Add(new NpgsqlParameter($"p{idx}", query.From.Value));
             idx++;
         }
+
         if (query.To.HasValue)
         {
             sql.Append($" AND timestamp <= @p{idx}");
@@ -224,6 +302,7 @@ public class PostgresLogRepository : ILogRepository
                 sql.Append($" AND message ILIKE @p{idx}");
                 parameters.Add(new NpgsqlParameter($"p{idx}", $"%{query.Search}%"));
             }
+
             idx++;
         }
 
