@@ -1,62 +1,113 @@
-.log-container {
-    border: 2px solid var(--color-surface-alt);
+.logs-page {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 16px;
+    padding: 16px;
+    color: var(--text-main);
+    background-color: var(--color-background);
+    min-height: 100vh;
 }
 
 .filter-bar {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 12px;
-    align-items: center;
-    justify-content: flex-start;
-}
-
-.filter-bar input[type="text"],
-.filter-bar select {
-    padding: 6px 10px;
-    border-radius: 6px;
-    border: 1px solid var(--border-color);
+    gap: 10px;
     background-color: var(--color-surface);
-    color: var(--text-main);
-    font-size: 14px;
-    outline: none;
-    transition: border-color 0.15s ease, background-color 0.15s ease;
-    min-width: 140px;
+    padding: 12px;
+    border-radius: 10px;
+    box-shadow: var(--shadow-small);
 }
 
-.filter-bar input[type="text"]:focus,
-.filter-bar select:focus {
-    border-color: var(--color-primary-light);
+.filter-bar input,
+.filter-bar select {
     background-color: var(--color-surface-alt);
-}
-
-.filter-bar input[type="text"]:hover,
-.filter-bar select:hover {
-    border-color: var(--color-secondary);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 8px;
+    font-size: 0.9rem;
 }
 
 .filter-bar button {
-    padding: 6px 14px;
+    background-color: var(--color-primary);
+    color: var(--text-inverse);
     border: none;
     border-radius: 6px;
-    background-color: var(--color-primary);
-    color: var(--text-main);
-    font-size: 14px;
+    padding: 8px 14px;
+    font-size: 0.9rem;
+    font-weight: 500;
     cursor: pointer;
+    transition: 0.2s ease;
     box-shadow: var(--shadow-small);
-    transition: background-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
 }
 
-.filter-bar button:hover {
+.filter-bar button:hover:not(:disabled) {
     background-color: var(--color-primary-light);
+}
+
+.controls-bar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+    padding: 14px;
+    background-color: var(--color-surface);
+    border-radius: 10px;
     box-shadow: var(--shadow-medium);
 }
 
-.filter-bar button:disabled {
+.btn {
+    border: none;
+    padding: 10px 18px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-small);
+}
+
+.btn-primary {
+    background-color: var(--color-primary);
+    color: var(--text-inverse);
+}
+
+.btn-primary:hover:not(:disabled) {
+    background-color: var(--color-primary-light);
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background-color: var(--color-secondary-dark);
+    color: var(--text-main);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background-color: var(--color-secondary);
+}
+
+.btn-active {
+    background-color: var(--accent-success);
+    color: var(--text-inverse);
+    font-weight: 600;
+    box-shadow: var(--shadow-medium);
+}
+
+.btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-    background-color: var(--color-surface-alt);
+}
+
+.loading-text {
+    text-align: center;
+    margin: 10px;
+    color: var(--text-tertiary);
+}
+
+.last-updated {
+    display: block;
+    text-align: right;
+    color: var(--text-tertiary);
+    font-size: var(--font-size-small);
+    margin-bottom: 10px;
 }

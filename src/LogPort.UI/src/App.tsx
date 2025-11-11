@@ -52,10 +52,7 @@ function App() {
     const handleScroll = () => {
       if (loadingRef.current || !hasMore) return
       const nearBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 300
-      if (nearBottom) {
-        console.log('Reached bottom, fetching next page...')
-        fetchLogsPage()
-      }
+      if (nearBottom) fetchLogsPage()
     }
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
@@ -74,12 +71,10 @@ function App() {
 
       const newLogs = await getLogs(params)
       if (!newLogs || newLogs.length === 0) {
-        console.log('No more logs available')
         setHasMore(false)
         return
       }
 
-      console.log(`Fetched ${newLogs.length} logs (page ${pageRef.current})`)
       setLogs(prev => [...prev, ...newLogs])
       setPage(prev => prev + 1)
 
@@ -156,7 +151,6 @@ function App() {
       try {
         const rawLogs: any[] = JSON.parse(event.data)
         const newLogs: LogEntry[] = rawLogs.map(normalizeLog).reverse()
-        console.log(`Received ${newLogs.length} live logs via WebSocket`)
         setLogs(prev => [...newLogs, ...prev])
       } catch (err) {
         console.error('Failed to parse log', err)
@@ -167,11 +161,8 @@ function App() {
   }
 
   return (
-    <div>
-      <div
-        className="filter-bar"
-        style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}
-      >
+    <div className="logs-page">
+      <div className="filter-bar">
         <input
           type="text"
           placeholder="Search logs..."
@@ -224,24 +215,29 @@ function App() {
         </button>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-        <button onClick={fetchLatestLogs} disabled={loading} style={{ marginRight: '12px' }}>
-          {loading ? 'Loading...' : 'Fetch New Logs'}
+      <div className="controls-bar">
+        <button className="btn btn-primary" onClick={fetchLatestLogs} disabled={loading}>
+          {loading ? 'Refreshing...' : '↻ Fetch Latest Logs'}
         </button>
-        <button onClick={enableTailing} disabled={tailing}>
-          {tailing ? 'Tailing Enabled' : 'Enable Tailing'}
+
+        <button
+          className={`btn ${tailing ? 'btn-active' : 'btn-secondary'}`}
+          onClick={enableTailing}
+          disabled={tailing}
+        >
+          {tailing ? '🟢 Live Tailing Active' : '▶ Enable Live Tailing'}
         </button>
-        {lastUpdatedRef.current && (
-          <span style={{ marginLeft: '12px' }}>
-            Last updated: {lastUpdatedRef.current.toLocaleString()}
-          </span>
-        )}
       </div>
 
       <div className="log-container">
         <HistogramChart data={histogram} />
+        {lastUpdatedRef.current && (
+          <span className="last-updated">
+            Last updated: {lastUpdatedRef.current.toLocaleString()}
+          </span>
+        )}
         <LogViewer logs={logs} />
-        {loading && <div style={{ textAlign: 'center', margin: '10px' }}>Loading more logs...</div>}
+        {loading && <div className="loading-text">Loading more logs...</div>}
       </div>
     </div>
   )

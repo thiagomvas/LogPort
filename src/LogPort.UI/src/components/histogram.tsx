@@ -58,7 +58,7 @@ export const HistogramChart = ({ data }: HistogramChartProps) => {
             x: {
                 type: 'time' as const,
                 time: {
-                    unit: 'minute' as 'minute',
+                    unit: 'hour' as 'hour',
                     tooltipFormat: 'HH:mm',
                     displayFormats: { hour: 'HH:mm' },
                 },
