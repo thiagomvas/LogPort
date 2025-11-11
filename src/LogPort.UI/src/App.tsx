@@ -41,7 +41,7 @@ function App() {
   }, [page])
 
   useEffect(() => {
-    fetchLogs()
+    fetchLatestLogs()
     getMetadata().then(setMetadata).catch(err => console.error('Failed to load metadata', err))
     return () => {
       wsRef.current?.close()
@@ -54,14 +54,14 @@ function App() {
       const nearBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 300
       if (nearBottom) {
         console.log('Reached bottom, fetching next page...')
-        fetchLogs()
+        fetchLogsPage()
       }
     }
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [hasMore])
 
-  const fetchLogs = async () => {
+  const fetchLogsPage = async () => {
     if (loadingRef.current) return
     loadingRef.current = true
     setLoading(true)
@@ -101,12 +101,45 @@ function App() {
     }
   }
 
+  const fetchLatestLogs = async () => {
+    if (loadingRef.current) return
+    loadingRef.current = true
+    setLoading(true)
+
+    try {
+      const params: LogQueryParameters = {
+        ...queryParamsRef.current,
+        page: 1,
+      }
+
+      const newLogs = await getLogs(params)
+      setLogs(newLogs)
+      setPage(2)
+      pageRef.current = 2
+      setHasMore(true)
+
+      const latest = newLogs.reduce((max, log) => {
+        const ts = log.timestamp ? new Date(log.timestamp) : new Date(0)
+        return ts > max ? ts : max
+      }, lastUpdatedRef.current ?? new Date(0))
+      lastUpdatedRef.current = latest
+
+      const histogramData = await getHistogramData({})
+      setHistogram(histogramData)
+    } catch (err) {
+      console.error('Failed to fetch latest logs', err)
+    } finally {
+      loadingRef.current = false
+      setLoading(false)
+    }
+  }
+
   const applyFilters = () => {
     setLogs([])
     setHasMore(true)
     setPage(1)
     pageRef.current = 1
-    fetchLogs()
+    fetchLatestLogs()
   }
 
   const enableTailing = () => {
@@ -192,7 +225,7 @@ function App() {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-        <button onClick={fetchLogs} disabled={loading} style={{ marginRight: '12px' }}>
+        <button onClick={fetchLatestLogs} disabled={loading} style={{ marginRight: '12px' }}>
           {loading ? 'Loading...' : 'Fetch New Logs'}
         </button>
         <button onClick={enableTailing} disabled={tailing}>
