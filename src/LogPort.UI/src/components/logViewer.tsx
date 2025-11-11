@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import type { LogEntry } from "../lib/types/log";
 import { LogRow } from "./logRow";
 import "../styles/logs.css";
