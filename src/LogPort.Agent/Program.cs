@@ -111,4 +111,5 @@ app.MapLogEndpoints();
 app.MapAnalyticsEndpoints();
 
 
+app.MapFallbackToFile("index.html");
 app.Run($"http://0.0.0.0:{logPortConfig.Port}");
