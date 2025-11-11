@@ -74,5 +74,5 @@ export const HistogramChart = ({ data }: HistogramChartProps) => {
 
     };
 
-    return <Bar data={chartData} options={options} height={100} />;
+    return <Bar data={chartData} options={options} height={50} />;
 };
