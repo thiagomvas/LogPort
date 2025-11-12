@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using LogPort.Core;
 using LogPort.Core.Models;
 
 namespace LogPort.SDK;
@@ -29,6 +30,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     private readonly TimeSpan _heartbeatTimeout;
     private readonly TimeSpan _heartbeatInterval;
 
+    private readonly LogNormalizer _normalizer;
 
     private const int SendDelayMs = 50;
 
@@ -47,6 +49,8 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
         _maxReconnectDelay = config.ClientMaxReconnectDelay;
         _heartbeatInterval = config.ClientHeartbeatInterval;
         _heartbeatTimeout = config.ClientHeartbeatTimeout;
+        
+        _normalizer = new LogNormalizer();
     }
 
     private LogPortClient(string serverUrl, Func<IWebSocketClient>? socketFactory = null)
@@ -156,6 +160,8 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
                     {
                         string json = JsonSerializer.Serialize(entry);
                         var bytes = Encoding.UTF8.GetBytes(json);
+                        
+                        entry.Level = _normalizer.NormalizeLevel(entry.Level);
 
                         await _webSocket.SendAsync(
                             new ArraySegment<byte>(bytes),
