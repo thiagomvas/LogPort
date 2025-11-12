@@ -27,28 +27,29 @@ public static class IServiceCollectionExtensions
         builder.Services.AddSingleton(config);
 
         var normalizer = new LogNormalizer();
-        var client = new LogPortClient(config, normalizer);
-        
-        builder.Services.AddSingleton<LogPortClient>(client);
+
+        builder.Services.AddSingleton<ILogPortLogger>(sp =>
+        {
+            var msLogger = sp.GetRequiredService<ILogger<LogPortClient>>();
+            return new MicrosoftLoggerAdapter<LogPortClient>(msLogger);
+        });
+
+        builder.Services.AddSingleton<LogPortClient>(sp =>
+        {
+            var logPortLogger = sp.GetRequiredService<ILogPortLogger>();
+            return new LogPortClient(config, normalizer, logger: logPortLogger);
+        });
+
         builder.Services.AddSingleton(normalizer);
-        builder.Logging.AddLogPort(client, config);
-        
+        builder.Logging.AddLogPort(builder.Services.BuildServiceProvider().GetRequiredService<LogPortClient>(), config);
+
         return builder;
     }
-    
-    /// <summary>
-    /// Connects the <see cref="LogPortClient"/> asynchronously and ensures proper disposal when the application stops.
-    /// </summary>
-    /// <param name="app">The <see cref="WebApplication"/> instance to configure.</param>
-    /// <param name="cancellationToken">Optional token to cancel the connection process.</param>
-    /// <returns>The same <see cref="WebApplication"/> instance for chaining.</returns>
-    /// <remarks>
-    /// This function requires the LogPort services to be registered beforehand. Use this in conjunction with <see cref="AddLogPort"/>.
-    /// </remarks>
+
     public static async Task<IApplicationBuilder> UseLogPortAsync(this IApplicationBuilder app, CancellationToken cancellationToken = default)
     {
         var client = app.ApplicationServices.GetRequiredService<LogPortClient>();
-        await client.EnsureConnectedAsync(cancellationToken);
+        _ = Task.Run(() => client.EnsureConnectedAsync(cancellationToken)); // non-blocking
 
         app.UseMiddleware<LogPortHttpRequestMiddleware>();
         
@@ -62,26 +63,11 @@ public static class IServiceCollectionExtensions
         return app;
     }
 
-    /// <summary>
-    /// Synchronously initializes and registers shutdown hooks for the <see cref="LogPortClient"/>.
-    /// </summary>
-    /// <param name="app">The <see cref="WebApplication"/> instance to configure.</param>
-    /// <returns>The same <see cref="WebApplication"/> instance for chaining.</returns>
-    /// <remarks>
-    /// This function requires the LogPort services to be registered beforehand. Use this in conjunction with <see cref="AddLogPort"/>.
-    /// </remarks>
     public static IApplicationBuilder UseLogPort(this IApplicationBuilder app)
     {
         return UseLogPortAsync(app).GetAwaiter().GetResult();
     }
 
-    /// <summary>
-    /// Adds a LogPort-based logging provider to the ASP.NET Core logging system.
-    /// </summary>
-    /// <param name="builder">The <see cref="ILoggingBuilder"/> used to configure logging providers.</param>
-    /// <param name="client">The <see cref="LogPortClient"/> instance used to send log entries.</param>
-    /// <param name="config">The <see cref="LogPortClientConfig"/> used to configure the client.</param>
-    /// <returns>The same <see cref="ILoggingBuilder"/> instance for chaining.</returns>
     private static ILoggingBuilder AddLogPort(this ILoggingBuilder builder, LogPortClient client, LogPortClientConfig config)
     {
         builder.AddProvider(new LogPortLoggerProvider(client, config));
