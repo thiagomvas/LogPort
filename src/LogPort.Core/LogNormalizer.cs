@@ -33,24 +33,24 @@ public sealed partial class LogNormalizer
     public string NormalizeLevel(string level)
     {
         if (string.IsNullOrWhiteSpace(level))
-            return "Info";
+            return DefaultLevel;
 
         return _levelMapping.GetOrAdd(level, static key =>
         {
             if (InfoRegex().IsMatch(key))
-                return "Info";
+                return InfoLevel;
             if (WarnRegex().IsMatch(key))
-                return "Warn";
+                return WarningLevel;
             if (ErrorRegex().IsMatch(key))
-                return "Error";
+                return ErrorLevel;
             if (CriticalRegex().IsMatch(key))
-                return "Fatal";
+                return FatalLevel;
             if (DebugRegex().IsMatch(key))
-                return "Debug";
+                return DebugLevel;
             if (TraceRegex().IsMatch(key))
-                return "Trace";
+                return TraceLevel;
 
-            return "Info";
+            return DefaultLevel;
         });
     }
     [GeneratedRegex(@"in(?:fo(?:rm(?:ation|ational)?)?|f)", RegexOptions.Compiled | RegexOptions.IgnoreCase)]

@@ -10,6 +10,7 @@ public class LogNormalizerTests
         var normalizer = new LogNormalizer();
 
         Assert.That(normalizer.NormalizeLevel("info"), Is.EqualTo(LogNormalizer.InfoLevel));
+        Assert.That(normalizer.NormalizeLevel("INFO"), Is.EqualTo(LogNormalizer.InfoLevel));
         Assert.That(normalizer.NormalizeLevel("WARNING"), Is.EqualTo(LogNormalizer.WarningLevel));
         Assert.That(normalizer.NormalizeLevel("Err"), Is.EqualTo(LogNormalizer.ErrorLevel));
         Assert.That(normalizer.NormalizeLevel("fatal"), Is.EqualTo(LogNormalizer.FatalLevel));

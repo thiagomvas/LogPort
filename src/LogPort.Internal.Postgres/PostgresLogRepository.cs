@@ -5,6 +5,7 @@ using NpgsqlTypes;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
+using LogPort.Core;
 using LogPort.Internal.Common.Interface;
 
 namespace LogPort.Data.Postgres;
@@ -14,8 +15,9 @@ public class PostgresLogRepository : ILogRepository
     private readonly string _connectionString;
     private readonly JsonSerializerOptions _jsonOptions;
     private readonly int _partitionLengthInDays;
+    private readonly LogNormalizer _normalizer;
 
-    public PostgresLogRepository(LogPortConfig config, JsonSerializerOptions? jsonOptions = null)
+    public PostgresLogRepository(LogPortConfig config, LogNormalizer normalizer, JsonSerializerOptions? jsonOptions = null)
     {
         _connectionString = config.Postgres.ConnectionString;
         _partitionLengthInDays = config.Postgres.PartitionLength;
@@ -23,6 +25,7 @@ public class PostgresLogRepository : ILogRepository
         {
             TypeInfoResolver = new DefaultJsonTypeInfoResolver()
         };
+        _normalizer = normalizer;
     }
 
     public Task AddLogAsync(LogEntry log) => AddLogsAsync(new[] { log });
@@ -50,7 +53,7 @@ public class PostgresLogRepository : ILogRepository
             {
                 new NpgsqlParameter($"ts{i}", log.Timestamp),
                 new NpgsqlParameter($"svc{i}", (object?)log.ServiceName ?? DBNull.Value),
-                new NpgsqlParameter($"lvl{i}", log.Level),
+                new NpgsqlParameter($"lvl{i}", _normalizer.NormalizeLevel(log.Level)),
                 new NpgsqlParameter($"msg{i}", log.Message),
                 new NpgsqlParameter($"meta{i}", NpgsqlDbType.Jsonb)
                     { Value = JsonSerializer.Serialize(log.Metadata, _jsonOptions) },
