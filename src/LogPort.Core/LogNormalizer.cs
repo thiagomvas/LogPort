@@ -5,17 +5,29 @@ namespace LogPort.Core;
 
 public sealed partial class LogNormalizer
 {
+    public const string DefaultLevel = "Info";
+    public const string InfoLevel = "Info";
+    public const string WarningLevel = "Warn";
+    public const string ErrorLevel = "Error";
+    public const string FatalLevel = "Fatal";
+    public const string DebugLevel = "Debug";
+    public const string TraceLevel = "Trace";
+    
     private readonly ConcurrentDictionary<string, string> _levelMapping = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["trace"] = "Trace",
-        ["debug"] = "Debug",
-        ["info"] = "Info",
-        ["information"] = "Info",
-        ["warn"] = "Warn",
-        ["warning"] = "Warn",
-        ["error"] = "Error",
-        ["fatal"] = "Fatal",
-        ["critical"] = "Fatal"
+        ["trace"] = TraceLevel,
+        ["debug"] = DebugLevel,
+        ["info"] = InfoLevel,
+        ["information"] = InfoLevel,
+        ["warn"] = WarningLevel,
+        ["warning"] = WarningLevel,
+        ["error"] = ErrorLevel,
+        ["err"] = ErrorLevel,
+        ["fail"] = ErrorLevel,
+        ["failure"] = ErrorLevel,
+        ["critical"] = FatalLevel,
+        ["fatal"] = FatalLevel,
+        ["panic"] = FatalLevel
     };
 
     public string NormalizeLevel(string level)
