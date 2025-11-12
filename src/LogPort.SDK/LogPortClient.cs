@@ -37,7 +37,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     public LogPortClient(LogPortClientConfig config, LogNormalizer? normalizer, Func<IWebSocketClient>? socketFactory = null)
     {
         ArgumentNullException.ThrowIfNull(config);
-        ArgumentNullException.ThrowIfNullOrEmpty(config.AgentUrl);
+        ArgumentException.ThrowIfNullOrEmpty(config.AgentUrl);
 
         var baseUrl = config.AgentUrl.Trim('/');
         _serverUri = new Uri($"{baseUrl}/api/stream");

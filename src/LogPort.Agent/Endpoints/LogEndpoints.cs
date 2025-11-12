@@ -25,7 +25,7 @@ public static class LogEndpoints
 
     private static void MapStreamEndpoint(WebApplication app)
     {
-        app.Map("api/stream", async (HttpContext context, LogNormalizer normalizer) =>
+        app.Map("api/stream", async context =>
         {
             if (!context.WebSockets.IsWebSocketRequest)
             {
@@ -37,6 +37,7 @@ public static class LogEndpoints
             var buffer = new byte[8192];
             var logQueue = context.RequestServices.GetRequiredService<LogQueue>();
             var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+            var normalizer = context.RequestServices.GetRequiredService<LogNormalizer>();
 
             while (webSocket.State == System.Net.WebSockets.WebSocketState.Open)
             {

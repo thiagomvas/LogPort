@@ -58,6 +58,7 @@ builder.Services.AddSingleton<LogQueue>();
 builder.Services.AddHostedService<LogBatchProcessor>();
 builder.Services.AddScoped<AnalyticsService>();
 builder.Services.AddSingleton<WebSocketManager>();
+builder.Services.AddSingleton<LogNormalizer>();
 
 builder.Services.AddWebSockets(options =>
 {

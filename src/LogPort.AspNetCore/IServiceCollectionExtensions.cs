@@ -1,3 +1,4 @@
+using LogPort.Core;
 using LogPort.Core.Models;
 using LogPort.SDK;
 using Microsoft.AspNetCore.Builder;
@@ -24,10 +25,12 @@ public static class IServiceCollectionExtensions
         var config = LogPortClientConfig.LoadFromEnvironment();
         configure?.Invoke(config);
         builder.Services.AddSingleton(config);
-        
-        var client = new LogPortClient(config);
+
+        var normalizer = new LogNormalizer();
+        var client = new LogPortClient(config, normalizer);
         
         builder.Services.AddSingleton<LogPortClient>(client);
+        builder.Services.AddSingleton(normalizer);
         builder.Logging.AddLogPort(client, config);
         
         return builder;
