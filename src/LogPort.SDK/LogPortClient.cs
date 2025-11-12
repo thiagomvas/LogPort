@@ -29,12 +29,18 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     private readonly TimeSpan _maxReconnectDelay;
     private readonly TimeSpan _heartbeatTimeout;
     private readonly TimeSpan _heartbeatInterval;
+    private readonly ILogPortLogger? _logger;
 
     private readonly LogNormalizer _normalizer;
 
     private const int SendDelayMs = 50;
     
-    public LogPortClient(LogPortClientConfig config, LogNormalizer? normalizer, Func<IWebSocketClient>? socketFactory = null)
+    public LogPortClient(
+        LogPortClientConfig config,
+        LogNormalizer? normalizer = null,
+        Func<IWebSocketClient>? socketFactory = null,
+        ILogPortLogger? logger = null)
+
     {
         ArgumentNullException.ThrowIfNull(config);
         ArgumentException.ThrowIfNullOrEmpty(config.AgentUrl);
@@ -51,6 +57,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
         _heartbeatTimeout = config.ClientHeartbeatTimeout;
         
         _normalizer = normalizer ?? new LogNormalizer();
+        _logger = logger;
     }
 
     public LogPortClient(LogPortClientConfig config, Func<IWebSocketClient>? socketFactory = null)
@@ -292,13 +299,17 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
                 _webSocket = _socketFactory?.Invoke();
                 try
                 {
+                    _logger?.Debug("Attempting WebSocket connection...");
                     await _webSocket.ConnectAsync(_serverUri, token).ConfigureAwait(false);
+                    _logger?.Info("Connected to LogPort Agent");
                     return;
                 }
                 catch (Exception ex)
                 {
+                    _logger?.Warn($"Connection failed, retrying: {ex.Message}");
                     await Task.Delay(delay + TimeSpan.FromMilliseconds(random.Next(0, 500)), token);
                     delay = TimeSpan.FromSeconds(Math.Min(delay.TotalSeconds * 2, _maxReconnectDelay.TotalSeconds));
+                    
                 }
             } while (_webSocket.State != WebSocketState.Open && !token.IsCancellationRequested);
         }
