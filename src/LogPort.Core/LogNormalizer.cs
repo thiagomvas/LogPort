@@ -41,22 +41,22 @@ public sealed partial class LogNormalizer
             return "Info";
         });
     }
-
-    [GeneratedRegex(@"\b(information|info|informational)\b", RegexOptions.Compiled | RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"in(?:fo(?:rm(?:ation|ational)?)?|f)", RegexOptions.Compiled | RegexOptions.IgnoreCase)]
     private static partial Regex InfoRegex();
 
-    [GeneratedRegex(@"\b(warning|warn)\b", RegexOptions.Compiled | RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"warn(?:ing|g)?", RegexOptions.Compiled | RegexOptions.IgnoreCase)]
     private static partial Regex WarnRegex();
 
-    [GeneratedRegex(@"\b(error|err)\b", RegexOptions.Compiled | RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"err(?:or)?|fail(?:ed|ure)?", RegexOptions.Compiled | RegexOptions.IgnoreCase)]
     private static partial Regex ErrorRegex();
 
-    [GeneratedRegex(@"\b(fatal|critical|crit)\b", RegexOptions.Compiled | RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"crit(?:ical)?|fatal|panic", RegexOptions.Compiled | RegexOptions.IgnoreCase)]
     private static partial Regex CriticalRegex();
 
-    [GeneratedRegex(@"\b(debug|dbg)\b", RegexOptions.Compiled | RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"deb(?:ug|g)?|dbg", RegexOptions.Compiled | RegexOptions.IgnoreCase)]
     private static partial Regex DebugRegex();
 
-    [GeneratedRegex(@"\b(trace|trc)\b", RegexOptions.Compiled | RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"tr(?:ace|c|ce)?|verb(?:ose)?", RegexOptions.Compiled | RegexOptions.IgnoreCase)]
     private static partial Regex TraceRegex();
+
 }
