@@ -13,6 +13,7 @@ public class DockerLogService : BackgroundService
     private readonly ILogger<DockerLogService>? _logger;
     private readonly LogQueue _logQueue;
     private readonly string _socketPath = "unix:///var/run/docker.sock";
+    private readonly LogPortConfig _logPortConfig;
 
     private readonly List<DockerExtractorConfig> _extractorConfigs = new();
 
@@ -21,7 +22,8 @@ public class DockerLogService : BackgroundService
         _logger = logger;
         _logQueue = logQueue;
         _socketPath = config.Docker.SocketPath;
-        
+        _logPortConfig = config;
+
         if (!string.IsNullOrWhiteSpace(config.Docker.ExtractorConfigPath))
         {
             try
@@ -45,15 +47,26 @@ public class DockerLogService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        if (_logPortConfig.Docker.WatchAllContainers)
+            _logger?.LogInformation("Initializing Docker log service, watching all containers.");
+        else
+            _logger?.LogInformation("Initializing Docker log service, watching containers with label com.logport.monitor=true.");
+        
+        
+        
         var client = new DockerClientConfiguration(new Uri(_socketPath)).CreateClient();
 
         var containers = await client.Containers.ListContainersAsync(new ContainersListParameters
         {
-            Filters = new Dictionary<string, IDictionary<string, bool>>
-            {
-                { "label", new Dictionary<string, bool> { { "com.logport.monitor=true", true } } }
-            }
+            All = false,
+            Filters = _logPortConfig.Docker.WatchAllContainers
+                ? new Dictionary<string, IDictionary<string, bool>>() // include all running containers
+                : new Dictionary<string, IDictionary<string, bool>>
+                {
+                    { "label", new Dictionary<string, bool> { { "com.logport.monitor=true", true } } }
+                }
         });
+
 
         foreach (var container in containers)
         {
@@ -64,6 +77,12 @@ public class DockerLogService : BackgroundService
 
         _ = Task.Run(() => WatchForNewContainersAsync(client, stoppingToken), stoppingToken);
 
+        _logger?.LogInformation(
+            "Docker log service initialized, watching {ContainerCount} existing containers.",
+            containers.Count
+        );
+
+        
         await Task.Delay(Timeout.Infinite, stoppingToken);
     }
 
@@ -147,7 +166,7 @@ public class DockerLogService : BackgroundService
                                 if (DateTime.TryParse(
                                         tsProp.GetString(),
                                         null,
-                                        System.Globalization.DateTimeStyles.AdjustToUniversal | 
+                                        System.Globalization.DateTimeStyles.AdjustToUniversal |
                                         System.Globalization.DateTimeStyles.AssumeUniversal,
                                         out var ts))
                                 {
@@ -186,13 +205,19 @@ public class DockerLogService : BackgroundService
                     try
                     {
                         var inspect = await client.Containers.InspectContainerAsync(message.ID, stoppingToken);
-                        if (inspect.Config?.Labels?.TryGetValue("com.logport.monitor", out var val) == true &&
-                            val == "true")
+                        var shouldWatch = _logPortConfig.Docker.WatchAllContainers;
+
+                        if (!shouldWatch)
+                        {
+                            shouldWatch = inspect.Config?.Labels?.TryGetValue("com.logport.monitor", out var val) == true &&
+                                          val == "true";
+                        }
+
+                        if (shouldWatch)
                         {
                             _logger?.LogInformation("New container detected: {ContainerId} ({Name})",
                                 inspect.ID, inspect.Name);
-                            _ = Task.Run(() => StreamContainerLogsAsync(client, inspect.ID, stoppingToken),
-                                stoppingToken);
+                            _ = Task.Run(() => StreamContainerLogsAsync(client, inspect.ID, stoppingToken), stoppingToken);
                         }
                     }
                     catch (Exception ex)
@@ -200,6 +225,7 @@ public class DockerLogService : BackgroundService
                         _logger?.LogError(ex, "Error inspecting container {ContainerId}", message.ID);
                     }
                 }
+
             }),
             stoppingToken
         );

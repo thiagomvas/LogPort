@@ -55,7 +55,7 @@ public class LogPortConfig
         config.Docker.Use = GetEnvBool("LOGPORT_USE_DOCKER");
         config.Docker.SocketPath = Environment.GetEnvironmentVariable("LOGPORT_DOCKER_SOCKET_PATH") ?? "unix:///var/run/docker.sock";
         config.Docker.ExtractorConfigPath = Environment.GetEnvironmentVariable("LOGPORT_DOCKER_EXTRACTOR_CONFIG_PATH");
-        
+        config.Docker.WatchAllContainers = GetEnvBool("LOGPORT_DOCKER_WATCH_ALL");
         
         if (!config.Postgres.Use && !config.Elastic.Use)
             throw new InvalidOperationException("At least one storage backend must be enabled.");
@@ -106,6 +106,7 @@ public class LogPortConfig
         public bool Use { get; set; } = false;
         public string SocketPath { get; set; } = "unix:///var/run/docker.sock";
         public string? ExtractorConfigPath { get; set; }
+        public bool WatchAllContainers { get; set; } = false;
     }
 
 }
