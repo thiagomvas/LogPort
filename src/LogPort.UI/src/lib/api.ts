@@ -1,6 +1,8 @@
 const useSsl = import.meta.env.LOGPORT_USESSL === 'true';
-const API_BASE_URL = `${useSsl ? 'https' : 'http'}://${import.meta.env.LOGPORT_AGENT_URL}`;
-
+const agentUrl = import.meta.env.LOGPORT_AGENT_URL || '';
+const API_BASE_URL = agentUrl
+  ? `${useSsl ? 'https' : 'http'}://${agentUrl}`
+  : `${window.location.origin}`;
 
 export async function baseFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
