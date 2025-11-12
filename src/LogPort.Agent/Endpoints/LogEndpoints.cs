@@ -25,7 +25,7 @@ public static class LogEndpoints
 
     private static void MapStreamEndpoint(WebApplication app)
     {
-        app.Map("api/stream", async context =>
+        app.Map("api/stream", async (HttpContext context, LogNormalizer normalizer) =>
         {
             if (!context.WebSockets.IsWebSocketRequest)
             {
@@ -58,6 +58,7 @@ public static class LogEndpoints
                     var logEntry = JsonSerializer.Deserialize<LogEntry>(jsonMessage);
                     if (logEntry != null)
                     {
+                        logEntry.Level = normalizer.NormalizeLevel(logEntry.Level);
                         logQueue.Enqueue(logEntry);
                     }
                 }

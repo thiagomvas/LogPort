@@ -33,8 +33,8 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     private readonly LogNormalizer _normalizer;
 
     private const int SendDelayMs = 50;
-
-    public LogPortClient(LogPortClientConfig config, Func<IWebSocketClient>? socketFactory = null)
+    
+    public LogPortClient(LogPortClientConfig config, LogNormalizer? normalizer, Func<IWebSocketClient>? socketFactory = null)
     {
         ArgumentNullException.ThrowIfNull(config);
         ArgumentNullException.ThrowIfNullOrEmpty(config.AgentUrl);
@@ -50,11 +50,17 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
         _heartbeatInterval = config.ClientHeartbeatInterval;
         _heartbeatTimeout = config.ClientHeartbeatTimeout;
         
-        _normalizer = new LogNormalizer();
+        _normalizer = normalizer ?? new LogNormalizer();
     }
 
+    public LogPortClient(LogPortClientConfig config, Func<IWebSocketClient>? socketFactory = null)
+        : this(config, null, socketFactory)
+    {
+        
+    }
+    
     private LogPortClient(string serverUrl, Func<IWebSocketClient>? socketFactory = null)
-        : this(new LogPortClientConfig() { AgentUrl = serverUrl }, socketFactory)
+        : this(new LogPortClientConfig() { AgentUrl = serverUrl }, null, socketFactory)
     {
     }
 
