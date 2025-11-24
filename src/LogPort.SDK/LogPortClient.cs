@@ -128,6 +128,13 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     public void Log(LogEntry entry)
     {
         if (entry is null) throw new ArgumentNullException(nameof(entry));
+
+        if (string.IsNullOrWhiteSpace(entry.TraceId))
+            entry.TraceId = TraceContext.TraceId;
+        
+        if (string.IsNullOrWhiteSpace(entry.SpanId))
+            entry.SpanId = TraceContext.SpanId;
+        
         _messageQueue.Enqueue(entry);
     }
 
