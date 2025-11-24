@@ -7,6 +7,7 @@ public class LogPortConfig
     public ElasticConfig Elastic { get; set; } = new();
     public PostgresConfig Postgres { get; set; } = new();
     public DockerConfig Docker { get; set; } = new();
+    public CacheConfig Cache { get; set; } = new();
 
     public uint Port { get; set; } = 8080;
     public string AgentUrl { get; set; } = "http://localhost:8080";
@@ -107,6 +108,15 @@ public class LogPortConfig
         public string SocketPath { get; set; } = "unix:///var/run/docker.sock";
         public string? ExtractorConfigPath { get; set; }
         public bool WatchAllContainers { get; set; } = false;
+    }
+
+    public class CacheConfig
+    {
+        public bool UseRedis { get; set; } = false;
+        public string? RedisConnectionString { get; set; } 
+        public TimeSpan DefaultExpiration { get; set; } = TimeSpan.FromMinutes(10);
+        
+        
     }
 
 }

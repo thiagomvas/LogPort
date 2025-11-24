@@ -54,11 +54,24 @@ if (logPortConfig.Docker.Use)
 {
     builder.Services.AddHostedService<DockerLogService>();
 }
+
+if (logPortConfig.Cache.UseRedis)
+{
+    
+}
+else
+{
+    builder.Services.AddMemoryCache();
+    builder.Services.AddScoped<ICache, InMemoryCacheAdapter>();
+}
+
 builder.Services.AddSingleton<LogQueue>();
 builder.Services.AddHostedService<LogBatchProcessor>();
 builder.Services.AddScoped<AnalyticsService>();
 builder.Services.AddSingleton<WebSocketManager>();
 builder.Services.AddSingleton<LogNormalizer>();
+builder.Services.AddScoped<LogService>();
+
 
 builder.Services.AddWebSockets(options =>
 {
