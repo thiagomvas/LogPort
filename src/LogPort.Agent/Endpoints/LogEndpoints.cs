@@ -103,28 +103,28 @@ public static class LogEndpoints
     }
 
 // Add a new log
-    private static async Task<IResult> AddLogAsync(ILogRepository logRepository, LogEntry log)
+    private static async Task<IResult> AddLogAsync(LogService logRepository, LogEntry log)
     {
         await logRepository.AddLogAsync(log);
         return Results.Created($"api/logs", log);
     }
 
     private static async Task<IResult> GetLogsAsync(
-        ILogRepository logRepository,
+        LogService logRepository,
         [AsParameters] LogQueryParameters parameters)
     {
         var logs = await logRepository.GetLogsAsync(parameters);
         return Results.Ok(logs);
     }
     private static async Task<IResult> CountLogsAsync(
-        ILogRepository logRepository,
+        LogService logRepository,
         [AsParameters] LogQueryParameters parameters)
     {
         var count = await logRepository.CountLogsAsync(parameters);
         return Results.Ok(new { Count = count });
     }
 
-    private static async Task<IResult> GetLogMetadataAsync(ILogRepository repository)
+    private static async Task<IResult> GetLogMetadataAsync(LogService repository)
     {
         var metadata = await repository.GetLogMetadataAsync();
         return Results.Ok(metadata);
