@@ -3,7 +3,7 @@ using LogPort.Agent.Endpoints;
 using LogPort.Agent.HealthChecks;
 using LogPort.Agent.Services;
 using LogPort.Core;
-using LogPort.Internal.Common.Interface;
+using LogPort.Internal.Abstractions;
 using LogPort.Core.Models;
 using LogPort.Internal.ElasticSearch;
 using LogPort.Data.Postgres;
