@@ -14,11 +14,33 @@ public sealed class WebSocketClientAdapter : IWebSocketClient
     public Task SendAsync(ArraySegment<byte> buffer, WebSocketMessageType messageType, bool endOfMessage, CancellationToken cancellationToken)
         => _socket.SendAsync(buffer, messageType, endOfMessage, cancellationToken);
 
-    public Task CloseConnectionAsync(WebSocketCloseStatus closeStatus, string statusDescription,
+    public async Task CloseConnectionAsync(
+        WebSocketCloseStatus closeStatus,
+        string statusDescription,
         CancellationToken cancellationToken)
     {
-        return _socket.CloseAsync(closeStatus, statusDescription, cancellationToken);
+        try
+        {
+            if (_socket.State is WebSocketState.Open or WebSocketState.CloseReceived)
+            {
+                await _socket.CloseAsync(closeStatus, statusDescription, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // normal during shutdown 
+        }
+        catch (WebSocketException)
+        {
+            // socket is already closed / aborted 
+        }
+        catch (ObjectDisposedException)
+        {
+            // already disposed 
+        }
     }
+
 
     public void CloseConnection(WebSocketCloseStatus closeStatus, string statusDescription)
     {
