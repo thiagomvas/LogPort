@@ -1,22 +1,29 @@
 using LogPort.Core.Models;
 using LogPort.SDK;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace LogPort.AspNetCore;
 
-
 public class LogPortLoggerProvider : ILoggerProvider
 {
-    private readonly LogPortClient _client;
+    private readonly IServiceProvider _sp;
     private readonly LogPortClientConfig _config;
+    private LogPortClient? _client;
 
-    public LogPortLoggerProvider(LogPortClient client, LogPortClientConfig config)
+    public LogPortLoggerProvider(IServiceProvider sp, LogPortClientConfig config)
     {
-        _client = client ?? throw new ArgumentNullException(nameof(client));
-        _config = config ?? throw new ArgumentNullException(nameof(config));
+        _sp = sp;
+        _config = config;
     }
 
-    public ILogger CreateLogger(string categoryName) => new LogPortLogger(categoryName, _client, _config);
+    private LogPortClient GetClient()
+    {
+        return _client ??= _sp.GetRequiredService<LogPortClient>();
+    }
+
+    public ILogger CreateLogger(string categoryName)
+        => new LogPortLogger(categoryName, GetClient, _config);
 
     public void Dispose() { }
 }

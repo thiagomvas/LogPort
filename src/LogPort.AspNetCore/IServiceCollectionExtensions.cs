@@ -34,14 +34,18 @@ public static class IServiceCollectionExtensions
             return new MicrosoftLoggerAdapter<LogPortClient>(msLogger);
         });
 
+        
+        
+
         builder.Services.AddSingleton<LogPortClient>(sp =>
         {
             var logPortLogger = sp.GetRequiredService<ILogPortLogger>();
             return new LogPortClient(config, normalizer, logger: logPortLogger);
         });
-
         builder.Services.AddSingleton(normalizer);
-        builder.Logging.AddLogPort(builder.Services.BuildServiceProvider().GetRequiredService<LogPortClient>(), config);
+        builder.Services.AddSingleton<ILoggerProvider>(sp =>
+            new LogPortLoggerProvider(sp, config));
+
 
         return builder;
     }
@@ -66,11 +70,5 @@ public static class IServiceCollectionExtensions
     public static IApplicationBuilder UseLogPort(this IApplicationBuilder app)
     {
         return UseLogPortAsync(app).GetAwaiter().GetResult();
-    }
-
-    private static ILoggingBuilder AddLogPort(this ILoggingBuilder builder, LogPortClient client, LogPortClientConfig config)
-    {
-        builder.AddProvider(new LogPortLoggerProvider(client, config));
-        return builder;
     }
 }
