@@ -45,6 +45,17 @@ internal class LogPortLogger : ILogger
         if (exception != null)
             entry.Metadata["Exception"] = exception.ToString();
 
+        if (state is IReadOnlyList<KeyValuePair<string, object>> stateProperties)
+        {
+            foreach (var kvp in stateProperties)
+            {
+                if (kvp.Key != "{OriginalFormat}")
+                {
+                    entry.Metadata[kvp.Key] = kvp.Value?.ToString() ?? string.Empty;
+                }
+            }
+        }
+        
         client.Log(entry);
     }
 }
