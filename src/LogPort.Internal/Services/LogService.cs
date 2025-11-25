@@ -25,39 +25,55 @@ public class LogService
     
     public async Task<IEnumerable<LogEntry>> GetLogsAsync(LogQueryParameters parameters)
     {
-        if (await _cache.TryGetAsync<IEnumerable<LogEntry>>($"{CacheKeys.LogPrefix}{parameters.GetCacheKey()}", out var cachedLogs) 
-            && cachedLogs is not null)
+        var key = $"{CacheKeys.LogPrefix}{parameters.GetCacheKey()}";
+
+        var cachedLogs = await _cache.GetAsync<IEnumerable<LogEntry>>(key);
+        if (cachedLogs is not null)
         {
-            _logger?.LogDebug("Getting logs from cache with key: {CacheKey}", $"{CacheKeys.LogPrefix}{parameters.GetCacheKey()}");
+            _logger?.LogDebug("Getting logs from cache with key: {CacheKey}", key);
             return cachedLogs;
         }
+
         var result = await _repository.GetLogsAsync(parameters);
-        await _cache.SetAsync($"{CacheKeys.LogPrefix}{parameters.GetCacheKey()}", result, _config.Cache.DefaultExpiration);
+
+        await _cache.SetAsync(key, result, _config.Cache.DefaultExpiration);
+
         return result;
     }
     
     public async Task<long> CountLogsAsync(LogQueryParameters parameters)
     {
-        if (await _cache.TryGetAsync<long>($"{CacheKeys.CountPrefix}{parameters.GetCacheKey()}", out var cachedCount))
+        var key = $"{CacheKeys.CountPrefix}{parameters.GetCacheKey()}";
+
+        var cachedCount = await _cache.GetAsync<long?>(key);
+        if (cachedCount is not null)
         {
-            _logger?.LogDebug("Getting log count from cache with key: {CacheKey}", $"{CacheKeys.CountPrefix}{parameters.GetCacheKey()}");
-            return cachedCount;
+            _logger?.LogDebug("Getting log count from cache with key: {CacheKey}", key);
+            return cachedCount.Value;
         }
+
         var result = await _repository.CountLogsAsync(parameters);
-        await _cache.SetAsync($"{CacheKeys.CountPrefix}{parameters.GetCacheKey()}", result, _config.Cache.DefaultExpiration);
+
+        await _cache.SetAsync(key, result, _config.Cache.DefaultExpiration);
+
         return result;
     }
     
     public async Task<LogMetadata> GetLogMetadataAsync()
     {
-        if (await _cache.TryGetAsync<LogMetadata>(CacheKeys.LogMetadata, out var cachedMetadata) 
-            && cachedMetadata is not null)
+        var key = CacheKeys.LogMetadata;
+
+        var cachedMetadata = await _cache.GetAsync<LogMetadata>(key);
+        if (cachedMetadata is not null)
         {
-            _logger?.LogDebug("Getting log metadata from cache with key: {CacheKey}", CacheKeys.LogMetadata);
+            _logger?.LogDebug("Getting log metadata from cache with key: {CacheKey}", key);
             return cachedMetadata;
         }
+
         var result = await _repository.GetLogMetadataAsync();
-        await _cache.SetAsync(CacheKeys.LogMetadata, result, _config.Cache.DefaultExpiration);
+
+        await _cache.SetAsync(key, result, _config.Cache.DefaultExpiration);
+
         return result;
     }
 }

@@ -9,9 +9,10 @@ using LogPort.Internal.ElasticSearch;
 using LogPort.Data.Postgres;
 using LogPort.Internal.Common.Services;
 using LogPort.Internal.Docker;
+using LogPort.Internal.Redis;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebSockets;
+using StackExchange.Redis;
 using WebSocketManager = LogPort.Internal.Common.Services.WebSocketManager;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -42,7 +43,6 @@ if (logPortConfig.Elastic.Use)
 
 if (logPortConfig.Postgres.Use)
 {
-    var connectionString = logPortConfig.Postgres.ConnectionString;
     builder.Services.AddScoped<ILogRepository, PostgresLogRepository>();
     builder.Services.AddHealthChecks()
         .AddCheck<PostgresHealthCheck>("postgres");
@@ -57,8 +57,12 @@ if (logPortConfig.Docker.Use)
 
 if (logPortConfig.Cache.UseRedis)
 {
-    
+    builder.Services.AddSingleton<IConnectionMultiplexer>(
+        _ => ConnectionMultiplexer.Connect(logPortConfig.Cache.RedisConnectionString ?? throw new InvalidOperationException("Redis connection string is not configured")));
+
+    builder.Services.AddScoped<ICache, RedisCacheAdapter>();
 }
+
 else
 {
     builder.Services.AddMemoryCache();

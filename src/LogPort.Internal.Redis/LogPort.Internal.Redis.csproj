@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="StackExchange.Redis" Version="2.10.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\LogPort.Internal\LogPort.Internal.csproj" />
+    </ItemGroup>
+
+</Project>
