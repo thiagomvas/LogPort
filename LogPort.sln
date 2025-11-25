@@ -32,6 +32,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogPort.Internal", "src\Log
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogPort.Internal.Redis", "src\LogPort.Internal.Redis\LogPort.Internal.Redis.csproj", "{FCFCF51D-8DEF-47D4-AD93-6355C3406BD8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogPort.Internal.Tests", "tests\LogPort.Internal.Tests\LogPort.Internal.Tests.csproj", "{FB001A68-A760-481A-8556-8AE2197F5C11}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -52,6 +54,7 @@ Global
 		{41C31C13-1DFD-444E-8211-135B2EB8C80A} = {A86F8D6D-859B-4677-8126-1872997E1D5A}
 		{C33F363A-E569-4474-B2CA-A98924EBC765} = {F099F1E6-CB4D-4712-B015-A22F9ACA50E8}
 		{FCFCF51D-8DEF-47D4-AD93-6355C3406BD8} = {F099F1E6-CB4D-4712-B015-A22F9ACA50E8}
+		{FB001A68-A760-481A-8556-8AE2197F5C11} = {A86F8D6D-859B-4677-8126-1872997E1D5A}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{C539DE40-F06C-4B16-B4D3-9966DAD1715F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -110,5 +113,9 @@ Global
 		{FCFCF51D-8DEF-47D4-AD93-6355C3406BD8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FCFCF51D-8DEF-47D4-AD93-6355C3406BD8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FCFCF51D-8DEF-47D4-AD93-6355C3406BD8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB001A68-A760-481A-8556-8AE2197F5C11}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB001A68-A760-481A-8556-8AE2197F5C11}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB001A68-A760-481A-8556-8AE2197F5C11}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB001A68-A760-481A-8556-8AE2197F5C11}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
