@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using LogPort.Core;
-using LogPort.Internal.Common.Interface;
+using LogPort.Internal.Abstractions;
 
 namespace LogPort.Data.Postgres;
 

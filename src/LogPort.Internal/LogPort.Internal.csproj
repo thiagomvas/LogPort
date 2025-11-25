@@ -8,15 +8,10 @@
 
     <ItemGroup>
       <ProjectReference Include="..\LogPort.Core\LogPort.Core.csproj" />
-      <ProjectReference Include="..\LogPort.Internal\LogPort.Internal.csproj" />
     </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Interface\" />
     </ItemGroup>
 
 </Project>

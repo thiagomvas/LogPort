@@ -3,15 +3,16 @@ using LogPort.Agent.Endpoints;
 using LogPort.Agent.HealthChecks;
 using LogPort.Agent.Services;
 using LogPort.Core;
-using LogPort.Internal.Common.Interface;
+using LogPort.Internal.Abstractions;
 using LogPort.Core.Models;
 using LogPort.Internal.ElasticSearch;
 using LogPort.Data.Postgres;
 using LogPort.Internal.Common.Services;
 using LogPort.Internal.Docker;
+using LogPort.Internal.Redis;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebSockets;
+using StackExchange.Redis;
 using WebSocketManager = LogPort.Internal.Common.Services.WebSocketManager;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -42,7 +43,6 @@ if (logPortConfig.Elastic.Use)
 
 if (logPortConfig.Postgres.Use)
 {
-    var connectionString = logPortConfig.Postgres.ConnectionString;
     builder.Services.AddScoped<ILogRepository, PostgresLogRepository>();
     builder.Services.AddHealthChecks()
         .AddCheck<PostgresHealthCheck>("postgres");
@@ -54,11 +54,28 @@ if (logPortConfig.Docker.Use)
 {
     builder.Services.AddHostedService<DockerLogService>();
 }
+
+if (logPortConfig.Cache.UseRedis)
+{
+    builder.Services.AddSingleton<IConnectionMultiplexer>(
+        _ => ConnectionMultiplexer.Connect(logPortConfig.Cache.RedisConnectionString ?? throw new InvalidOperationException("Redis connection string is not configured")));
+
+    builder.Services.AddScoped<ICache, RedisCacheAdapter>();
+}
+
+else
+{
+    builder.Services.AddMemoryCache();
+    builder.Services.AddScoped<ICache, InMemoryCacheAdapter>();
+}
+
 builder.Services.AddSingleton<LogQueue>();
 builder.Services.AddHostedService<LogBatchProcessor>();
 builder.Services.AddScoped<AnalyticsService>();
 builder.Services.AddSingleton<WebSocketManager>();
 builder.Services.AddSingleton<LogNormalizer>();
+builder.Services.AddScoped<LogService>();
+
 
 builder.Services.AddWebSockets(options =>
 {

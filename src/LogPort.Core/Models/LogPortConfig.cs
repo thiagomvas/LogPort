@@ -7,6 +7,7 @@ public class LogPortConfig
     public ElasticConfig Elastic { get; set; } = new();
     public PostgresConfig Postgres { get; set; } = new();
     public DockerConfig Docker { get; set; } = new();
+    public CacheConfig Cache { get; set; } = new();
 
     public uint Port { get; set; } = 8080;
     public string AgentUrl { get; set; } = "http://localhost:8080";
@@ -57,6 +58,11 @@ public class LogPortConfig
         config.Docker.ExtractorConfigPath = Environment.GetEnvironmentVariable("LOGPORT_DOCKER_EXTRACTOR_CONFIG_PATH");
         config.Docker.WatchAllContainers = GetEnvBool("LOGPORT_DOCKER_WATCH_ALL");
         
+        // Cache
+        config.Cache.UseRedis = GetEnvBool("LOGPORT_CACHE_USE_REDIS");
+        config.Cache.RedisConnectionString = Environment.GetEnvironmentVariable("LOGPORT_CACHE_REDIS_CONNECTION_STRING");
+        config.Cache.DefaultExpiration =
+            TimeSpan.FromMilliseconds(GetEnvInt("LOGPORT_CACHE_DEFAULT_EXPIRATION_MS", 600000));
         if (!config.Postgres.Use && !config.Elastic.Use)
             throw new InvalidOperationException("At least one storage backend must be enabled.");
         return config;
@@ -107,6 +113,15 @@ public class LogPortConfig
         public string SocketPath { get; set; } = "unix:///var/run/docker.sock";
         public string? ExtractorConfigPath { get; set; }
         public bool WatchAllContainers { get; set; } = false;
+    }
+
+    public class CacheConfig
+    {
+        public bool UseRedis { get; set; } = false;
+        public string? RedisConnectionString { get; set; } 
+        public TimeSpan DefaultExpiration { get; set; } = TimeSpan.FromMinutes(10);
+        
+        
     }
 
 }

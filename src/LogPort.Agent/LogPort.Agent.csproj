@@ -17,6 +17,7 @@
       <ProjectReference Include="..\LogPort.Internal.Docker\LogPort.Internal.Docker.csproj" />
       <ProjectReference Include="..\LogPort.Internal.ElasticSearch\LogPort.Internal.ElasticSearch.csproj" />
       <ProjectReference Include="..\LogPort.Internal.Postgres\LogPort.Internal.Postgres.csproj" />
+      <ProjectReference Include="..\LogPort.Internal.Redis\LogPort.Internal.Redis.csproj" />
     </ItemGroup>
 
     <ItemGroup>
