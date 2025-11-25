@@ -1,11 +1,9 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using LogPort.Core.Models;
-using LogPort.Internal;
 using LogPort.Internal.Abstractions;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using NUnit.Framework;
+
+namespace LogPort.Internal.Tests;
 
 [TestFixture]
 public class LogServiceTests
