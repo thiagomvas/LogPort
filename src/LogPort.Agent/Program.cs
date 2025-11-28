@@ -18,7 +18,6 @@ using StackExchange.Redis;
 using WebSocketManager = LogPort.Internal.Common.Services.WebSocketManager;
 
 var builder = WebApplication.CreateBuilder(args);
-
 builder.Services.AddOpenApi();
 builder.Services.AddCors(options =>
 {
@@ -35,69 +34,68 @@ var logPortConfig = LogPortConfig.LoadFromEnvironment();
 builder.Configuration.GetSection("LOGPORT").Bind(logPortConfig);
 builder.Services.AddSingleton(logPortConfig);
 
-if (logPortConfig.Elastic.Use)
+bool isAgent = logPortConfig.Mode == LogMode.Agent;
+if (isAgent)
 {
-    builder.Services.AddSingleton(ElasticClientFactory.Create(logPortConfig));
-    builder.Services.AddScoped<ILogRepository, ElasticLogRepository>();
-    builder.Services.AddHealthChecks()
-        .AddCheck<ElasticsearchHealthCheck>("elasticsearch");
-}
+    if (logPortConfig.Elastic.Use)
+    {
+        builder.Services.AddSingleton(ElasticClientFactory.Create(logPortConfig));
+        builder.Services.AddScoped<ILogRepository, ElasticLogRepository>();
+        builder.Services.AddHealthChecks()
+            .AddCheck<ElasticsearchHealthCheck>("elasticsearch");
+    }
 
-if (logPortConfig.Postgres.Use)
+    if (logPortConfig.Postgres.Use)
+    {
+        builder.Services.AddScoped<ILogRepository, PostgresLogRepository>();
+        builder.Services.AddHealthChecks()
+            .AddCheck<PostgresHealthCheck>("postgres");
+
+        builder.Services.AddHostedService<PostgresInitializerHostedService>();
+    }
+
+    if (logPortConfig.Cache.UseRedis)
+    {
+        builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
+            ConnectionMultiplexer.Connect(logPortConfig.Cache.RedisConnectionString ??
+                                          throw new InvalidOperationException(
+                                              "Redis connection string is not configured")));
+
+        builder.Services.AddScoped<ICache, RedisCacheAdapter>();
+    }
+
+    else
+    {
+        builder.Services.AddMemoryCache();
+        builder.Services.AddScoped<ICache, InMemoryCacheAdapter>();
+    }
+
+    builder.Services.AddScoped<AnalyticsService>();
+    builder.Services.AddSingleton<LogNormalizer>();
+    builder.Services.AddScoped<LogService>();
+
+    builder.Services.AddScoped<ILogBatchHandler, AgentLogBatchHandler>();
+}
+else
 {
-    builder.Services.AddScoped<ILogRepository, PostgresLogRepository>();
-    builder.Services.AddHealthChecks()
-        .AddCheck<PostgresHealthCheck>("postgres");
-    
-    builder.Services.AddHostedService<PostgresInitializerHostedService>();
+    builder.AddLogPort(o =>
+    {
+        o.AgentUrl = logPortConfig.UpstreamUrl ??
+                     throw new InvalidOperationException("UpstreamUrl must be set in Relay mode");
+    });
+    builder.Services.AddScoped<ILogBatchHandler, RelayLogBatchHandler>();
 }
 
 if (logPortConfig.Docker.Use)
 {
     builder.Services.AddHostedService<DockerLogService>();
 }
-
-if (logPortConfig.Cache.UseRedis)
-{
-    builder.Services.AddSingleton<IConnectionMultiplexer>(
-        _ => ConnectionMultiplexer.Connect(logPortConfig.Cache.RedisConnectionString ?? throw new InvalidOperationException("Redis connection string is not configured")));
-
-    builder.Services.AddScoped<ICache, RedisCacheAdapter>();
-}
-
-else
-{
-    builder.Services.AddMemoryCache();
-    builder.Services.AddScoped<ICache, InMemoryCacheAdapter>();
-}
-
-switch (logPortConfig.Mode)
-{
-    case LogMode.Agent:
-        builder.Services.AddScoped<ILogBatchHandler, AgentLogBatchHandler>();
-        break;
-    case LogMode.Relay:
-        builder.AddLogPort();
-        builder.Services.AddScoped<ILogBatchHandler, RelayLogBatchHandler>();
-        break;
-    default:
-        throw new InvalidOperationException($"Unsupported LogPort mode: {logPortConfig.Mode}");
-    
-}
-
 builder.Services.AddSingleton<LogQueue>();
 builder.Services.AddHostedService<LogBatchProcessor>();
-builder.Services.AddScoped<AnalyticsService>();
 builder.Services.AddSingleton<WebSocketManager>();
-builder.Services.AddSingleton<LogNormalizer>();
-builder.Services.AddScoped<LogService>();
 
 
-builder.Services.AddWebSockets(options =>
-{
-    options.KeepAliveInterval = TimeSpan.FromSeconds(30);
-});
-
+builder.Services.AddWebSockets(options => { options.KeepAliveInterval = TimeSpan.FromSeconds(30); });
 
 
 var app = builder.Build();
@@ -113,39 +111,42 @@ if (app.Environment.IsDevelopment())
 }
 
 
-app.MapHealthChecks("/health", new HealthCheckOptions
-{
-    ResponseWriter = async (context, report) =>
-    {
-        context.Response.ContentType = "application/json";
 
-        var response = new
-        {
-            status = report.Status.ToString(),
-            totalChecks = report.Entries.Count,
-            checks = report.Entries.Select(e => new
-            {
-                name = e.Key,
-                status = e.Value.Status.ToString(),
-                description = e.Value.Description,
-                exception = e.Value.Exception?.Message,
-                duration = e.Value.Duration.ToString()
-            })
-        };
-
-        await context.Response.WriteAsync(JsonSerializer.Serialize(response, new JsonSerializerOptions
-        {
-            WriteIndented = true
-        }));
-    }
-});
 app.UseWebSockets();
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
-app.MapLogEndpoints();
-app.MapAnalyticsEndpoints();
+if (isAgent)
+{app.MapHealthChecks("/health", new HealthCheckOptions
+    {
+        ResponseWriter = async (context, report) =>
+        {
+            context.Response.ContentType = "application/json";
+
+            var response = new
+            {
+                status = report.Status.ToString(),
+                totalChecks = report.Entries.Count,
+                checks = report.Entries.Select(e => new
+                {
+                    name = e.Key,
+                    status = e.Value.Status.ToString(),
+                    description = e.Value.Description,
+                    exception = e.Value.Exception?.Message,
+                    duration = e.Value.Duration.ToString()
+                })
+            };
+
+            await context.Response.WriteAsync(JsonSerializer.Serialize(response, new JsonSerializerOptions
+            {
+                WriteIndented = true
+            }));
+        }
+    });
+    app.MapLogEndpoints();
+    app.MapAnalyticsEndpoints();
+}
 
 
 app.MapFallbackToFile("index.html");

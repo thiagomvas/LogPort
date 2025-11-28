@@ -8,7 +8,7 @@ public class LogPortConfig
     public CacheConfig Cache { get; set; } = new();
 
     public uint Port { get; set; } = 8080;
-    public string AgentUrl { get; set; } = "http://localhost:8080";
+    public string? UpstreamUrl { get; set; } 
     public int BatchSize { get; set; } = 100;
     public int FlushIntervalMs { get; set; } = 250;
     public LogMode Mode { get; set; } = LogMode.Agent;
@@ -21,7 +21,7 @@ public class LogPortConfig
         var config = new LogPortConfig();
 
         config.Port = GetEnvUInt("LOGPORT_PORT", 8080);
-        config.AgentUrl = Environment.GetEnvironmentVariable("LOGPORT_AGENT_URL") ?? $"http://localhost:{config.Port}";
+        config.UpstreamUrl = Environment.GetEnvironmentVariable("LOGPORT_UPSTREAM_URL");
         config.BatchSize = GetEnvInt("LOGPORT_BATCH_SIZE", 100);
         config.FlushIntervalMs = GetEnvInt("LOGPORT_FLUSH_INTERVAL_MS", 250);
         var modeStr = Environment.GetEnvironmentVariable("LOGPORT_MODE") ?? "Agent";
@@ -64,7 +64,7 @@ public class LogPortConfig
         config.Cache.RedisConnectionString = Environment.GetEnvironmentVariable("LOGPORT_CACHE_REDIS_CONNECTION_STRING");
         config.Cache.DefaultExpiration =
             TimeSpan.FromMilliseconds(GetEnvInt("LOGPORT_CACHE_DEFAULT_EXPIRATION_MS", 600000));
-        if (!config.Postgres.Use && !config.Elastic.Use)
+        if (config.Mode is LogMode.Agent && !config.Postgres.Use && !config.Elastic.Use)
             throw new InvalidOperationException("At least one storage backend must be enabled.");
         return config;
     }
