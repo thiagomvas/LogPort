@@ -77,7 +77,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     /// <exception cref="InvalidOperationException">Thrown if the environment variable is not set.</exception>
     public static LogPortClient FromEnvironment()
     {
-        var config = LogPortConfig.LoadFromEnvironment();
+        var config = LogPortClientConfig.LoadFromEnvironment();
 
         return new LogPortClient(config.AgentUrl);
     }

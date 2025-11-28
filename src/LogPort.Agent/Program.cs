@@ -7,6 +7,7 @@ using LogPort.Internal.Abstractions;
 using LogPort.Core.Models;
 using LogPort.Internal.ElasticSearch;
 using LogPort.Data.Postgres;
+using LogPort.Internal;
 using LogPort.Internal.Common.Services;
 using LogPort.Internal.Docker;
 using LogPort.Internal.Redis;

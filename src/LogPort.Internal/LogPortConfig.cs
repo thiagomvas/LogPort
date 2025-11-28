@@ -1,6 +1,4 @@
-namespace LogPort.Core.Models;
-
-using System;
+namespace LogPort.Internal;
 
 public class LogPortConfig
 {
