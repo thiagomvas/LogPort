@@ -137,6 +137,21 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
         
         _messageQueue.Enqueue(entry);
     }
+    
+    /// <summary>
+    /// Enqueues a batch of <see cref="LogEntry"/> items to be sent asynchronously to the server.
+    /// </summary>
+    /// <param name="entries">An <see cref="IEnumerable{T}"/> containing the log batch to be enqueued.</param>
+    /// <exception cref="ArgumentNullException">Thrown if any entry is null.</exception>
+    public void LogBatch(IEnumerable<LogEntry> entries)
+    {
+        if (entries is null) throw new ArgumentNullException(nameof(entries));
+
+        foreach (var entry in entries)
+        {
+            Log(entry);
+        }
+    }
 
     /// <summary>
     /// Convenience method to log a simple message with a specified level.

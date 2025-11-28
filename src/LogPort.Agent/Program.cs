@@ -2,6 +2,7 @@ using System.Text.Json;
 using LogPort.Agent.Endpoints;
 using LogPort.Agent.HealthChecks;
 using LogPort.Agent.Services;
+using LogPort.AspNetCore;
 using LogPort.Core;
 using LogPort.Internal.Abstractions;
 using LogPort.Core.Models;
@@ -70,6 +71,20 @@ else
     builder.Services.AddScoped<ICache, InMemoryCacheAdapter>();
 }
 
+switch (logPortConfig.Mode)
+{
+    case LogMode.Agent:
+        builder.Services.AddScoped<ILogBatchHandler, AgentLogBatchHandler>();
+        break;
+    case LogMode.Relay:
+        builder.AddLogPort();
+        builder.Services.AddScoped<ILogBatchHandler, RelayLogBatchHandler>();
+        break;
+    default:
+        throw new InvalidOperationException($"Unsupported LogPort mode: {logPortConfig.Mode}");
+    
+}
+
 builder.Services.AddSingleton<LogQueue>();
 builder.Services.AddHostedService<LogBatchProcessor>();
 builder.Services.AddScoped<AnalyticsService>();
@@ -86,6 +101,9 @@ builder.Services.AddWebSockets(options =>
 
 
 var app = builder.Build();
+
+if (logPortConfig.Mode is LogMode.Relay)
+    await app.UseLogPortAsync();
 
 app.UseCors("AllowAll");
 
