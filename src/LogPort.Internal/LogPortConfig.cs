@@ -11,6 +11,7 @@ public class LogPortConfig
     public string AgentUrl { get; set; } = "http://localhost:8080";
     public int BatchSize { get; set; } = 100;
     public int FlushIntervalMs { get; set; } = 250;
+    public LogMode Mode { get; set; } = LogMode.Agent;
     public TimeSpan ClientMaxReconnectDelay { get; set; } = TimeSpan.FromSeconds(30);
     public TimeSpan ClientHeartbeatInterval { get; set; } = TimeSpan.FromSeconds(10);
     public TimeSpan ClientHeartbeatTimeout { get; set; } = TimeSpan.FromSeconds(10);
@@ -23,6 +24,8 @@ public class LogPortConfig
         config.AgentUrl = Environment.GetEnvironmentVariable("LOGPORT_AGENT_URL") ?? $"http://localhost:{config.Port}";
         config.BatchSize = GetEnvInt("LOGPORT_BATCH_SIZE", 100);
         config.FlushIntervalMs = GetEnvInt("LOGPORT_FLUSH_INTERVAL_MS", 250);
+        var modeStr = Environment.GetEnvironmentVariable("LOGPORT_MODE") ?? "Agent";
+        config.Mode = Enum.TryParse<LogMode>(modeStr, true, out var mode) ? mode : LogMode.Agent;
 
         config.ClientMaxReconnectDelay =
             TimeSpan.FromMilliseconds(GetEnvInt("LOGPORT_CLIENT_MAX_RECONNECT_DELAY_MS", 30000));
