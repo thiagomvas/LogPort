@@ -318,6 +318,8 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
 
             do
             {
+                if (token.IsCancellationRequested)
+                    return;
                 _webSocket = _socketFactory?.Invoke();
                 try
                 {
