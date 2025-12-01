@@ -8,8 +8,10 @@ public static class ApplicationBuilderExtensions
 {
     public static void MapAgentEndpoints(this WebApplication app)
     {
+        app.UseDefaultFiles();
+        app.UseStaticFiles();
         app.MapLogEndpoints();
         app.MapAnalyticsEndpoints();
-        
+        app.MapFallbackToFile("index.html");
     }
 }
