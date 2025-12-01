@@ -1,12 +1,16 @@
 using System.Text.Json;
+using Docker.DotNet;
+using LogPort.Agent;
 using LogPort.Agent.Endpoints;
 using LogPort.Agent.HealthChecks;
 using LogPort.Agent.Services;
+using LogPort.AspNetCore;
 using LogPort.Core;
 using LogPort.Internal.Abstractions;
 using LogPort.Core.Models;
 using LogPort.Internal.ElasticSearch;
 using LogPort.Data.Postgres;
+using LogPort.Internal;
 using LogPort.Internal.Common.Services;
 using LogPort.Internal.Docker;
 using LogPort.Internal.Redis;
@@ -16,7 +20,6 @@ using StackExchange.Redis;
 using WebSocketManager = LogPort.Internal.Common.Services.WebSocketManager;
 
 var builder = WebApplication.CreateBuilder(args);
-
 builder.Services.AddOpenApi();
 builder.Services.AddCors(options =>
 {
@@ -32,66 +35,47 @@ builder.Configuration.AddEnvironmentVariables(prefix: "LOGPORT_");
 var logPortConfig = LogPortConfig.LoadFromEnvironment();
 builder.Configuration.GetSection("LOGPORT").Bind(logPortConfig);
 builder.Services.AddSingleton(logPortConfig);
+builder.Services.AddHttpClient();
+bool isAgent = logPortConfig.Mode is LogMode.Agent;
 
-if (logPortConfig.Elastic.Use)
-{
-    builder.Services.AddSingleton(ElasticClientFactory.Create(logPortConfig));
-    builder.Services.AddScoped<ILogRepository, ElasticLogRepository>();
-    builder.Services.AddHealthChecks()
-        .AddCheck<ElasticsearchHealthCheck>("elasticsearch");
-}
+if (isAgent)
+    builder.Services.AddLogPortAgent(logPortConfig);
+else
+    builder.Services.AddLogPortRelay(logPortConfig, builder);
 
-if (logPortConfig.Postgres.Use)
-{
-    builder.Services.AddScoped<ILogRepository, PostgresLogRepository>();
-    builder.Services.AddHealthChecks()
-        .AddCheck<PostgresHealthCheck>("postgres");
-    
-    builder.Services.AddHostedService<PostgresInitializerHostedService>();
-}
 
 if (logPortConfig.Docker.Use)
 {
+    builder.Services.AddSingleton(_ =>
+        new DockerClientConfiguration(new Uri(logPortConfig.Docker.SocketPath))
+            .CreateClient());
+
+    builder.Services.AddHealthChecks().AddCheck<DockerHealthCheck>("docker");
     builder.Services.AddHostedService<DockerLogService>();
-}
-
-if (logPortConfig.Cache.UseRedis)
-{
-    builder.Services.AddSingleton<IConnectionMultiplexer>(
-        _ => ConnectionMultiplexer.Connect(logPortConfig.Cache.RedisConnectionString ?? throw new InvalidOperationException("Redis connection string is not configured")));
-
-    builder.Services.AddScoped<ICache, RedisCacheAdapter>();
-}
-
-else
-{
-    builder.Services.AddMemoryCache();
-    builder.Services.AddScoped<ICache, InMemoryCacheAdapter>();
 }
 
 builder.Services.AddSingleton<LogQueue>();
 builder.Services.AddHostedService<LogBatchProcessor>();
-builder.Services.AddScoped<AnalyticsService>();
 builder.Services.AddSingleton<WebSocketManager>();
-builder.Services.AddSingleton<LogNormalizer>();
-builder.Services.AddScoped<LogService>();
 
-
-builder.Services.AddWebSockets(options =>
-{
-    options.KeepAliveInterval = TimeSpan.FromSeconds(30);
-});
-
-
+builder.Services.AddWebSockets(options => { options.KeepAliveInterval = TimeSpan.FromSeconds(30); });
 
 var app = builder.Build();
+
+if (logPortConfig.Mode is LogMode.Relay)
+    await app.UseLogPortAsync();
 
 app.UseCors("AllowAll");
 
 if (app.Environment.IsDevelopment())
-{
     app.MapOpenApi();
-}
+
+app.UseWebSockets();
+
+if (isAgent)
+    app.MapAgentEndpoints();
+
+app.MapSocketEndpoints();
 
 
 app.MapHealthChecks("/health", new HealthCheckOptions
@@ -120,14 +104,6 @@ app.MapHealthChecks("/health", new HealthCheckOptions
         }));
     }
 });
-app.UseWebSockets();
-
-app.UseDefaultFiles();
-app.UseStaticFiles();
-
-app.MapLogEndpoints();
-app.MapAnalyticsEndpoints();
 
 
-app.MapFallbackToFile("index.html");
 app.Run($"http://0.0.0.0:{logPortConfig.Port}");

@@ -77,7 +77,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     /// <exception cref="InvalidOperationException">Thrown if the environment variable is not set.</exception>
     public static LogPortClient FromEnvironment()
     {
-        var config = LogPortConfig.LoadFromEnvironment();
+        var config = LogPortClientConfig.LoadFromEnvironment();
 
         return new LogPortClient(config.AgentUrl);
     }
@@ -136,6 +136,21 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
             entry.SpanId = TraceContext.SpanId;
         
         _messageQueue.Enqueue(entry);
+    }
+    
+    /// <summary>
+    /// Enqueues a batch of <see cref="LogEntry"/> items to be sent asynchronously to the server.
+    /// </summary>
+    /// <param name="entries">An <see cref="IEnumerable{T}"/> containing the log batch to be enqueued.</param>
+    /// <exception cref="ArgumentNullException">Thrown if any entry is null.</exception>
+    public void LogBatch(IEnumerable<LogEntry> entries)
+    {
+        if (entries is null) throw new ArgumentNullException(nameof(entries));
+
+        foreach (var entry in entries)
+        {
+            Log(entry);
+        }
     }
 
     /// <summary>

@@ -8,6 +8,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\LogPort.Core\LogPort.Core.csproj" />
+      <ProjectReference Include="..\LogPort.SDK\LogPort.SDK.csproj" />
     </ItemGroup>
 
     <ItemGroup>

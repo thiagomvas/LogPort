@@ -1,5 +1,6 @@
 using LogPort.Core;
 using LogPort.Core.Models;
+using LogPort.Internal;
 using LogPort.Internal.Abstractions;
 using WebSocketManager = LogPort.Internal.Common.Services.WebSocketManager;
 
@@ -40,9 +41,8 @@ public class LogBatchProcessor : BackgroundService
                 await _socketManager.BroadcastBatchAsync(batch);
                 
                 using var scope = _services.CreateScope();
-                var repo = scope.ServiceProvider.GetRequiredService<ILogRepository>();
-                await repo.AddLogsAsync(batch);
-                _logger.LogDebug("Inserted {Count} logs", batch.Count);
+                var handler = scope.ServiceProvider.GetRequiredService<ILogBatchHandler>();
+                await handler.HandleBatchAsync(batch, stoppingToken);
             }
             catch (Exception ex)
             {
