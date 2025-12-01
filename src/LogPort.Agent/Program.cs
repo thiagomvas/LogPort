@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Docker.DotNet;
 using LogPort.Agent;
 using LogPort.Agent.Endpoints;
 using LogPort.Agent.HealthChecks;
@@ -34,6 +35,7 @@ builder.Configuration.AddEnvironmentVariables(prefix: "LOGPORT_");
 var logPortConfig = LogPortConfig.LoadFromEnvironment();
 builder.Configuration.GetSection("LOGPORT").Bind(logPortConfig);
 builder.Services.AddSingleton(logPortConfig);
+builder.Services.AddHttpClient();
 bool isAgent = logPortConfig.Mode is LogMode.Agent;
 
 if (isAgent)
@@ -44,9 +46,14 @@ else
 
 if (logPortConfig.Docker.Use)
 {
+    builder.Services.AddSingleton(_ =>
+        new DockerClientConfiguration(new Uri(logPortConfig.Docker.SocketPath))
+            .CreateClient());
+
     builder.Services.AddHealthChecks().AddCheck<DockerHealthCheck>("docker");
     builder.Services.AddHostedService<DockerLogService>();
 }
+
 builder.Services.AddSingleton<LogQueue>();
 builder.Services.AddHostedService<LogBatchProcessor>();
 builder.Services.AddSingleton<WebSocketManager>();
@@ -68,38 +75,35 @@ app.UseWebSockets();
 if (isAgent)
     app.MapAgentEndpoints();
 
+app.MapSocketEndpoints();
 
-if (isAgent)
+
+app.MapHealthChecks("/health", new HealthCheckOptions
 {
-    app.MapHealthChecks("/health", new HealthCheckOptions
+    ResponseWriter = async (context, report) =>
     {
-        ResponseWriter = async (context, report) =>
+        context.Response.ContentType = "application/json";
+
+        var response = new
         {
-            context.Response.ContentType = "application/json";
-
-            var response = new
+            status = report.Status.ToString(),
+            totalChecks = report.Entries.Count,
+            checks = report.Entries.Select(e => new
             {
-                status = report.Status.ToString(),
-                totalChecks = report.Entries.Count,
-                checks = report.Entries.Select(e => new
-                {
-                    name = e.Key,
-                    status = e.Value.Status.ToString(),
-                    description = e.Value.Description,
-                    exception = e.Value.Exception?.Message,
-                    duration = e.Value.Duration.ToString()
-                })
-            };
+                name = e.Key,
+                status = e.Value.Status.ToString(),
+                description = e.Value.Description,
+                exception = e.Value.Exception?.Message,
+                duration = e.Value.Duration.ToString()
+            })
+        };
 
-            await context.Response.WriteAsync(JsonSerializer.Serialize(response, new JsonSerializerOptions
-            {
-                WriteIndented = true
-            }));
-        }
-    });
-    app.MapLogEndpoints();
-    app.MapAnalyticsEndpoints();
-}
+        await context.Response.WriteAsync(JsonSerializer.Serialize(response, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        }));
+    }
+});
 
 
 app.MapFallbackToFile("index.html");

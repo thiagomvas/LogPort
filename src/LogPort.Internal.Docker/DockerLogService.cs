@@ -12,17 +12,22 @@ public class DockerLogService : BackgroundService
 {
     private readonly ILogger<DockerLogService>? _logger;
     private readonly LogQueue _logQueue;
-    private readonly string _socketPath = "unix:///var/run/docker.sock";
+    private readonly DockerClient _client;
     private readonly LogPortConfig _logPortConfig;
 
     private readonly List<DockerExtractorConfig> _extractorConfigs = new();
 
-    public DockerLogService(LogQueue logQueue, LogPortConfig config, ILogger<DockerLogService>? logger = null)
+    public DockerLogService(
+        LogQueue logQueue,
+        LogPortConfig config,
+        DockerClient client,
+        ILogger<DockerLogService>? logger = null)
+
     {
         _logger = logger;
         _logQueue = logQueue;
-        _socketPath = config.Docker.SocketPath;
         _logPortConfig = config;
+        _client = client;
 
         if (!string.IsNullOrWhiteSpace(config.Docker.ExtractorConfigPath))
         {
@@ -51,12 +56,8 @@ public class DockerLogService : BackgroundService
             _logger?.LogInformation("Initializing Docker log service, watching all containers.");
         else
             _logger?.LogInformation("Initializing Docker log service, watching containers with label com.logport.monitor=true.");
-        
-        
-        
-        var client = new DockerClientConfiguration(new Uri(_socketPath)).CreateClient();
 
-        var containers = await client.Containers.ListContainersAsync(new ContainersListParameters
+        var containers = await _client.Containers.ListContainersAsync(new ContainersListParameters
         {
             All = false,
             Filters = _logPortConfig.Docker.WatchAllContainers
@@ -72,10 +73,10 @@ public class DockerLogService : BackgroundService
         {
             _logger?.LogInformation("Starting log stream for container {ContainerId} ({ContainerNames})", container.ID,
                 string.Join(", ", container.Names));
-            _ = Task.Run(() => StreamContainerLogsAsync(client, container.ID, stoppingToken), stoppingToken);
+            _ = Task.Run(() => StreamContainerLogsAsync(_client, container.ID, stoppingToken), stoppingToken);
         }
 
-        _ = Task.Run(() => WatchForNewContainersAsync(client, stoppingToken), stoppingToken);
+        _ = Task.Run(() => WatchForNewContainersAsync(_client, stoppingToken), stoppingToken);
 
         _logger?.LogInformation(
             "Docker log service initialized, watching {ContainerCount} existing containers.",
