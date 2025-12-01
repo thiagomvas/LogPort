@@ -21,7 +21,7 @@ public class LogPortConfig
         var config = new LogPortConfig();
 
         config.Port = GetEnvUInt("LOGPORT_PORT", 8080);
-        config.UpstreamUrl = Environment.GetEnvironmentVariable("LOGPORT_UPSTREAM_URL");
+        config.UpstreamUrl = Environment.GetEnvironmentVariable("LOGPORT_UPSTREAM_URL")?.Trim('/');
         config.BatchSize = GetEnvInt("LOGPORT_BATCH_SIZE", 100);
         config.FlushIntervalMs = GetEnvInt("LOGPORT_FLUSH_INTERVAL_MS", 250);
         var modeStr = Environment.GetEnvironmentVariable("LOGPORT_MODE") ?? "Agent";

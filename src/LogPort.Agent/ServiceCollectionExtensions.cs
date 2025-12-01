@@ -59,5 +59,6 @@ public static class ServiceCollectionExtensions
         });
 
         services.AddScoped<ILogBatchHandler, RelayLogBatchHandler>();
+        services.AddHealthChecks().AddCheck<UpstreamHealthCheck>("upstream_agent");
     }
 }
