@@ -1,4 +1,5 @@
 using System.Text.Json;
+using LogPort.Agent;
 using LogPort.Agent.Endpoints;
 using LogPort.Agent.HealthChecks;
 using LogPort.Agent.Services;
@@ -33,58 +34,13 @@ builder.Configuration.AddEnvironmentVariables(prefix: "LOGPORT_");
 var logPortConfig = LogPortConfig.LoadFromEnvironment();
 builder.Configuration.GetSection("LOGPORT").Bind(logPortConfig);
 builder.Services.AddSingleton(logPortConfig);
+bool isAgent = logPortConfig.Mode is LogMode.Agent;
 
-bool isAgent = logPortConfig.Mode == LogMode.Agent;
 if (isAgent)
-{
-    if (logPortConfig.Elastic.Use)
-    {
-        builder.Services.AddSingleton(ElasticClientFactory.Create(logPortConfig));
-        builder.Services.AddScoped<ILogRepository, ElasticLogRepository>();
-        builder.Services.AddHealthChecks()
-            .AddCheck<ElasticsearchHealthCheck>("elasticsearch");
-    }
-
-    if (logPortConfig.Postgres.Use)
-    {
-        builder.Services.AddScoped<ILogRepository, PostgresLogRepository>();
-        builder.Services.AddHealthChecks()
-            .AddCheck<PostgresHealthCheck>("postgres");
-
-        builder.Services.AddHostedService<PostgresInitializerHostedService>();
-    }
-
-    if (logPortConfig.Cache.UseRedis)
-    {
-        builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
-            ConnectionMultiplexer.Connect(logPortConfig.Cache.RedisConnectionString ??
-                                          throw new InvalidOperationException(
-                                              "Redis connection string is not configured")));
-
-        builder.Services.AddScoped<ICache, RedisCacheAdapter>();
-    }
-
-    else
-    {
-        builder.Services.AddMemoryCache();
-        builder.Services.AddScoped<ICache, InMemoryCacheAdapter>();
-    }
-
-    builder.Services.AddScoped<AnalyticsService>();
-    builder.Services.AddSingleton<LogNormalizer>();
-    builder.Services.AddScoped<LogService>();
-
-    builder.Services.AddScoped<ILogBatchHandler, AgentLogBatchHandler>();
-}
+    builder.Services.AddLogPortAgent(logPortConfig);
 else
-{
-    builder.AddLogPort(o =>
-    {
-        o.AgentUrl = logPortConfig.UpstreamUrl ??
-                     throw new InvalidOperationException("UpstreamUrl must be set in Relay mode");
-    });
-    builder.Services.AddScoped<ILogBatchHandler, RelayLogBatchHandler>();
-}
+    builder.Services.AddLogPortRelay(logPortConfig, builder);
+
 
 if (logPortConfig.Docker.Use)
 {
@@ -94,9 +50,7 @@ builder.Services.AddSingleton<LogQueue>();
 builder.Services.AddHostedService<LogBatchProcessor>();
 builder.Services.AddSingleton<WebSocketManager>();
 
-
 builder.Services.AddWebSockets(options => { options.KeepAliveInterval = TimeSpan.FromSeconds(30); });
-
 
 var app = builder.Build();
 
@@ -106,19 +60,17 @@ if (logPortConfig.Mode is LogMode.Relay)
 app.UseCors("AllowAll");
 
 if (app.Environment.IsDevelopment())
-{
     app.MapOpenApi();
-}
-
-
 
 app.UseWebSockets();
 
-app.UseDefaultFiles();
-app.UseStaticFiles();
+if (isAgent)
+    app.MapAgentEndpoints();
+
 
 if (isAgent)
-{app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    app.MapHealthChecks("/health", new HealthCheckOptions
     {
         ResponseWriter = async (context, report) =>
         {
