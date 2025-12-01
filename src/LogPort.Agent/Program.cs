@@ -44,6 +44,7 @@ else
 
 if (logPortConfig.Docker.Use)
 {
+    builder.Services.AddHealthChecks().AddCheck<DockerHealthCheck>("docker");
     builder.Services.AddHostedService<DockerLogService>();
 }
 builder.Services.AddSingleton<LogQueue>();
