@@ -18,7 +18,8 @@ public class PostgresLogRepository : ILogRepository
     private readonly int _partitionLengthInDays;
     private readonly LogNormalizer _normalizer;
 
-    public PostgresLogRepository(LogPortConfig config, LogNormalizer normalizer, JsonSerializerOptions? jsonOptions = null)
+    public PostgresLogRepository(LogPortConfig config, LogNormalizer normalizer,
+        JsonSerializerOptions? jsonOptions = null)
     {
         _connectionString = config.Postgres.ConnectionString;
         _partitionLengthInDays = config.Postgres.PartitionLength;
@@ -155,9 +156,9 @@ public class PostgresLogRepository : ILogRepository
         return (long)await cmd.ExecuteScalarAsync();
     }
 
-public async Task<LogMetadata> GetLogMetadataAsync()
-{
-    const string sql = @"
+    public async Task<LogMetadata> GetLogMetadataAsync()
+    {
+        const string sql = @"
 WITH
   lvl_counts AS (
     SELECT jsonb_object_agg(level, count) AS data
@@ -198,36 +199,174 @@ FROM distincts d, lvl_counts l, svc_counts s, env_counts e, host_counts h;
 
 ";
 
-    await using var conn = new NpgsqlConnection(_connectionString);
-    await conn.OpenAsync();
-    await using var cmd = new NpgsqlCommand(sql, conn);
-    await using var reader = await cmd.ExecuteReaderAsync();
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        await using var reader = await cmd.ExecuteReaderAsync();
 
-    if (!await reader.ReadAsync())
-        throw new InvalidOperationException("Failed to read log metadata.");
+        if (!await reader.ReadAsync())
+            throw new InvalidOperationException("Failed to read log metadata.");
 
-    return new LogMetadata
+        return new LogMetadata
+        {
+            LogLevels = reader.IsDBNull(0) ? [] : reader.GetFieldValue<string[]>(0),
+            Environments = reader.IsDBNull(1) ? [] : reader.GetFieldValue<string[]>(1),
+            Services = reader.IsDBNull(2) ? [] : reader.GetFieldValue<string[]>(2),
+            Hostnames = reader.IsDBNull(3) ? [] : reader.GetFieldValue<string[]>(3),
+            LogCount = reader.GetInt64(4),
+            LogCountByLevel = reader.IsDBNull(5)
+                ? new()
+                : JsonSerializer.Deserialize<Dictionary<string, int>>(reader.GetString(5))!,
+            LogCountByService = reader.IsDBNull(6)
+                ? new()
+                : JsonSerializer.Deserialize<Dictionary<string, int>>(reader.GetString(6))!,
+            LogCountByEnvironment = reader.IsDBNull(7)
+                ? new()
+                : JsonSerializer.Deserialize<Dictionary<string, int>>(reader.GetString(7))!,
+            LogCountByHostname = reader.IsDBNull(8)
+                ? new()
+                : JsonSerializer.Deserialize<Dictionary<string, int>>(reader.GetString(8))!
+        };
+    }
+
+
+    public async Task<LogPattern?> GetPatternByHashAsync(string patternHash)
     {
-        LogLevels = reader.IsDBNull(0) ? [] : reader.GetFieldValue<string[]>(0),
-        Environments = reader.IsDBNull(1) ? [] : reader.GetFieldValue<string[]>(1),
-        Services = reader.IsDBNull(2) ? [] : reader.GetFieldValue<string[]>(2),
-        Hostnames = reader.IsDBNull(3) ? [] : reader.GetFieldValue<string[]>(3),
-        LogCount = reader.GetInt64(4),
-        LogCountByLevel = reader.IsDBNull(5)
-            ? new()
-            : JsonSerializer.Deserialize<Dictionary<string, int>>(reader.GetString(5))!,
-        LogCountByService = reader.IsDBNull(6)
-            ? new()
-            : JsonSerializer.Deserialize<Dictionary<string, int>>(reader.GetString(6))!,
-        LogCountByEnvironment = reader.IsDBNull(7)
-            ? new()
-            : JsonSerializer.Deserialize<Dictionary<string, int>>(reader.GetString(7))!,
-        LogCountByHostname = reader.IsDBNull(8)
-            ? new()
-            : JsonSerializer.Deserialize<Dictionary<string, int>>(reader.GetString(8))!
-    };
-}
+        const string sql = @"
+SELECT id, normalized_message, pattern_hash, first_seen, last_seen, occurrence_count
+FROM log_patterns
+WHERE pattern_hash = @hash;
+";
 
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("hash", patternHash);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        if (!await reader.ReadAsync())
+            return null;
+
+        return MapPattern(reader);
+    }
+    
+    public async Task<long> CreatePatternAsync(string normalizedMessage, string patternHash)
+    {
+        const string sql = @"
+INSERT INTO log_patterns (normalized_message, pattern_hash, occurrence_count)
+VALUES (@msg, @hash, 1)
+RETURNING id;
+";
+
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("msg", normalizedMessage);
+        cmd.Parameters.AddWithValue("hash", patternHash);
+
+        return (long)await cmd.ExecuteScalarAsync();
+    }
+    
+    public async Task<long> GetOrCreatePatternAsync(
+        string normalizedMessage,
+        string patternHash,
+        DateTime timestamp)
+    {
+        const string sql = @"
+INSERT INTO log_patterns (normalized_message, pattern_hash, first_seen, last_seen, occurrence_count)
+VALUES (@msg, @hash, @ts, @ts, 1)
+ON CONFLICT (pattern_hash)
+DO UPDATE SET
+    last_seen = EXCLUDED.last_seen,
+    occurrence_count = log_patterns.occurrence_count + 1
+RETURNING id;
+";
+
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("msg", normalizedMessage);
+        cmd.Parameters.AddWithValue("hash", patternHash);
+        cmd.Parameters.AddWithValue("ts", timestamp);
+
+        return (long)await cmd.ExecuteScalarAsync();
+    }
+    
+    public async Task UpdatePatternMessageAsync(long patternId, string normalizedMessage)
+    {
+        const string sql = @"
+UPDATE log_patterns
+SET normalized_message = @msg
+WHERE id = @id;
+";
+
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("id", patternId);
+        cmd.Parameters.AddWithValue("msg", normalizedMessage);
+
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+    public async Task<IReadOnlyList<LogPattern>> GetPatternsAsync(
+        int limit = 100,
+        int offset = 0)
+    {
+        const string sql = @"
+SELECT id, normalized_message, pattern_hash, first_seen, last_seen, occurrence_count
+FROM log_patterns
+ORDER BY last_seen DESC
+LIMIT @limit OFFSET @offset;
+";
+
+        var results = new List<LogPattern>();
+
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("limit", limit);
+        cmd.Parameters.AddWithValue("offset", offset);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+            results.Add(MapPattern(reader));
+
+        return results;
+    }
+
+    public async Task DeletePatternAsync(long patternId)
+    {
+        const string sql = @"
+DELETE FROM log_patterns
+WHERE id = @id;
+";
+
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("id", patternId);
+
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+
+    private static LogPattern MapPattern(NpgsqlDataReader reader) =>
+        new()
+        {
+            Id = reader.GetInt64(0),
+            NormalizedMessage = reader.GetString(1),
+            PatternHash = reader.GetString(2),
+            FirstSeen = reader.GetDateTime(3),
+            LastSeen = reader.GetDateTime(4),
+            OccurrenceCount = reader.GetInt64(5)
+        };
 
     private async Task EnsurePartitionAsync(DateTime timestamp)
     {
