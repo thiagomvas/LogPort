@@ -37,7 +37,7 @@ builder.Configuration.GetSection("LOGPORT").Bind(logPortConfig);
 builder.Services.AddSingleton(logPortConfig);
 builder.Services.AddHttpClient();
 bool isAgent = logPortConfig.Mode is LogMode.Agent;
-
+ 
 if (isAgent)
     builder.Services.AddLogPortAgent(logPortConfig);
 else
