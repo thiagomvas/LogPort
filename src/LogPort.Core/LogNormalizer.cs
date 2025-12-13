@@ -46,7 +46,6 @@ public sealed partial class LogNormalizer
         
         result = IsoTimestampRegex().Replace(result, "{timestamp}");
         result = GuidRegex().Replace(result, "{guid}");
-        result = WindowsPathRegex().Replace(result, "{path}");
         result = UnixPathRegex().Replace(result, "{path}");
         result = NumberRegex().Replace(result, "{number}");
         
@@ -117,10 +116,6 @@ public sealed partial class LogNormalizer
     [GeneratedRegex(@"\b[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[1-5][a-fA-F0-9]{3}-[89abAB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}\b",
         RegexOptions.Compiled)]
     private static partial Regex GuidRegex();
-
-    [GeneratedRegex(@"\b[a-zA-Z]:\\(?:[^\\/:*?""<>|\r\n]+\\)*[^\\/:*?""<>|\r\n]*\b",
-        RegexOptions.Compiled)]
-    private static partial Regex WindowsPathRegex();
 
     [GeneratedRegex(@"(?:\/[^\/\s]+)+",
         RegexOptions.Compiled)]
