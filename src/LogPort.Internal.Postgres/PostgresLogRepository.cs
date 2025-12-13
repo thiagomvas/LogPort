@@ -11,6 +11,7 @@ using LogPort.Internal.Abstractions;
 
 namespace LogPort.Data.Postgres;
 
+
 public class PostgresLogRepository : ILogRepository
 {
     private readonly string _connectionString;
