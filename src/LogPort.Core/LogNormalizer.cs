@@ -43,6 +43,13 @@ public sealed partial class LogNormalizer
                 continue;
             result = result.Replace(valueString, $"{{{kvp.Key}}}", StringComparison.OrdinalIgnoreCase);
         }
+        
+        result = IsoTimestampRegex().Replace(result, "{timestamp}");
+        result = GuidRegex().Replace(result, "{guid}");
+        result = WindowsPathRegex().Replace(result, "{path}");
+        result = UnixPathRegex().Replace(result, "{path}");
+        result = NumberRegex().Replace(result, "{number}");
+        
         return result;
     }
     
@@ -102,5 +109,26 @@ public sealed partial class LogNormalizer
 
     [GeneratedRegex(@"tr(?:ace|c|ce)?|verb(?:ose)?", RegexOptions.Compiled | RegexOptions.IgnoreCase)]
     private static partial Regex TraceRegex();
+
+    [GeneratedRegex(@"\b\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:[.,]\d+)?(?:Z|[+-]\d{2}:\d{2})?\b",
+        RegexOptions.Compiled)]
+    private static partial Regex IsoTimestampRegex();
+
+    [GeneratedRegex(@"\b[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[1-5][a-fA-F0-9]{3}-[89abAB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}\b",
+        RegexOptions.Compiled)]
+    private static partial Regex GuidRegex();
+
+    [GeneratedRegex(@"\b[a-zA-Z]:\\(?:[^\\/:*?""<>|\r\n]+\\)*[^\\/:*?""<>|\r\n]*\b",
+        RegexOptions.Compiled)]
+    private static partial Regex WindowsPathRegex();
+
+    [GeneratedRegex(@"(?:\/[^\/\s]+)+",
+        RegexOptions.Compiled)]
+    private static partial Regex UnixPathRegex();
+
+    [GeneratedRegex(@"\b-?\d+(?:\.\d+)?\b",
+        RegexOptions.Compiled)]
+    private static partial Regex NumberRegex();
+
 
 }
