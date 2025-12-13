@@ -105,5 +105,12 @@ app.MapHealthChecks("/health", new HealthCheckOptions
     }
 });
 
+app.Lifetime.ApplicationStopping.Register(() =>
+{
+    using var scope = app.Services.CreateScope();
+    var manager = scope.ServiceProvider.GetRequiredService<WebSocketManager>();
+    manager.AbortAll();
+});
+
 
 app.Run($"http://0.0.0.0:{logPortConfig.Port}");

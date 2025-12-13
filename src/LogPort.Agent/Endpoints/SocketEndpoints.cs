@@ -27,12 +27,15 @@ public static class SocketEndpoints
             }
 
             using var socket = await context.WebSockets.AcceptWebSocketAsync();
+            
             var buffer = new byte[8192];
             var queue = context.RequestServices.GetRequiredService<LogQueue>();
             var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
             var normalizer = context.RequestServices.GetRequiredService<LogNormalizer>();
+            var manager = context.RequestServices.GetRequiredService<WebSocketManager>();
+            manager.AddSocket(socket);
 
-            while (socket.State == System.Net.WebSockets.WebSocketState.Open)
+            while (!context.RequestAborted.IsCancellationRequested && socket.State == System.Net.WebSockets.WebSocketState.Open)
             {
                 var result = await socket.ReceiveAsync(buffer, context.RequestAborted);
                 if (result.MessageType == System.Net.WebSockets.WebSocketMessageType.Close)
@@ -60,6 +63,8 @@ public static class SocketEndpoints
                     logger.LogWarning("Invalid JSON received: {Message}", json);
                 }
             }
+            manager.RemoveSocket(socket);
+
         });
     }
 
@@ -79,7 +84,7 @@ public static class SocketEndpoints
 
             var buffer = new byte[4096];
 
-            while (socket.State == System.Net.WebSockets.WebSocketState.Open)
+            while (!context.RequestAborted.IsCancellationRequested && socket.State == System.Net.WebSockets.WebSocketState.Open)
             {
                 var result = await socket.ReceiveAsync(buffer, context.RequestAborted);
                 if (result.MessageType == System.Net.WebSockets.WebSocketMessageType.Close)

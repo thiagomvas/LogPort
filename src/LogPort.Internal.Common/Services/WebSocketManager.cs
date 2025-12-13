@@ -78,5 +78,30 @@ public class WebSocketManager
         }
     }
 
+    public void AbortAll()
+    {
+        List<WebSocket> sockets;
+        lock (_lock)
+        {
+            sockets = _sockets.ToList();
+            _sockets.Clear();
+        }
+
+        foreach (var socket in sockets)
+        {
+            try
+            {
+                if (socket.State == WebSocketState.Open ||
+                    socket.State == WebSocketState.CloseReceived)
+                {
+                    socket.Abort(); 
+                }
+            }
+            catch { }
+        }
+
+        _logger?.LogInformation("All WebSockets aborted");
+    }
+
 
 }
