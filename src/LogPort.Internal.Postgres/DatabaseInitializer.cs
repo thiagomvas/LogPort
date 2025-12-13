@@ -34,6 +34,7 @@ public static class DatabaseInitializer
 
         foreach (var scriptName in scripts)
         {
+            Console.WriteLine($"Executing script: {scriptName}");
             await using var stream = assembly.GetManifestResourceStream(scriptName);
             if (stream == null) continue;
 

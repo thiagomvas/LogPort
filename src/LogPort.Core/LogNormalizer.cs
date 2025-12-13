@@ -1,10 +1,13 @@
 using System.Collections.Concurrent;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 
 namespace LogPort.Core;
 
 public sealed partial class LogNormalizer
 {
+    private static readonly SHA256 _sha256 = SHA256.Create();
+
     public const string DefaultLevel = "Info";
     public const string InfoLevel = "Info";
     public const string WarningLevel = "Warn";
@@ -29,6 +32,35 @@ public sealed partial class LogNormalizer
         ["fatal"] = FatalLevel,
         ["panic"] = FatalLevel
     };
+    
+    public string NormalizeMessage(string message, Dictionary<string, object>? metadata = null)
+    {
+        string result = message ?? string.Empty;
+        foreach (var kvp in metadata ?? [])
+        {
+            var valueString = kvp.Value?.ToString() ?? string.Empty;
+            if (string.IsNullOrEmpty(valueString))
+                continue;
+            result = result.Replace(valueString, $"{{{kvp.Key}}}", StringComparison.OrdinalIgnoreCase);
+        }
+        return result;
+    }
+    
+    public static ulong ComputePatternHash(string text)
+    {
+        const ulong offset = 14695981039346656037;
+        const ulong prime = 1099511628211;
+
+        ulong hash = offset;
+        foreach (var c in text)
+        {
+            hash ^= c;
+            hash *= prime;
+        }
+
+        return hash;
+    }
+
 
     public string NormalizeLevel(string level)
     {

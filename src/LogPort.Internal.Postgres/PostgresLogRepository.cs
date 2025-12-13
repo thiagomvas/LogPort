@@ -33,50 +33,81 @@ public class PostgresLogRepository : ILogRepository
     public Task AddLogAsync(LogEntry log) => AddLogsAsync(new[] { log });
 
     public async Task AddLogsAsync(IEnumerable<LogEntry> logs)
+{
+    var logList = logs.ToList();
+    if (logList.Count == 0)
+        return;
+
+    foreach (var day in logList.Select(l => l.Timestamp.Date).Distinct())
+        await EnsurePartitionAsync(day);
+
+    await using var conn = new NpgsqlConnection(_connectionString);
+    await conn.OpenAsync();
+    await using var tx = await conn.BeginTransactionAsync();
+
+    // Cache patternHash -> patternId (per batch)
+    var patternCache = new Dictionary<ulong, long>();
+
+    var values = new List<string>();
+    var parameters = new List<NpgsqlParameter>();
+    int i = 0;
+
+    foreach (var log in logList)
     {
-        var logList = logs.ToList();
-        if (!logList.Any()) return;
+        var normalized = _normalizer.NormalizeMessage(log.Message, log.Metadata);
+        var hash = LogNormalizer.ComputePatternHash(normalized);
 
-        var uniquePeriods = logList
-            .Select(l => l.Timestamp.Date)
-            .Distinct();
-
-        foreach (var day in uniquePeriods)
-            await EnsurePartitionAsync(day);
-
-        var sqlValues = new List<string>();
-        var parameters = new List<NpgsqlParameter>();
-        int i = 0;
-
-        foreach (var log in logList)
+        if (!patternCache.TryGetValue(hash, out var patternId))
         {
-            sqlValues.Add($"(@ts{i}, @svc{i}, @lvl{i}, @msg{i}, @meta{i}, @trace{i}, @span{i}, @host{i}, @env{i})");
-            parameters.AddRange(new[]
-            {
-                new NpgsqlParameter($"ts{i}", log.Timestamp),
-                new NpgsqlParameter($"svc{i}", (object?)log.ServiceName ?? DBNull.Value),
-                new NpgsqlParameter($"lvl{i}", _normalizer.NormalizeLevel(log.Level)),
-                new NpgsqlParameter($"msg{i}", log.Message),
-                new NpgsqlParameter($"meta{i}", NpgsqlDbType.Jsonb)
-                    { Value = JsonSerializer.Serialize(log.Metadata, _jsonOptions) },
-                new NpgsqlParameter($"trace{i}", (object?)log.TraceId ?? DBNull.Value),
-                new NpgsqlParameter($"span{i}", (object?)log.SpanId ?? DBNull.Value),
-                new NpgsqlParameter($"host{i}", (object?)log.Hostname ?? DBNull.Value),
-                new NpgsqlParameter($"env{i}", (object?)log.Environment ?? DBNull.Value),
-            });
-            i++;
+            await using var patternCmd = new NpgsqlCommand(@"
+INSERT INTO log_patterns (normalized_message, pattern_hash, first_seen, last_seen, occurrence_count)
+VALUES (@msg, @hash, NOW(), NOW(), 1)
+ON CONFLICT (pattern_hash)
+DO UPDATE SET
+  last_seen = NOW(),
+  occurrence_count = log_patterns.occurrence_count + 1
+RETURNING id;", conn, tx);
+
+            patternCmd.Parameters.AddWithValue("msg", normalized);
+            patternCmd.Parameters.AddWithValue("hash", (long)hash);
+
+            patternId = (long)await patternCmd.ExecuteScalarAsync();
+            patternCache[hash] = patternId;
         }
 
-        var sql =
-            "INSERT INTO logs (timestamp, service_name, level, message, metadata, trace_id, span_id, hostname, environment) VALUES "
-            + string.Join(", ", sqlValues);
+        values.Add(
+            $"(@ts{i}, @svc{i}, @lvl{i}, @msg{i}, @meta{i}, @trace{i}, @span{i}, @host{i}, @env{i}, @pid{i})");
 
-        await using var conn = new NpgsqlConnection(_connectionString);
-        await conn.OpenAsync();
-        await using var cmd = new NpgsqlCommand(sql, conn);
-        cmd.Parameters.AddRange(parameters.ToArray());
-        await cmd.ExecuteNonQueryAsync();
+        parameters.AddRange(new[]
+        {
+            new NpgsqlParameter($"ts{i}", log.Timestamp),
+            new NpgsqlParameter($"svc{i}", (object?)log.ServiceName ?? DBNull.Value),
+            new NpgsqlParameter($"lvl{i}", _normalizer.NormalizeLevel(log.Level)),
+            new NpgsqlParameter($"msg{i}", log.Message),
+            new NpgsqlParameter($"meta{i}", NpgsqlDbType.Jsonb)
+                { Value = JsonSerializer.Serialize(log.Metadata, _jsonOptions) },
+            new NpgsqlParameter($"trace{i}", (object?)log.TraceId ?? DBNull.Value),
+            new NpgsqlParameter($"span{i}", (object?)log.SpanId ?? DBNull.Value),
+            new NpgsqlParameter($"host{i}", (object?)log.Hostname ?? DBNull.Value),
+            new NpgsqlParameter($"env{i}", (object?)log.Environment ?? DBNull.Value),
+            new NpgsqlParameter($"pid{i}", patternId)
+        });
+
+        i++;
     }
+
+    var sql = $@"
+INSERT INTO logs
+(timestamp, service_name, level, message, metadata, trace_id, span_id, hostname, environment, pattern_id)
+VALUES {string.Join(", ", values)};";
+
+    await using var cmd = new NpgsqlCommand(sql, conn, tx);
+    cmd.Parameters.AddRange(parameters.ToArray());
+    await cmd.ExecuteNonQueryAsync();
+
+    await tx.CommitAsync();
+}
+
 
     public async Task<IEnumerable<LogEntry>> GetLogsAsync(LogQueryParameters parameters)
     {
@@ -362,7 +393,8 @@ WHERE id = @id;
         {
             Id = reader.GetInt64(0),
             NormalizedMessage = reader.GetString(1),
-            PatternHash = reader.GetString(2),
+            PatternHash = unchecked((ulong)reader.GetInt64(2)),
+
             FirstSeen = reader.GetDateTime(3),
             LastSeen = reader.GetDateTime(4),
             OccurrenceCount = reader.GetInt64(5)
@@ -463,6 +495,28 @@ WHERE id = @id;
                 }
             }
         }
+    }
+    private async Task<long> UpsertPatternAsync(
+        NpgsqlConnection conn,
+        NpgsqlTransaction tx,
+        string normalizedMessage,
+        ulong patternHash)
+    {
+        const string sql = @"
+INSERT INTO log_patterns (normalized_message, pattern_hash, first_seen, last_seen, occurrence_count)
+VALUES (@normalized, @hash, NOW(), NOW(), 1)
+ON CONFLICT (pattern_hash)
+DO UPDATE SET
+    last_seen = NOW(),
+    occurrence_count = log_patterns.occurrence_count + 1
+RETURNING id;
+";
+
+        await using var cmd = new NpgsqlCommand(sql, conn, tx);
+        cmd.Parameters.AddWithValue("normalized", normalizedMessage);
+        cmd.Parameters.AddWithValue("hash", (long)patternHash); // stored as BIGINT
+
+        return (long)await cmd.ExecuteScalarAsync();
     }
 
     private LogEntry MapReader(NpgsqlDataReader reader) =>

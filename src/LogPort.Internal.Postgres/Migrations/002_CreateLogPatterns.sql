@@ -1,9 +1,10 @@
 BEGIN;
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 CREATE TABLE IF NOT EXISTS log_patterns (
     id BIGSERIAL PRIMARY KEY,
     normalized_message TEXT NOT NULL,
-    pattern_hash TEXT NOT NULL,
+    pattern_hash BIGINT NOT NULL UNIQUE,
     first_seen TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     last_seen  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     occurrence_count BIGINT NOT NULL DEFAULT 0,
@@ -12,12 +13,6 @@ CREATE TABLE IF NOT EXISTS log_patterns (
 
 ALTER TABLE logs
     ADD COLUMN IF NOT EXISTS pattern_id BIGINT;
-
-ALTER TABLE logs
-    ADD CONSTRAINT fk_logs_pattern
-        FOREIGN KEY (pattern_id)
-            REFERENCES log_patterns(id)
-    NOT VALID;
 
 CREATE INDEX IF NOT EXISTS idx_logs_pattern_id
     ON logs (pattern_id);
