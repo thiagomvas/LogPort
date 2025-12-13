@@ -13,6 +13,13 @@ builder.AddLogPort(options =>
     options.ServiceName = "logport-testapi";
 });
 
+builder.Logging.SetMinimumLevel(LogLevel.Debug);
+
+// IMPORTANT: category filters
+builder.Logging.AddFilter("Microsoft", LogLevel.Debug);
+builder.Logging.AddFilter("System", LogLevel.Debug);
+builder.Logging.AddFilter("LogPort", LogLevel.Debug);
+builder.Logging.AddFilter("Default", LogLevel.Debug);
 var app = builder.Build();
 
 await app.UseLogPortAsync();
