@@ -265,7 +265,7 @@ FROM distincts d, lvl_counts l, svc_counts s, env_counts e, host_counts h;
     public async Task<LogPattern?> GetPatternByHashAsync(string patternHash)
     {
         const string sql = @"
-SELECT id, normalized_message, pattern_hash, first_seen, last_seen, occurrence_count
+SELECT id, normalized_message, pattern_hash, first_seen, last_seen, occurrence_count, level
 FROM log_patterns
 WHERE pattern_hash = @hash;
 ";
@@ -283,11 +283,11 @@ WHERE pattern_hash = @hash;
         return MapPattern(reader);
     }
     
-    public async Task<long> CreatePatternAsync(string normalizedMessage, string patternHash)
+    public async Task<long> CreatePatternAsync(string normalizedMessage, string patternHash, string level = "INFO")
     {
         const string sql = @"
-INSERT INTO log_patterns (normalized_message, pattern_hash, occurrence_count)
-VALUES (@msg, @hash, 1)
+INSERT INTO log_patterns (normalized_message, pattern_hash, occurrence_count, level)
+VALUES (@msg, @hash, 1, @lvl)
 RETURNING id;
 ";
 
@@ -297,6 +297,7 @@ RETURNING id;
         await using var cmd = new NpgsqlCommand(sql, conn);
         cmd.Parameters.AddWithValue("msg", normalizedMessage);
         cmd.Parameters.AddWithValue("hash", patternHash);
+        cmd.Parameters.AddWithValue("lvl", level);
 
         return (long)await cmd.ExecuteScalarAsync();
     }
@@ -304,11 +305,12 @@ RETURNING id;
     public async Task<long> GetOrCreatePatternAsync(
         string normalizedMessage,
         string patternHash,
-        DateTime timestamp)
+        DateTime timestamp,
+        string level = "INFO")
     {
         const string sql = @"
-INSERT INTO log_patterns (normalized_message, pattern_hash, first_seen, last_seen, occurrence_count)
-VALUES (@msg, @hash, @ts, @ts, 1)
+INSERT INTO log_patterns (normalized_message, pattern_hash, first_seen, last_seen, occurrence_count, level)
+VALUES (@msg, @hash, @ts, @ts, 1, @lvl)
 ON CONFLICT (pattern_hash)
 DO UPDATE SET
     last_seen = EXCLUDED.last_seen,
@@ -323,6 +325,7 @@ RETURNING id;
         cmd.Parameters.AddWithValue("msg", normalizedMessage);
         cmd.Parameters.AddWithValue("hash", patternHash);
         cmd.Parameters.AddWithValue("ts", timestamp);
+        cmd.Parameters.AddWithValue("lvl", level);
 
         return (long)await cmd.ExecuteScalarAsync();
     }
@@ -350,7 +353,7 @@ WHERE id = @id;
         int offset = 0)
     {
         const string sql = @"
-SELECT id, normalized_message, pattern_hash, first_seen, last_seen, occurrence_count
+SELECT id, normalized_message, pattern_hash, first_seen, last_seen, occurrence_count, level
 FROM log_patterns
 ORDER BY last_seen DESC
 LIMIT @limit OFFSET @offset;

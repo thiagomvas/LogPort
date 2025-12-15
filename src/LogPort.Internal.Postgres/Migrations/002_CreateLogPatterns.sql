@@ -1,4 +1,5 @@
 BEGIN;
+
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 CREATE TABLE IF NOT EXISTS log_patterns (
@@ -14,6 +15,9 @@ CREATE TABLE IF NOT EXISTS log_patterns (
 ALTER TABLE logs
     ADD COLUMN IF NOT EXISTS pattern_id BIGINT;
 
+ALTER TABLE log_patterns
+    ADD COLUMN IF NOT EXISTS level TEXT NOT NULL DEFAULT 'INFO';
+
 CREATE INDEX IF NOT EXISTS idx_logs_pattern_id
     ON logs (pattern_id);
 
@@ -24,3 +28,4 @@ CREATE INDEX IF NOT EXISTS idx_log_patterns_normalized_message
     ON log_patterns USING gin (normalized_message gin_trgm_ops);
 
 COMMIT;
+

@@ -8,4 +8,5 @@ public sealed class LogPattern
     public DateTime FirstSeen { get; set; }
     public DateTime LastSeen { get; set; }
     public long OccurrenceCount { get; set; }
+    public string Level { get; set; } = null!;
 }
