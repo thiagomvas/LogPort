@@ -219,14 +219,6 @@ function LogExplorer() {
                 <button className="btn btn-primary" onClick={fetchLatestLogs} disabled={loading}>
                     {loading ? 'Refreshing...' : '↻ Fetch Latest Logs'}
                 </button>
-
-                <button
-                    className={`btn ${tailing ? 'btn-active' : 'btn-secondary'}`}
-                    onClick={enableTailing}
-                    disabled={tailing}
-                >
-                    {tailing ? '🟢 Live Tailing Active' : '▶ Enable Live Tailing'}
-                </button>
             </div>
 
             <div className="log-container">

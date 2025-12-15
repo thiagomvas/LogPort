@@ -1,4 +1,4 @@
-import { Bar } from 'react-chartjs-2';
+import { Bar } from 'react-chartjs-2'
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -8,9 +8,9 @@ import {
     Tooltip,
     Legend,
     TimeScale,
-} from 'chart.js';
-import type { LogBucket } from '../lib/types/analytics';
-import 'chartjs-adapter-date-fns';
+} from 'chart.js'
+import type { LogBucket } from '../lib/types/analytics'
+import 'chartjs-adapter-date-fns'
 
 ChartJS.register(
     CategoryScale,
@@ -20,20 +20,25 @@ ChartJS.register(
     Tooltip,
     Legend,
     TimeScale
-);
-
+)
 
 interface HistogramChartProps {
-    data: LogBucket[];
+    data: LogBucket[]
+    timeUnit?: 'minute' | 'hour' | 'day'
 }
+
 const primaryColor = getComputedStyle(document.documentElement)
     .getPropertyValue('--color-primary')
-    .trim(); // e.g. "#2196f3"
+    .trim()
+
 const textColor = getComputedStyle(document.documentElement)
     .getPropertyValue('--text-main')
     .trim()
 
-export const HistogramChart = ({ data }: HistogramChartProps) => {
+export const HistogramChart = ({
+    data,
+    timeUnit = 'hour',
+}: HistogramChartProps) => {
     const chartData = {
         labels: data.map(bucket => new Date(bucket.periodStart)),
         datasets: [
@@ -43,36 +48,58 @@ export const HistogramChart = ({ data }: HistogramChartProps) => {
                 backgroundColor: primaryColor,
                 borderColor: primaryColor,
                 borderWidth: 1,
-                color: textColor
+                color: textColor,
             },
         ],
-    };
+    }
 
     const options = {
         responsive: true,
         plugins: {
-            legend: { display: true, labels: { color: textColor } },
-            tooltip: { mode: 'index' as const },
+            legend: {
+                display: true,
+                labels: { color: textColor },
+            },
+            tooltip: {
+                mode: 'index' as const,
+            },
         },
         scales: {
             x: {
                 type: 'time' as const,
+                offset: true,
                 time: {
-                    unit: 'hour' as const,
-                    tooltipFormat: 'HH:mm',
-                    displayFormats: { hour: 'HH:mm' },
+                    unit: timeUnit,
+                    tooltipFormat:
+                        timeUnit === 'day' ? 'MMM d' : 'HH:mm',
+                    displayFormats: {
+                        minute: 'HH:mm',
+                        hour: 'HH:mm',
+                        day: 'MMM d',
+                    },
                 },
-                title: { display: true, text: 'Time', color: textColor },
-                ticks: { stepSize: 1, color: textColor },
+                title: {
+                    display: true,
+                    text: 'Time',
+                    color: textColor,
+                },
+                ticks: {
+                    color: textColor,
+                },
             },
             y: {
                 beginAtZero: true,
-                title: { display: true, text: 'Count', color: textColor },
-                ticks: { color: textColor },
+                title: {
+                    display: true,
+                    text: 'Count',
+                    color: textColor,
+                },
+                ticks: {
+                    color: textColor,
+                },
             },
         },
+    }
 
-    };
-
-    return <Bar data={chartData} options={options} height={50} />;
-};
+    return <Bar data={chartData} options={options} height={50} />
+}
