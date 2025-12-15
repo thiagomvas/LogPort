@@ -115,12 +115,12 @@ public class ElasticLogRepository : ILogRepository
         throw new NotImplementedException();
     }
 
-    public Task<long> CreatePatternAsync(string normalizedMessage, string patternHash)
+    public Task<long> CreatePatternAsync(string normalizedMessage, string patternHash, string level)
     {
         throw new NotImplementedException();
     }
 
-    public Task<long> GetOrCreatePatternAsync(string normalizedMessage, string patternHash, DateTime timestamp)
+    public Task<long> GetOrCreatePatternAsync(string normalizedMessage, string patternHash, DateTime timestamp, string level)
     {
         throw new NotImplementedException();
     }

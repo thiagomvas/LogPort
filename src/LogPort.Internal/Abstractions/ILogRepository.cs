@@ -12,13 +12,13 @@ public interface ILogRepository
     Task<LogMetadata> GetLogMetadataAsync();
     
     Task<LogPattern?> GetPatternByHashAsync(string patternHash);
-    Task<long> CreatePatternAsync(string normalizedMessage, string patternHash, string level);
+    Task<long> CreatePatternAsync(string normalizedMessage, string patternHash, string level = "INFO");
 
     Task<long> GetOrCreatePatternAsync(
         string normalizedMessage,
         string patternHash,
         DateTime timestamp,
-        string level);
+        string level = "INFO");
 
     Task UpdatePatternMessageAsync(long patternId, string normalizedMessage);
 
