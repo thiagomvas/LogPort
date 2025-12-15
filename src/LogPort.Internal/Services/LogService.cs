@@ -76,4 +76,22 @@ public class LogService
 
         return result;
     }
+    
+    public async Task<IEnumerable<LogPattern>> GetLogPatternsAsync(int limit = 100, int offset = 0)
+    {
+        var key = CacheKeys.LogPatterns;
+
+        var cachedPatterns = await _cache.GetAsync<IEnumerable<LogPattern>>(key);
+        if (cachedPatterns is not null)
+        {
+            _logger?.LogDebug("Getting log patterns from cache with key: {CacheKey}", key);
+            return cachedPatterns;
+        }
+
+        var result = await _repository.GetPatternsAsync(limit, offset);
+
+        await _cache.SetAsync(key, result, _config.Cache.DefaultExpiration);
+
+        return result;
+    }
 }

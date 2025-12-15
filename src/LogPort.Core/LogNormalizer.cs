@@ -1,10 +1,13 @@
 using System.Collections.Concurrent;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 
 namespace LogPort.Core;
 
 public sealed partial class LogNormalizer
 {
+    private static readonly SHA256 _sha256 = SHA256.Create();
+
     public const string DefaultLevel = "Info";
     public const string InfoLevel = "Info";
     public const string WarningLevel = "Warn";
@@ -29,6 +32,41 @@ public sealed partial class LogNormalizer
         ["fatal"] = FatalLevel,
         ["panic"] = FatalLevel
     };
+    
+    public string NormalizeMessage(string message, Dictionary<string, object>? metadata = null)
+    {
+        string result = message ?? string.Empty;
+        foreach (var kvp in metadata ?? [])
+        {
+            var valueString = kvp.Value?.ToString() ?? string.Empty;
+            if (string.IsNullOrEmpty(valueString))
+                continue;
+            result = result.Replace(valueString, $"{{{kvp.Key}}}", StringComparison.OrdinalIgnoreCase);
+        }
+        
+        result = IsoTimestampRegex().Replace(result, "{timestamp}");
+        result = GuidRegex().Replace(result, "{guid}");
+        result = UnixPathRegex().Replace(result, "{path}");
+        result = NumberRegex().Replace(result, "{number}");
+        
+        return result;
+    }
+    
+    public static ulong ComputePatternHash(string text)
+    {
+        const ulong offset = 14695981039346656037;
+        const ulong prime = 1099511628211;
+
+        ulong hash = offset;
+        foreach (var c in text)
+        {
+            hash ^= c;
+            hash *= prime;
+        }
+
+        return hash;
+    }
+
 
     public string NormalizeLevel(string level)
     {
@@ -70,5 +108,22 @@ public sealed partial class LogNormalizer
 
     [GeneratedRegex(@"tr(?:ace|c|ce)?|verb(?:ose)?", RegexOptions.Compiled | RegexOptions.IgnoreCase)]
     private static partial Regex TraceRegex();
+
+    [GeneratedRegex(@"\b\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:[.,]\d+)?(?:Z|[+-]\d{2}:\d{2})?\b",
+        RegexOptions.Compiled)]
+    private static partial Regex IsoTimestampRegex();
+
+    [GeneratedRegex(@"\b[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[1-5][a-fA-F0-9]{3}-[89abAB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}\b",
+        RegexOptions.Compiled)]
+    private static partial Regex GuidRegex();
+
+    [GeneratedRegex(@"(?:\/[^\/\s]+)+",
+        RegexOptions.Compiled)]
+    private static partial Regex UnixPathRegex();
+
+    [GeneratedRegex(@"\b-?\d+(?:\.\d+)?\b",
+        RegexOptions.Compiled)]
+    private static partial Regex NumberRegex();
+
 
 }

@@ -34,6 +34,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     private readonly LogNormalizer _normalizer;
 
     private const int SendDelayMs = 50;
+    bool _isAlive = false;
     
     public LogPortClient(
         LogPortClientConfig config,
@@ -246,8 +247,11 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     /// </summary>
     public async Task FlushAsync()
     {
-        while (!_messageQueue.IsEmpty)
+        _logger?.Debug("Flushing log queue...");
+        while (!_messageQueue.IsEmpty && _isAlive)
             await Task.Delay(SendDelayMs).ConfigureAwait(false);
+        
+        _logger?.Debug("Log queue flushed.");
     }
 
     /// <summary>
@@ -258,11 +262,13 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     /// </remarks>
     public void Dispose()
     {
+        _logger?.Debug("Disposing LogPortClient...");
         _cts.Cancel();
         _senderTask?.Wait();
         _webSocket.CloseConnection(WebSocketCloseStatus.NormalClosure, "Client disposed");
         _webSocket.Dispose();
         _cts.Dispose();
+        _logger?.Debug("LogPortClient disposed.");
     }
 
     private async Task<bool> SendHeartbeatAsync(CancellationToken token)
@@ -326,6 +332,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
                     _logger?.Debug("Attempting WebSocket connection...");
                     await _webSocket.ConnectAsync(_serverUri, token).ConfigureAwait(false);
                     _logger?.Info("Connected to LogPort Agent");
+                    _isAlive = true;
                     return;
                 }
                 catch (Exception ex)
@@ -333,7 +340,8 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
                     _logger?.Warn($"Connection failed, retrying: {ex.Message}");
                     await Task.Delay(delay + TimeSpan.FromMilliseconds(random.Next(0, 500)), token);
                     delay = TimeSpan.FromSeconds(Math.Min(delay.TotalSeconds * 2, _maxReconnectDelay.TotalSeconds));
-                    
+                    _isAlive = false;
+
                 }
             } while (_webSocket.State != WebSocketState.Open && !token.IsCancellationRequested);
         }

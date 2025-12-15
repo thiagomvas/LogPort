@@ -12,6 +12,7 @@ public static class ApplicationBuilderExtensions
         app.UseStaticFiles();
         app.MapLogEndpoints();
         app.MapAnalyticsEndpoints();
+        app.MapPatternEndpoints();
         app.MapFallbackToFile("index.html");
     }
 }

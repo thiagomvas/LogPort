@@ -9,10 +9,17 @@ builder.Services.AddOpenApi();
 builder.Logging.AddConsole();
 builder.AddLogPort(options =>
 {
-    options.AgentUrl = "ws://localhost:8080/";
+    options.AgentUrl = "ws://localhost:10000/";
     options.ServiceName = "logport-testapi";
 });
 
+builder.Logging.SetMinimumLevel(LogLevel.Debug);
+
+// IMPORTANT: category filters
+builder.Logging.AddFilter("Microsoft", LogLevel.Debug);
+builder.Logging.AddFilter("System", LogLevel.Debug);
+builder.Logging.AddFilter("LogPort", LogLevel.Debug);
+builder.Logging.AddFilter("Default", LogLevel.Debug);
 var app = builder.Build();
 
 await app.UseLogPortAsync();

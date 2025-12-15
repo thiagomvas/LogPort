@@ -44,6 +44,9 @@ public sealed class WebSocketClientAdapter : IWebSocketClient
 
     public void CloseConnection(WebSocketCloseStatus closeStatus, string statusDescription)
     {
+        if (_socket.State is not WebSocketState.Open and not WebSocketState.CloseReceived)
+            return;
+        
         _socket.CloseAsync(closeStatus, statusDescription, CancellationToken.None).GetAwaiter().GetResult();
     }
 
