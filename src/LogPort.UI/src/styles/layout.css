@@ -1,14 +1,13 @@
-/* Root layout */
 .layout {
-  display: flex;
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  /* sidebar + content */
   min-height: 100vh;
-  width: 100%;
-  overflow-x: hidden;
   background-color: var(--color-background);
   color: var(--text-main);
 }
 
-/* Sidebar */
+
 .sidebar {
   background-color: var(--color-surface);
   color: var(--text-main);
@@ -24,28 +23,29 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+
+  position: sticky;
+  top: 0;
+  height: 100vh;
 }
 
-/* Header / Logo area */
+
+
 .sidebar-header {
   display: flex;
   flex-direction: column;
-  /* logo above name */
   align-items: center;
-  /* center horizontally */
   gap: 6px;
 
   padding: 12px 10px;
   border-bottom: 1px solid var(--border-color);
 }
 
-/* Logo */
 .app-logo {
   font-size: 2rem;
   line-height: 1;
 }
 
-/* App name */
 .app-name {
   font-size: 1.25rem;
   font-weight: 600;
@@ -55,14 +55,12 @@
 }
 
 
-/* Navigation */
 .sidebar-nav {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-/* Sidebar item */
 .sidebar-item {
   display: flex;
   align-items: center;
@@ -85,13 +83,11 @@
   color: var(--text-main);
 }
 
-/* Active route */
 .sidebar-item.active {
   background-color: var(--color-primary-dark);
   color: var(--text-main);
 }
 
-/* Icon */
 .icon {
   display: flex;
   align-items: center;
@@ -100,18 +96,16 @@
   color: inherit;
 }
 
-/* Label */
 .label {
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* Main content */
 .content {
-  flex: 1;
-  min-width: 0;
   padding: 16px;
   box-sizing: border-box;
   background-color: var(--color-background);
   color: var(--text-main);
+  overflow-y: auto;
+  min-width: 0;
 }
