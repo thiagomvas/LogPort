@@ -53,10 +53,12 @@ function SidebarItem({ icon, label, href }: SidebarItemProps) {
     return (
         <NavLink
             to={href}
+            end
             className={({ isActive }) =>
                 `sidebar-item${isActive ? ' active' : ''}`
             }
         >
+
             <span className="icon">{icon}</span>
             <span className="label">{label}</span>
         </NavLink>
