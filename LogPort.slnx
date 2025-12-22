@@ -1,0 +1,21 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ConsoleApp/ConsoleApp.csproj" />
+    <Project Path="src/LogPort.Agent/LogPort.Agent.csproj" />
+    <Project Path="src/LogPort.AspNetCore/LogPort.AspNetCore.csproj" />
+    <Project Path="src/LogPort.Core/LogPort.Core.csproj" />
+    <Project Path="src/LogPort.Internal.Common/LogPort.Internal.Common.csproj" />
+    <Project Path="src/LogPort.Internal.Docker/LogPort.Internal.Docker.csproj" />
+    <Project Path="src/LogPort.Internal.ElasticSearch/LogPort.Internal.ElasticSearch.csproj" />
+    <Project Path="src/LogPort.Internal.Postgres/LogPort.Internal.Postgres.csproj" />
+    <Project Path="src/LogPort.Internal.Redis/LogPort.Internal.Redis.csproj" />
+    <Project Path="src/LogPort.Internal/LogPort.Internal.csproj" />
+    <Project Path="src/LogPort.SDK/LogPort.SDK.csproj" />
+    <Project Path="src/WebApi/WebApi.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Logport.Core.Tests/Logport.Core.Tests.csproj" />
+    <Project Path="tests/LogPort.Internal.Tests/LogPort.Internal.Tests.csproj" />
+    <Project Path="tests/LogPort.SDK.Tests/LogPort.SDK.Tests.csproj" />
+  </Folder>
+</Solution>
