@@ -54,6 +54,66 @@ builder.Services.AddWebSockets(options =>
 
 var app = builder.Build();
 
+var adminUser = Environment.GetEnvironmentVariable("LOGPORT_ADMIN_USER");
+var adminPass = Environment.GetEnvironmentVariable("LOGPORT_ADMIN_PASS");
+
+app.Use(async (context, next) =>
+{
+    if (!context.Request.Path.StartsWithSegments("/analytics"))
+{
+    await next();
+    return;
+}
+
+if (string.IsNullOrWhiteSpace(adminUser) || string.IsNullOrWhiteSpace(adminPass))
+{
+    context.Response.StatusCode = 503;
+    await context.Response.WriteAsync("Admin credentials are not configured.");
+    return;
+}
+
+var auth = context.Request.Headers.Authorization.ToString();
+
+if (string.IsNullOrWhiteSpace(auth) || !auth.StartsWith("Basic ", StringComparison.OrdinalIgnoreCase))
+    {
+        context.Response.StatusCode = 401;
+        context.Response.Headers.WWWAuthenticate = "Basic";
+        return;
+    }
+
+try
+    {
+        var encoded = auth["Basic ".Length..].Trim();
+        var decoded = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(encoded));
+
+        var parts = decoded.Split(':', 2);
+        if (parts.Length != 2)
+        {
+            context.Response.StatusCode = 401;
+            context.Response.Headers.WWWAuthenticate = "Basic";
+            return;
+        }
+
+        var userOK = parts[0] == adminUser;
+        var PassOK = parts[1] == adminPass;
+
+        if (!userOK || !PassOK)
+        {
+            context.Response.StatusCode = 401;
+            context.Response.Headers.WWWAuthenticate = "Basic";
+            return;
+        }
+    }
+    catch
+    {
+        context.Response.StatusCode = 400;
+        return;
+    }
+
+   await next();
+});
+
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
