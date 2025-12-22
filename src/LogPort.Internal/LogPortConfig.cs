@@ -1,16 +1,17 @@
-namespace LogPort.Core.Models;
-
-using System;
+namespace LogPort.Internal;
 
 public class LogPortConfig
 {
     public ElasticConfig Elastic { get; set; } = new();
     public PostgresConfig Postgres { get; set; } = new();
-    
+    public DockerConfig Docker { get; set; } = new();
+    public CacheConfig Cache { get; set; } = new();
+
     public uint Port { get; set; } = 8080;
-    public string AgentUrl { get; set; } = "http://localhost:8080";
+    public string? UpstreamUrl { get; set; } 
     public int BatchSize { get; set; } = 100;
     public int FlushIntervalMs { get; set; } = 250;
+    public LogMode Mode { get; set; } = LogMode.Agent;
     public TimeSpan ClientMaxReconnectDelay { get; set; } = TimeSpan.FromSeconds(30);
     public TimeSpan ClientHeartbeatInterval { get; set; } = TimeSpan.FromSeconds(10);
     public TimeSpan ClientHeartbeatTimeout { get; set; } = TimeSpan.FromSeconds(10);
@@ -20,18 +21,25 @@ public class LogPortConfig
         var config = new LogPortConfig();
 
         config.Port = GetEnvUInt("LOGPORT_PORT", 8080);
-        config.AgentUrl = Environment.GetEnvironmentVariable("LOGPORT_AGENT_URL") ?? $"http://localhost:{config.Port}";
+        config.UpstreamUrl = Environment.GetEnvironmentVariable("LOGPORT_UPSTREAM_URL")?.Trim('/');
         config.BatchSize = GetEnvInt("LOGPORT_BATCH_SIZE", 100);
         config.FlushIntervalMs = GetEnvInt("LOGPORT_FLUSH_INTERVAL_MS", 250);
-        
-        config.ClientMaxReconnectDelay = TimeSpan.FromMilliseconds(GetEnvInt("LOGPORT_CLIENT_MAX_RECONNECT_DELAY_MS", 30000));
-        config.ClientHeartbeatInterval = TimeSpan.FromMilliseconds(GetEnvInt("LOGPORT_CLIENT_HEARTBEAT_INTERVAL_MS", 10000));
-        config.ClientHeartbeatTimeout = TimeSpan.FromMilliseconds(GetEnvInt("LOGPORT_CLIENT_HEARTBEAT_TIMEOUT_MS", 10000));
-        
+        var modeStr = Environment.GetEnvironmentVariable("LOGPORT_MODE") ?? "Agent";
+        config.Mode = Enum.TryParse<LogMode>(modeStr, true, out var mode) ? mode : LogMode.Agent;
+
+        config.ClientMaxReconnectDelay =
+            TimeSpan.FromMilliseconds(GetEnvInt("LOGPORT_CLIENT_MAX_RECONNECT_DELAY_MS", 30000));
+        config.ClientHeartbeatInterval =
+            TimeSpan.FromMilliseconds(GetEnvInt("LOGPORT_CLIENT_HEARTBEAT_INTERVAL_MS", 10000));
+        config.ClientHeartbeatTimeout =
+            TimeSpan.FromMilliseconds(GetEnvInt("LOGPORT_CLIENT_HEARTBEAT_TIMEOUT_MS", 10000));
+
         // Elastic
         config.Elastic.Use = GetEnvBool("LOGPORT_USE_ELASTICSEARCH");
-        config.Elastic.Uri = Environment.GetEnvironmentVariable("LOGPORT_ELASTIC_URI") 
-                             ?? (config.Elastic.Use ? throw new InvalidOperationException("LOGPORT_ELASTIC_URI is required") : null);
+        config.Elastic.Uri = Environment.GetEnvironmentVariable("LOGPORT_ELASTIC_URI")
+                             ?? (config.Elastic.Use
+                                 ? throw new InvalidOperationException("LOGPORT_ELASTIC_URI is required")
+                                 : null);
         config.Elastic.DefaultIndex = Environment.GetEnvironmentVariable("LOGPORT_ELASTIC_DEFAULT_INDEX") ?? "logs";
         config.Elastic.Username = Environment.GetEnvironmentVariable("LOGPORT_ELASTIC_USERNAME");
         config.Elastic.Password = Environment.GetEnvironmentVariable("LOGPORT_ELASTIC_PASSWORD");
@@ -45,6 +53,19 @@ public class LogPortConfig
         config.Postgres.Password = Environment.GetEnvironmentVariable("LOGPORT_POSTGRES_PASSWORD") ?? "postgres";
         config.Postgres.PartitionLength = GetEnvInt("LOGPORT_POSTGRES_PARTITION_LENGTH", 1);
 
+        // Docker
+        config.Docker.Use = GetEnvBool("LOGPORT_USE_DOCKER");
+        config.Docker.SocketPath = Environment.GetEnvironmentVariable("LOGPORT_DOCKER_SOCKET_PATH") ?? "unix:///var/run/docker.sock";
+        config.Docker.ExtractorConfigPath = Environment.GetEnvironmentVariable("LOGPORT_DOCKER_EXTRACTOR_CONFIG_PATH");
+        config.Docker.WatchAllContainers = GetEnvBool("LOGPORT_DOCKER_WATCH_ALL");
+        
+        // Cache
+        config.Cache.UseRedis = GetEnvBool("LOGPORT_CACHE_USE_REDIS");
+        config.Cache.RedisConnectionString = Environment.GetEnvironmentVariable("LOGPORT_CACHE_REDIS_CONNECTION_STRING");
+        config.Cache.DefaultExpiration =
+            TimeSpan.FromMilliseconds(GetEnvInt("LOGPORT_CACHE_DEFAULT_EXPIRATION_MS", 600000));
+        if (config.Mode is LogMode.Agent && !config.Postgres.Use && !config.Elastic.Use)
+            throw new InvalidOperationException("At least one storage backend must be enabled.");
         return config;
     }
 
@@ -86,4 +107,22 @@ public class LogPortConfig
 
         public int PartitionLength { get; set; } = 1;
     }
+
+    public class DockerConfig
+    {
+        public bool Use { get; set; } = false;
+        public string SocketPath { get; set; } = "unix:///var/run/docker.sock";
+        public string? ExtractorConfigPath { get; set; }
+        public bool WatchAllContainers { get; set; } = false;
+    }
+
+    public class CacheConfig
+    {
+        public bool UseRedis { get; set; } = false;
+        public string? RedisConnectionString { get; set; } 
+        public TimeSpan DefaultExpiration { get; set; } = TimeSpan.FromMinutes(10);
+        
+        
+    }
+
 }

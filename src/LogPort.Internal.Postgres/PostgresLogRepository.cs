@@ -5,17 +5,22 @@ using NpgsqlTypes;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
-using LogPort.Internal.Common.Interface;
+using LogPort.Core;
+using LogPort.Internal;
+using LogPort.Internal.Abstractions;
 
 namespace LogPort.Data.Postgres;
+
 
 public class PostgresLogRepository : ILogRepository
 {
     private readonly string _connectionString;
     private readonly JsonSerializerOptions _jsonOptions;
     private readonly int _partitionLengthInDays;
+    private readonly LogNormalizer _normalizer;
 
-    public PostgresLogRepository(LogPortConfig config, JsonSerializerOptions? jsonOptions = null)
+    public PostgresLogRepository(LogPortConfig config, LogNormalizer normalizer,
+        JsonSerializerOptions? jsonOptions = null)
     {
         _connectionString = config.Postgres.ConnectionString;
         _partitionLengthInDays = config.Postgres.PartitionLength;
@@ -23,53 +28,87 @@ public class PostgresLogRepository : ILogRepository
         {
             TypeInfoResolver = new DefaultJsonTypeInfoResolver()
         };
+        _normalizer = normalizer;
     }
 
     public Task AddLogAsync(LogEntry log) => AddLogsAsync(new[] { log });
 
     public async Task AddLogsAsync(IEnumerable<LogEntry> logs)
+{
+    var logList = logs.ToList();
+    if (logList.Count == 0)
+        return;
+
+    foreach (var day in logList.Select(l => l.Timestamp.Date).Distinct())
+        await EnsurePartitionAsync(day);
+
+    await using var conn = new NpgsqlConnection(_connectionString);
+    await conn.OpenAsync();
+    await using var tx = await conn.BeginTransactionAsync();
+
+    // Cache patternHash -> patternId (per batch)
+    var patternCache = new Dictionary<ulong, long>();
+
+    var values = new List<string>();
+    var parameters = new List<NpgsqlParameter>();
+    int i = 0;
+
+    foreach (var log in logList)
     {
-        var logList = logs.ToList();
-        if (!logList.Any()) return;
+        var normalized = _normalizer.NormalizeMessage(log.Message, log.Metadata);
+        var hash = LogNormalizer.ComputePatternHash(normalized);
 
-        var uniquePeriods = logList
-            .Select(l => l.Timestamp.Date)
-            .Distinct();
-
-        foreach (var day in uniquePeriods)
-            await EnsurePartitionAsync(day);
-
-        var sqlValues = new List<string>();
-        var parameters = new List<NpgsqlParameter>();
-        int i = 0;
-
-        foreach (var log in logList)
+        if (!patternCache.TryGetValue(hash, out var patternId))
         {
-            sqlValues.Add($"(@ts{i}, @svc{i}, @lvl{i}, @msg{i}, @meta{i}, @trace{i}, @span{i}, @host{i}, @env{i})");
-            parameters.AddRange(new[]
-            {
-                new NpgsqlParameter($"ts{i}", log.Timestamp),
-                new NpgsqlParameter($"svc{i}", (object?)log.ServiceName ?? DBNull.Value),
-                new NpgsqlParameter($"lvl{i}", log.Level),
-                new NpgsqlParameter($"msg{i}", log.Message),
-                new NpgsqlParameter($"meta{i}", NpgsqlDbType.Jsonb) { Value = JsonSerializer.Serialize(log.Metadata, _jsonOptions) },
-                new NpgsqlParameter($"trace{i}", (object?)log.TraceId ?? DBNull.Value),
-                new NpgsqlParameter($"span{i}", (object?)log.SpanId ?? DBNull.Value),
-                new NpgsqlParameter($"host{i}", (object?)log.Hostname ?? DBNull.Value),
-                new NpgsqlParameter($"env{i}", (object?)log.Environment ?? DBNull.Value),
-            });
-            i++;
+            await using var patternCmd = new NpgsqlCommand(@"
+INSERT INTO log_patterns (normalized_message, pattern_hash, first_seen, last_seen, occurrence_count)
+VALUES (@msg, @hash, NOW(), NOW(), 1)
+ON CONFLICT (pattern_hash)
+DO UPDATE SET
+  last_seen = NOW(),
+  occurrence_count = log_patterns.occurrence_count + 1
+RETURNING id;", conn, tx);
+
+            patternCmd.Parameters.AddWithValue("msg", normalized);
+            patternCmd.Parameters.AddWithValue("hash", (long)hash);
+
+            patternId = (long)await patternCmd.ExecuteScalarAsync();
+            patternCache[hash] = patternId;
         }
 
-        var sql = "INSERT INTO logs (timestamp, service_name, level, message, metadata, trace_id, span_id, hostname, environment) VALUES "
-                  + string.Join(", ", sqlValues);
+        values.Add(
+            $"(@ts{i}, @svc{i}, @lvl{i}, @msg{i}, @meta{i}, @trace{i}, @span{i}, @host{i}, @env{i}, @pid{i})");
 
-        await using var conn = new NpgsqlConnection(_connectionString);
-        await conn.OpenAsync();
-        await using var cmd = new NpgsqlCommand(sql, conn);
-        cmd.Parameters.AddRange(parameters.ToArray());
-        await cmd.ExecuteNonQueryAsync();
+        parameters.AddRange(new[]
+        {
+            new NpgsqlParameter($"ts{i}", log.Timestamp),
+            new NpgsqlParameter($"svc{i}", (object?)log.ServiceName ?? DBNull.Value),
+            new NpgsqlParameter($"lvl{i}", _normalizer.NormalizeLevel(log.Level)),
+            new NpgsqlParameter($"msg{i}", log.Message),
+            new NpgsqlParameter($"meta{i}", NpgsqlDbType.Jsonb)
+                { Value = JsonSerializer.Serialize(log.Metadata, _jsonOptions) },
+            new NpgsqlParameter($"trace{i}", (object?)log.TraceId ?? DBNull.Value),
+            new NpgsqlParameter($"span{i}", (object?)log.SpanId ?? DBNull.Value),
+            new NpgsqlParameter($"host{i}", (object?)log.Hostname ?? DBNull.Value),
+            new NpgsqlParameter($"env{i}", (object?)log.Environment ?? DBNull.Value),
+            new NpgsqlParameter($"pid{i}", patternId)
+        });
+
+        i++;
     }
+
+    var sql = $@"
+INSERT INTO logs
+(timestamp, service_name, level, message, metadata, trace_id, span_id, hostname, environment, pattern_id)
+VALUES {string.Join(", ", values)};";
+
+    await using var cmd = new NpgsqlCommand(sql, conn, tx);
+    cmd.Parameters.AddRange(parameters.ToArray());
+    await cmd.ExecuteNonQueryAsync();
+
+    await tx.CommitAsync();
+}
+
 
     public async Task<IEnumerable<LogEntry>> GetLogsAsync(LogQueryParameters parameters)
     {
@@ -108,7 +147,7 @@ public class PostgresLogRepository : ILogRepository
         var sqlParams = new List<NpgsqlParameter>();
         BuildFilters(sql, sqlParams, parameters);
 
-        sql.Append(" ORDER BY timestamp ASC"); 
+        sql.Append(" ORDER BY timestamp ASC");
 
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
@@ -149,9 +188,226 @@ public class PostgresLogRepository : ILogRepository
         return (long)await cmd.ExecuteScalarAsync();
     }
 
+    public async Task<LogMetadata> GetLogMetadataAsync()
+    {
+        const string sql = @"
+WITH
+  lvl_counts AS (
+    SELECT jsonb_object_agg(level, count) AS data
+    FROM (SELECT level, COUNT(*) AS count FROM logs WHERE level IS NOT NULL GROUP BY level) t
+  ),
+  svc_counts AS (
+    SELECT jsonb_object_agg(service_name, count) AS data
+    FROM (SELECT service_name, COUNT(*) AS count FROM logs WHERE service_name IS NOT NULL GROUP BY service_name) t
+  ),
+  env_counts AS (
+    SELECT jsonb_object_agg(environment, count) AS data
+    FROM (SELECT environment, COUNT(*) AS count FROM logs WHERE environment IS NOT NULL GROUP BY environment) t
+  ),
+  host_counts AS (
+    SELECT jsonb_object_agg(hostname, count) AS data
+    FROM (SELECT hostname, COUNT(*) AS count FROM logs WHERE hostname IS NOT NULL GROUP BY hostname) t
+  ),
+  distincts AS (
+    SELECT
+      array_agg(DISTINCT level) AS levels,
+      array_agg(DISTINCT environment) AS environments,
+      array_agg(DISTINCT service_name) AS services,
+      array_agg(DISTINCT hostname) AS hostnames,
+      COUNT(*) AS log_count
+    FROM logs
+  )
+SELECT
+  d.levels,
+  d.environments,
+  d.services,
+  d.hostnames,
+  d.log_count,
+  l.data AS log_count_by_level,
+  s.data AS log_count_by_service,
+  e.data AS log_count_by_environment,
+  h.data AS log_count_by_hostname
+FROM distincts d, lvl_counts l, svc_counts s, env_counts e, host_counts h;
+
+";
+
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        if (!await reader.ReadAsync())
+            throw new InvalidOperationException("Failed to read log metadata.");
+
+        return new LogMetadata
+        {
+            LogLevels = reader.IsDBNull(0) ? [] : reader.GetFieldValue<string[]>(0),
+            Environments = reader.IsDBNull(1) ? [] : reader.GetFieldValue<string[]>(1),
+            Services = reader.IsDBNull(2) ? [] : reader.GetFieldValue<string[]>(2),
+            Hostnames = reader.IsDBNull(3) ? [] : reader.GetFieldValue<string[]>(3),
+            LogCount = reader.GetInt64(4),
+            LogCountByLevel = reader.IsDBNull(5)
+                ? new()
+                : JsonSerializer.Deserialize<Dictionary<string, int>>(reader.GetString(5))!,
+            LogCountByService = reader.IsDBNull(6)
+                ? new()
+                : JsonSerializer.Deserialize<Dictionary<string, int>>(reader.GetString(6))!,
+            LogCountByEnvironment = reader.IsDBNull(7)
+                ? new()
+                : JsonSerializer.Deserialize<Dictionary<string, int>>(reader.GetString(7))!,
+            LogCountByHostname = reader.IsDBNull(8)
+                ? new()
+                : JsonSerializer.Deserialize<Dictionary<string, int>>(reader.GetString(8))!
+        };
+    }
+
+
+    public async Task<LogPattern?> GetPatternByHashAsync(string patternHash)
+    {
+        const string sql = @"
+SELECT id, normalized_message, pattern_hash, first_seen, last_seen, occurrence_count, level
+FROM log_patterns
+WHERE pattern_hash = @hash;
+";
+
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("hash", patternHash);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        if (!await reader.ReadAsync())
+            return null;
+
+        return MapPattern(reader);
+    }
+    
+    public async Task<long> CreatePatternAsync(string normalizedMessage, string patternHash, string level = "INFO")
+    {
+        const string sql = @"
+INSERT INTO log_patterns (normalized_message, pattern_hash, occurrence_count, level)
+VALUES (@msg, @hash, 1, @lvl)
+RETURNING id;
+";
+
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("msg", normalizedMessage);
+        cmd.Parameters.AddWithValue("hash", patternHash);
+        cmd.Parameters.AddWithValue("lvl", level);
+
+        return (long)await cmd.ExecuteScalarAsync();
+    }
+    
+    public async Task<long> GetOrCreatePatternAsync(
+        string normalizedMessage,
+        string patternHash,
+        DateTime timestamp,
+        string level = "INFO")
+    {
+        const string sql = @"
+INSERT INTO log_patterns (normalized_message, pattern_hash, first_seen, last_seen, occurrence_count, level)
+VALUES (@msg, @hash, @ts, @ts, 1, @lvl)
+ON CONFLICT (pattern_hash)
+DO UPDATE SET
+    last_seen = EXCLUDED.last_seen,
+    occurrence_count = log_patterns.occurrence_count + 1
+RETURNING id;
+";
+
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("msg", normalizedMessage);
+        cmd.Parameters.AddWithValue("hash", patternHash);
+        cmd.Parameters.AddWithValue("ts", timestamp);
+        cmd.Parameters.AddWithValue("lvl", level);
+
+        return (long)await cmd.ExecuteScalarAsync();
+    }
+    
+    public async Task UpdatePatternMessageAsync(long patternId, string normalizedMessage)
+    {
+        const string sql = @"
+UPDATE log_patterns
+SET normalized_message = @msg
+WHERE id = @id;
+";
+
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("id", patternId);
+        cmd.Parameters.AddWithValue("msg", normalizedMessage);
+
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+    public async Task<IReadOnlyList<LogPattern>> GetPatternsAsync(
+        int limit = 100,
+        int offset = 0)
+    {
+        const string sql = @"
+SELECT id, normalized_message, pattern_hash, first_seen, last_seen, occurrence_count, level
+FROM log_patterns
+ORDER BY last_seen DESC
+LIMIT @limit OFFSET @offset;
+";
+
+        var results = new List<LogPattern>();
+
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("limit", limit);
+        cmd.Parameters.AddWithValue("offset", offset);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+            results.Add(MapPattern(reader));
+
+        return results;
+    }
+
+    public async Task DeletePatternAsync(long patternId)
+    {
+        const string sql = @"
+DELETE FROM log_patterns
+WHERE id = @id;
+";
+
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("id", patternId);
+
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+
+    private static LogPattern MapPattern(NpgsqlDataReader reader) =>
+        new()
+        {
+            Id = reader.GetInt64(0),
+            NormalizedMessage = reader.GetString(1),
+            PatternHash = unchecked((ulong)reader.GetInt64(2)),
+
+            FirstSeen = reader.GetDateTime(3),
+            LastSeen = reader.GetDateTime(4),
+            OccurrenceCount = reader.GetInt64(5)
+        };
+
     private async Task EnsurePartitionAsync(DateTime timestamp)
     {
-        var startDate = timestamp.Date.AddDays(-((timestamp.Date - DateTime.MinValue.Date).Days % _partitionLengthInDays));
+        var startDate =
+            timestamp.Date.AddDays(-((timestamp.Date - DateTime.MinValue.Date).Days % _partitionLengthInDays));
         var endDate = startDate.AddDays(_partitionLengthInDays);
 
         var partitionName = $"logs_{startDate:yyyy_MM_dd}_{_partitionLengthInDays}d";
@@ -205,6 +461,7 @@ public class PostgresLogRepository : ILogRepository
             parameters.Add(new NpgsqlParameter($"p{idx}", query.From.Value));
             idx++;
         }
+
         if (query.To.HasValue)
         {
             sql.Append($" AND timestamp <= @p{idx}");
@@ -224,8 +481,46 @@ public class PostgresLogRepository : ILogRepository
                 sql.Append($" AND message ILIKE @p{idx}");
                 parameters.Add(new NpgsqlParameter($"p{idx}", $"%{query.Search}%"));
             }
+
             idx++;
         }
+
+        if (!string.IsNullOrWhiteSpace(query.Metadata))
+        {
+            var metadataFilter = JsonSerializer.Deserialize<Dictionary<string, object>>(query.Metadata, _jsonOptions);
+            if (metadataFilter != null)
+            {
+                foreach (var kvp in metadataFilter)
+                {
+                    sql.Append($" AND metadata ->> @p{idx} = @p{idx + 1}");
+                    parameters.Add(new NpgsqlParameter($"p{idx}", kvp.Key));
+                    parameters.Add(new NpgsqlParameter($"p{idx + 1}", kvp.Value.ToString() ?? ""));
+                    idx += 2;
+                }
+            }
+        }
+    }
+    private async Task<long> UpsertPatternAsync(
+        NpgsqlConnection conn,
+        NpgsqlTransaction tx,
+        string normalizedMessage,
+        ulong patternHash)
+    {
+        const string sql = @"
+INSERT INTO log_patterns (normalized_message, pattern_hash, first_seen, last_seen, occurrence_count)
+VALUES (@normalized, @hash, NOW(), NOW(), 1)
+ON CONFLICT (pattern_hash)
+DO UPDATE SET
+    last_seen = NOW(),
+    occurrence_count = log_patterns.occurrence_count + 1
+RETURNING id;
+";
+
+        await using var cmd = new NpgsqlCommand(sql, conn, tx);
+        cmd.Parameters.AddWithValue("normalized", normalizedMessage);
+        cmd.Parameters.AddWithValue("hash", (long)patternHash); // stored as BIGINT
+
+        return (long)await cmd.ExecuteScalarAsync();
     }
 
     private LogEntry MapReader(NpgsqlDataReader reader) =>

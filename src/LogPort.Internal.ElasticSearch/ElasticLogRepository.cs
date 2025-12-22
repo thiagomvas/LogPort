@@ -1,5 +1,5 @@
 using LogPort.Core.Models;
-using LogPort.Internal.Common.Interface;
+using LogPort.Internal.Abstractions;
 using Nest;
 
 namespace LogPort.Internal.ElasticSearch;
@@ -103,6 +103,41 @@ public class ElasticLogRepository : ILogRepository
         );
 
         return response.Count;
+    }
+
+    public Task<LogMetadata> GetLogMetadataAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<LogPattern?> GetPatternByHashAsync(string patternHash)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<long> CreatePatternAsync(string normalizedMessage, string patternHash, string level)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<long> GetOrCreatePatternAsync(string normalizedMessage, string patternHash, DateTime timestamp, string level)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task UpdatePatternMessageAsync(long patternId, string normalizedMessage)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<IReadOnlyList<LogPattern>> GetPatternsAsync(int limit = 100, int offset = 0)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task DeletePatternAsync(long patternId)
+    {
+        throw new NotImplementedException();
     }
 
     private Func<QueryContainerDescriptor<LogEntry>, QueryContainer> BuildQuery(LogQueryParameters parameters)

@@ -1,5 +1,5 @@
 using LogPort.Core.Models;
-using LogPort.Internal.Common.Interface;
+using LogPort.Internal.Abstractions;
 using LogPort.Internal.Common.Models;
 
 namespace LogPort.Internal.Common.Services;
