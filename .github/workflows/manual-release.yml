@@ -1,0 +1,96 @@
+name: Manual Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type'
+        required: true
+        default: 'beta'
+        type: choice
+        options:
+          - beta
+          - prod
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release
+
+      - name: Test
+        run: dotnet test --configuration Release
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Frontend Dependencies
+        working-directory: src/LogPort.UI
+        run: npm ci
+
+      - name: Build Frontend
+        working-directory: src/LogPort.UI
+        run: npm run build
+
+      - name: Install GitVersion
+        uses: GitTools/actions/gitversion/setup@v0
+        with:
+          versionSpec: '5.12.0'
+
+      - name: Run GitVersion
+        id: gitversion
+        uses: GitTools/actions/gitversion/execute@v0
+
+      - name: Determine Release Version
+        run: |
+          CLEAN_VERSION=$(echo "${{ steps.gitversion.outputs.fullSemVer }}" | cut -d'+' -f1)
+
+          if [ "${{ inputs.release_type }}" = "beta" ]; then
+            RELEASE_TAG="v${CLEAN_VERSION}-beta"
+            IMAGE_TAG="beta"
+          else
+            RELEASE_TAG="v${CLEAN_VERSION}"
+            IMAGE_TAG="latest"
+          fi
+
+          echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_ENV
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+          echo "CLEAN_VERSION=$CLEAN_VERSION" >> $GITHUB_ENV
+
+      - name: Create Git Tag
+        run: |
+          git tag $RELEASE_TAG
+          git push origin $RELEASE_TAG
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./src/LogPort.Agent/Dockerfile
+          push: true
+          tags: |
+            thiagomvas/logport:${{ env.IMAGE_TAG }}
+            thiagomvas/logport:${{ env.CLEAN_VERSION }}

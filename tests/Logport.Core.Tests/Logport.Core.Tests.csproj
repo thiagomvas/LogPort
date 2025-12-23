@@ -21,7 +21,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\src\LogPort.Core\LogPort.Core.csproj" />
+      <ProjectReference Include="..\..\src\LogPort.Core\LogPort.Core.csproj" />
     </ItemGroup>
 
 </Project>
