@@ -1,56 +1,28 @@
-﻿using LogPort.Core.Models;
-using LogPort.SDK;
+﻿using LogPort.Core;
 
-var random = new Random();
-var services = new[] { "auth-api", "payment-api", "orders-api", "inventory-api" };
-var levels = new[] { "INFO", "WARN", "ERROR", "DEBUG" };
-var messages = new[]
+var normalizer = new LogNormalizer();
+
+var samples = new[]
 {
-    "User logged in",
-    "Payment processed",
-    "Order created",
-    "Inventory updated",
-    "Failed to authenticate",
-    "Timeout while calling external service"
+    "User JohnDoe failed to login from IP 123.45.67.89",
+    "2025-01-12 14:33:21.456 Request completed in 123ms",
+    "2025-01-12T14:33:21Z CorrelationId=3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+    "Error in C:\\Services\\Auth\\LoginService.cs at line 248",
+    "2025-01-12T14:33:21.987Z Failed to open /var/log/nginx/access.log",
+    "Job 42 failed after 3 retries (JobId=6fa459ea-ee8a-3ca4-894e-db77e160355e)",
+    "2025-01-12 14:33:21,123 [ERROR] Request 9812 failed in C:\\Api\\OrdersController.cs:87",
+    "at MyApp.Services.UserService.Login(User user) in /src/UserService.cs:line 152",
+    "User authentication failed"
 };
 
-using var client = LogPortClient.FromServerUrl("ws://localhost:8080/stream");
-await client.EnsureConnectedAsync();
-
-// Send a log every time a key is pressed
-while (Console.ReadKey().Key != ConsoleKey.Escape)
+var metadata = new Dictionary<string, object>
 {
-    var log = new LogEntry
-    {
-        Timestamp = DateTime.UtcNow,
-        ServiceName = services[random.Next(services.Length)],
-        Level = levels[random.Next(levels.Length)],
-        Message = messages[random.Next(messages.Length)]
-    };
+    ["username"] = "JohnDoe",
+    ["ip_address"] = "123.45.67.89"
+};
 
-    client.Log(log);
-    Console.WriteLine($"Sent log: {log.Timestamp} [{log.ServiceName}] {log.Level} - {log.Message}");
-    
-}
-
-return;
-const int LOGS_PER_DAY = 1000;
-const int DAYS = 7;
-
-for (int day = 0; day < DAYS; day++)
+foreach (var message in samples)
 {
-    var date = DateTime.UtcNow.Date.AddDays(-day);
-    for (int i = 0; i < LOGS_PER_DAY; i++)
-    {
-        var log = new LogEntry
-        {
-            Timestamp = date.AddSeconds(random.Next(0, 86400)),
-            ServiceName = services[random.Next(services.Length)],
-            Level = levels[random.Next(levels.Length)],
-            Message = messages[random.Next(messages.Length)]
-        };
-
-        client.Log(log);
-        Thread.Sleep(5);
-    }
+    Console.WriteLine(normalizer.NormalizeMessage(message, metadata));
+    Console.WriteLine(LogNormalizer.ComputePatternHash(normalizer.NormalizeMessage(message, metadata)));
 }

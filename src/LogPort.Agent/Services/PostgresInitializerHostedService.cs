@@ -1,5 +1,6 @@
 using LogPort.Core.Models;
 using LogPort.Data.Postgres;
+using LogPort.Internal;
 
 namespace LogPort.Agent.Services;
 
@@ -19,7 +20,8 @@ public class PostgresInitializerHostedService : IHostedService
         try
         {
             _logger.LogInformation("Initializing Postgres...");
-            await DatabaseInitializer.InitializeAsync(_config.Postgres.ConnectionString);
+            var initializer = new DatabaseInitializer(msg => _logger.LogInformation(msg));
+            await initializer.InitializeAsync(_config.Postgres.ConnectionString!);
             _logger.LogInformation("Postgres initialized successfully.");
         }
         catch (Exception ex)

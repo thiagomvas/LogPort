@@ -1,4 +1,5 @@
 using LogPort.Core.Models;
+using LogPort.Internal;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Npgsql;
 

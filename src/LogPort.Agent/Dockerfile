@@ -4,23 +4,32 @@ WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 
+FROM node:20 AS ui-build
+WORKDIR /src/LogPort.UI
+COPY src/LogPort.UI/package*.json ./
+RUN npm ci --verbose
+COPY src/LogPort.UI .
+RUN npm run build
+
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["src/LogPort.Api/LogPort.Api.csproj", "src/LogPort.Api/"]
+COPY ["src/LogPort.Agent/LogPort.Agent.csproj", "src/LogPort.Agent/"]
 COPY ["src/LogPort.Core/LogPort.Core.csproj", "src/LogPort.Core/"]
-COPY ["src/LogPort.ElasticSearch/LogPort.ElasticSearch.csproj", "src/LogPort.ElasticSearch/"]
-COPY ["src/LogPort.Postgres/LogPort.Postgres.csproj", "src/LogPort.Postgres/"]
-RUN dotnet restore "src/LogPort.Api/LogPort.Api.csproj"
+COPY ["src/LogPort.Internal.ElasticSearch/LogPort.Internal.ElasticSearch.csproj", "src/LogPort.Internal.ElasticSearch/"]
+COPY ["src/LogPort.Internal.Common/LogPort.Internal.Common.csproj", "src/LogPort.Internal.Common/"]
+COPY ["src/LogPort.Internal.Postgres/LogPort.Internal.Postgres.csproj", "src/LogPort.Internal.Postgres/"]
+RUN dotnet restore "src/LogPort.Agent/LogPort.Agent.csproj"
 COPY . .
-WORKDIR "/src/src/LogPort.Api"
-RUN dotnet build "./LogPort.Api.csproj" -c $BUILD_CONFIGURATION -o /app/build
+WORKDIR "/src/src/LogPort.Agent"
+RUN dotnet build "./LogPort.Agent.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./LogPort.Api.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./LogPort.Agent.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "LogPort.Api.dll"]
+COPY --from=ui-build /src/LogPort.UI/dist ./wwwroot
+ENTRYPOINT ["dotnet", "LogPort.Agent.dll"]

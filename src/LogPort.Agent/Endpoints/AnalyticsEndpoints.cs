@@ -9,12 +9,12 @@ public static class AnalyticsEndpoints
 {
     public static void MapAnalyticsEndpoints(this WebApplication app)
     {
-        app.MapGet("/analytics/histogram", GetHistogram)
+        app.MapGet("api/analytics/histogram", GetHistogram)
         .WithTags("Analytics")
         .WithName("GetLogHistogram")
         .WithSummary("Retrieves a histogram of log entries over time based on the provided query parameters.");
 
-        app.MapPost("/analytics/count-by-type", GetCountByType);
+        app.MapGet("api/analytics/count-by-type", GetCountByType);
     }
 
     private static async Task<IResult> GetHistogram(AnalyticsService service, [AsParameters] LogQueryParameters parameters, [FromQuery] TimeSpan? interval)

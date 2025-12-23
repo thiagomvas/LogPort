@@ -5,6 +5,7 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+        <Version>1.0.0-nightly</Version>
     </PropertyGroup>
 
     <ItemGroup>
@@ -12,9 +13,12 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\LogPort.AspNetCore\LogPort.AspNetCore.csproj" />
       <ProjectReference Include="..\LogPort.Core\LogPort.Core.csproj" />
+      <ProjectReference Include="..\LogPort.Internal.Docker\LogPort.Internal.Docker.csproj" />
       <ProjectReference Include="..\LogPort.Internal.ElasticSearch\LogPort.Internal.ElasticSearch.csproj" />
       <ProjectReference Include="..\LogPort.Internal.Postgres\LogPort.Internal.Postgres.csproj" />
+      <ProjectReference Include="..\LogPort.Internal.Redis\LogPort.Internal.Redis.csproj" />
     </ItemGroup>
 
     <ItemGroup>

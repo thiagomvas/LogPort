@@ -1,0 +1,113 @@
+.logs-page {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+    color: var(--text-main);
+    background-color: var(--color-background);
+    min-height: 100vh;
+}
+
+.filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    background-color: var(--color-surface);
+    padding: 12px;
+    border-radius: 10px;
+    box-shadow: var(--shadow-small);
+}
+
+.filter-bar input,
+.filter-bar select {
+    background-color: var(--color-surface-alt);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 8px;
+    font-size: 0.9rem;
+}
+
+.filter-bar button {
+    background-color: var(--color-primary);
+    color: var(--text-inverse);
+    border: none;
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: 0.2s ease;
+    box-shadow: var(--shadow-small);
+}
+
+.filter-bar button:hover:not(:disabled) {
+    background-color: var(--color-primary-light);
+}
+
+.controls-bar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+    padding: 14px;
+    background-color: var(--color-surface);
+    border-radius: 10px;
+    box-shadow: var(--shadow-medium);
+}
+
+.btn {
+    border: none;
+    padding: 10px 18px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-small);
+}
+
+.btn-primary {
+    background-color: var(--color-primary);
+    color: var(--text-inverse);
+}
+
+.btn-primary:hover:not(:disabled) {
+    background-color: var(--color-primary-light);
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background-color: var(--color-secondary-dark);
+    color: var(--text-main);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background-color: var(--color-secondary);
+}
+
+.btn-active {
+    background-color: var(--accent-success);
+    color: var(--text-inverse);
+    font-weight: 600;
+    box-shadow: var(--shadow-medium);
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.loading-text {
+    text-align: center;
+    margin: 10px;
+    color: var(--text-tertiary);
+}
+
+.last-updated {
+    display: block;
+    text-align: right;
+    color: var(--text-tertiary);
+    font-size: var(--font-size-small);
+    margin-bottom: 10px;
+}
