@@ -20,7 +20,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # needed to see all tags
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -49,7 +49,7 @@ jobs:
         working-directory: src/LogPort.UI
         run: npm run build
 
-      - name: Install GitVersion
+      - name: Setup GitVersion
         uses: GitTools/actions/gitversion/setup@v0
         with:
           versionSpec: '5.12.0'
@@ -60,11 +60,17 @@ jobs:
 
       - name: Determine Release Version
         run: |
+          # Base version from GitVersion
           CLEAN_VERSION=$(echo "${{ steps.gitversion.outputs.fullSemVer }}" | cut -d'+' -f1)
-
+          
           if [ "${{ inputs.release_type }}" = "beta" ]; then
-            BETA_COUNT=$(git rev-list --count HEAD ^$(git describe --tags --abbrev=0))
-            RELEASE_TAG="v${CLEAN_VERSION}-beta.${BETA_COUNT}"
+            LATEST_BETA=$(git tag --list "v${CLEAN_VERSION}-beta.*" | sort -V | tail -n1)
+            if [ -z "$LATEST_BETA" ]; then
+              BETA_NUM=1
+            else
+              BETA_NUM=$(( ${LATEST_BETA##*.} + 1 ))
+            fi
+            RELEASE_TAG="v${CLEAN_VERSION}-beta.${BETA_NUM}"
             IMAGE_TAG="beta"
           else
             RELEASE_TAG="v${CLEAN_VERSION}"
@@ -74,6 +80,7 @@ jobs:
           echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_ENV
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
           echo "CLEAN_VERSION=$CLEAN_VERSION" >> $GITHUB_ENV
+          echo "Determined release tag: $RELEASE_TAG"
 
       - name: Create Git Tag
         run: |
