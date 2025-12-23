@@ -63,7 +63,8 @@ jobs:
           CLEAN_VERSION=$(echo "${{ steps.gitversion.outputs.fullSemVer }}" | cut -d'+' -f1)
 
           if [ "${{ inputs.release_type }}" = "beta" ]; then
-            RELEASE_TAG="v${CLEAN_VERSION}-beta"
+            BETA_COUNT=$(git rev-list --count HEAD ^$(git describe --tags --abbrev=0))
+            RELEASE_TAG="v${CLEAN_VERSION}-beta.${BETA_COUNT}"
             IMAGE_TAG="beta"
           else
             RELEASE_TAG="v${CLEAN_VERSION}"
