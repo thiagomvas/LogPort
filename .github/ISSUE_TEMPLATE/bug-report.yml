@@ -42,4 +42,3 @@ body:
       label: Logs / Screenshots
       description: Paste logs or attach screenshots
       render: shell
-      required: false
