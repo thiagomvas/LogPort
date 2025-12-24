@@ -31,11 +31,9 @@ body:
     attributes:
       label: Alternatives Considered
       description: Other solutions or workarounds
-      required: false
 
   - type: textarea
     id: additional
     attributes:
       label: Additional Context
       description: Screenshots, diagrams, links, etc.
-      required: false
