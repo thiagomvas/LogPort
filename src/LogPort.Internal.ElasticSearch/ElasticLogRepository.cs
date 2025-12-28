@@ -105,6 +105,11 @@ public class ElasticLogRepository : ILogRepository
         return response.Count;
     }
 
+    public Task<LogMetadata> GetLogMetadataAsync(DateTimeOffset? from = null, DateTimeOffset? to = null)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<LogMetadata> GetLogMetadataAsync()
     {
         throw new NotImplementedException();

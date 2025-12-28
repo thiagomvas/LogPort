@@ -1,13 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import {
-  type LogEntry,
-  type LogQueryParameters,
-} from '../../lib/types/log';
-import type { LogBucket } from '../../lib/types/analytics';
-import { getLogs, normalizeLog } from '../../lib/services/logs.service';
-import { HistogramChart } from '../../components/histogram';
-import { LogViewer } from '../../components/logViewer';
-import '../../styles/logsPage.css';
+import '../styles/logsPage.css';
+import { HistogramChart } from '../components/histogram';
+import { LogViewer } from '../components/logViewer';
+import { getLogs, normalizeLog } from '../lib/services/logs.service';
+import type { LogBucket } from '../lib/types/analytics';
+import type { LogEntry, LogQueryParameters } from '../lib/types/log';
 
 const FIFTEEN_MINUTES_MS = 15 * 60 * 1000;
 const ONE_MINUTE_MS = 60 * 1000;

@@ -1,0 +1,170 @@
+.dashboard-page {
+  padding: 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  color: var(--text-main);
+}
+
+/* =========================
+   Stat cards
+   ========================= */
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.stat-card {
+  background: var(--color-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: var(--shadow-small);
+}
+
+.stat-card .stat-title {
+  font-size: var(--font-size-small);
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.stat-card .stat-value {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+/* Intent variants */
+.stat-card.danger {
+  border-color: var(--color-error);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-error) 20%, transparent),
+    transparent
+  );
+}
+
+/* =========================
+   Sections
+   ========================= */
+
+.dashboard-page section {
+  background: var(--color-surface-alt);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: var(--shadow-small);
+}
+
+.dashboard-page h3 {
+  margin: 0 0 12px 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* =========================
+   Key-value bars
+   ========================= */
+
+.kv-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.kv-row {
+  display: grid;
+  grid-template-columns: 160px 1fr 60px;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.kv-row span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kv-row .bar {
+  height: 8px;
+  background: var(--color-background);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.kv-row .bar .fill {
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--color-primary),
+    var(--color-primary-light)
+  );
+  transition: width 0.2s ease;
+}
+
+/* =========================
+   Actions
+   ========================= */
+
+.dashboard-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.dashboard-actions .btn {
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  background: var(--color-surface);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+}
+
+.dashboard-actions .btn:hover {
+  background: var(--bg-hover);
+}
+
+/* Emphasis buttons */
+.dashboard-actions .btn-primary {
+  background: var(--color-primary);
+  border-color: var(--color-primary-dark);
+  color: var(--text-inverse);
+}
+
+.dashboard-actions .btn-primary:hover {
+  background: var(--color-primary-dark);
+}
+
+.dashboard-actions .btn-danger {
+  background: var(--color-error);
+  border-color: var(--accent-error);
+  color: var(--text-inverse);
+}
+
+.dashboard-actions .btn-danger:hover {
+  background: var(--accent-error);
+}
+
+/* =========================
+   Responsive
+   ========================= */
+
+@media (max-width: 600px) {
+  .kv-row {
+    grid-template-columns: 120px 1fr 50px;
+  }
+
+  .stat-card .stat-value {
+    font-size: 1.4rem;
+  }
+}

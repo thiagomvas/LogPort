@@ -14,7 +14,7 @@ export default function Layout({ children }: LayoutProps) {
       <aside className="sidebar">
         {/* App / Logo area */}
         <div className="sidebar-header">
-          <img src='public/vite.svg' className="app-logo"></img>
+          {/* <img src='public/vite.svg' className="app-logo"></img> */}
           <span className="app-name">LogPort</span>
         </div>
 

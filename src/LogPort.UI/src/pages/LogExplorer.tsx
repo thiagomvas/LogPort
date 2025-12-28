@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { type LogEntry, type LogMetadata, type LogQueryParameters } from '../../lib/types/log';
-import { getLogs, normalizeLog, getMetadata } from '../../lib/services/logs.service';
-import type { LogBucket } from '../../lib/types/analytics';
-import { getHistogramData } from '../../lib/services/analytics.service';
-import { HistogramChart } from '../../components/histogram';
-import '../../styles/logsPage.css';
-import { LogViewer } from '../../components/logViewer';
+
+import '../styles/logsPage.css';
+import { HistogramChart } from '../components/histogram';
+import { LogViewer } from '../components/logViewer';
+import { getHistogramData } from '../lib/services/analytics.service';
+import { getMetadata, getLogs } from '../lib/services/logs.service';
+import type { LogBucket } from '../lib/types/analytics';
+import type { LogEntry, LogMetadata, LogQueryParameters } from '../lib/types/log';
 
 function LogExplorer() {
   const [logs, setLogs] = useState<LogEntry[]>([]);

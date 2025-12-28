@@ -188,25 +188,55 @@ VALUES {string.Join(", ", values)};";
         return (long)await cmd.ExecuteScalarAsync();
     }
 
-    public async Task<LogMetadata> GetLogMetadataAsync()
+    public async Task<LogMetadata> GetLogMetadataAsync(
+        DateTimeOffset? from = null,
+        DateTimeOffset? to = null)
+
     {
         const string sql = @"
 WITH
+  filtered_logs AS (
+    SELECT *
+    FROM logs
+    WHERE
+      (@from IS NULL OR timestamp >= @from)
+      AND (@to IS NULL OR timestamp <= @to)
+  ),
   lvl_counts AS (
     SELECT jsonb_object_agg(level, count) AS data
-    FROM (SELECT level, COUNT(*) AS count FROM logs WHERE level IS NOT NULL GROUP BY level) t
+    FROM (
+      SELECT level, COUNT(*) AS count
+      FROM filtered_logs
+      WHERE level IS NOT NULL
+      GROUP BY level
+    ) t
   ),
   svc_counts AS (
     SELECT jsonb_object_agg(service_name, count) AS data
-    FROM (SELECT service_name, COUNT(*) AS count FROM logs WHERE service_name IS NOT NULL GROUP BY service_name) t
+    FROM (
+      SELECT service_name, COUNT(*) AS count
+      FROM filtered_logs
+      WHERE service_name IS NOT NULL
+      GROUP BY service_name
+    ) t
   ),
   env_counts AS (
     SELECT jsonb_object_agg(environment, count) AS data
-    FROM (SELECT environment, COUNT(*) AS count FROM logs WHERE environment IS NOT NULL GROUP BY environment) t
+    FROM (
+      SELECT environment, COUNT(*) AS count
+      FROM filtered_logs
+      WHERE environment IS NOT NULL
+      GROUP BY environment
+    ) t
   ),
   host_counts AS (
     SELECT jsonb_object_agg(hostname, count) AS data
-    FROM (SELECT hostname, COUNT(*) AS count FROM logs WHERE hostname IS NOT NULL GROUP BY hostname) t
+    FROM (
+      SELECT hostname, COUNT(*) AS count
+      FROM filtered_logs
+      WHERE hostname IS NOT NULL
+      GROUP BY hostname
+    ) t
   ),
   distincts AS (
     SELECT
@@ -215,7 +245,7 @@ WITH
       array_agg(DISTINCT service_name) AS services,
       array_agg(DISTINCT hostname) AS hostnames,
       COUNT(*) AS log_count
-    FROM logs
+    FROM filtered_logs
   )
 SELECT
   d.levels,
@@ -228,6 +258,7 @@ SELECT
   e.data AS log_count_by_environment,
   h.data AS log_count_by_hostname
 FROM distincts d, lvl_counts l, svc_counts s, env_counts e, host_counts h;
+
 
 ";
 

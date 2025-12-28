@@ -9,7 +9,10 @@ public interface ILogRepository
     Task<IEnumerable<LogEntry>> GetLogsAsync(LogQueryParameters parameters);
     IAsyncEnumerable<IReadOnlyList<LogEntry>> GetBatchesAsync(LogQueryParameters parameters, int batchSize);
     Task<long> CountLogsAsync(LogQueryParameters parameters);
-    Task<LogMetadata> GetLogMetadataAsync();
+
+    Task<LogMetadata> GetLogMetadataAsync(
+        DateTimeOffset? from = null,
+        DateTimeOffset? to = null);
     
     Task<LogPattern?> GetPatternByHashAsync(string patternHash);
     Task<long> CreatePatternAsync(string normalizedMessage, string patternHash, string level = "INFO");

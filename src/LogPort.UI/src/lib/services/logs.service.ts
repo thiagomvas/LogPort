@@ -24,6 +24,40 @@ export function normalizeLog(log: Record<string, any>): LogEntry {
   };
 }
 
-export function getMetadata(): Promise<LogMetadata> {
-  return baseFetch<LogMetadata>('/api/logs/metadata');
+export function getMetadata(
+  params?: {
+    from?: Date | string;
+    to?: Date | string;
+    lastDays?: number;
+  }
+): Promise<LogMetadata> {
+  const qs = new URLSearchParams();
+
+  // if (params?.from) {
+  //   qs.set(
+  //     'from',
+  //     params.from instanceof Date
+  //       ? params.from.toISOString()
+  //       : params.from
+  //   );
+  // }
+
+  // if (params?.to) {
+  //   qs.set(
+  //     'to',
+  //     params.to instanceof Date
+  //       ? params.to.toISOString()
+  //       : params.to
+  //   );
+  // }
+
+  // if (params?.lastDays !== null) {
+  //   qs.set('lastDays', String(params!.lastDays));
+  // }
+
+  const url = qs.toString()
+    ? `/api/logs/metadata?${qs.toString()}`
+    : '/api/logs/metadata';
+
+  return baseFetch<LogMetadata>(url);
 }

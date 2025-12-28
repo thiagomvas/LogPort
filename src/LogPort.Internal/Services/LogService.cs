@@ -59,23 +59,33 @@ public class LogService
         return result;
     }
     
-    public async Task<LogMetadata> GetLogMetadataAsync()
+    public async Task<LogMetadata> GetLogMetadataAsync(
+        DateTimeOffset? from = null,
+        DateTimeOffset? to = null)
     {
-        var key = CacheKeys.LogMetadata;
+        var key = $"{CacheKeys.LogMetadata}:{from?.ToUnixTimeSeconds() ?? 0}:{to?.ToUnixTimeSeconds() ?? 0}";
 
         var cachedMetadata = await _cache.GetAsync<LogMetadata>(key);
         if (cachedMetadata is not null)
         {
-            _logger?.LogDebug("Getting log metadata from cache with key: {CacheKey}", key);
+            _logger?.LogDebug(
+                "Getting log metadata from cache with key: {CacheKey}",
+                key
+            );
             return cachedMetadata;
         }
 
-        var result = await _repository.GetLogMetadataAsync();
+        var result = await _repository.GetLogMetadataAsync(from, to);
 
-        await _cache.SetAsync(key, result, _config.Cache.DefaultExpiration);
+        await _cache.SetAsync(
+            key,
+            result,
+            _config.Cache.DefaultExpiration
+        );
 
         return result;
     }
+
     
     public async Task<IEnumerable<LogPattern>> GetLogPatternsAsync(int limit = 100, int offset = 0)
     {
