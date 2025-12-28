@@ -20,7 +20,6 @@ public static class LogEndpoints
         app.MapGet("api/logs/metadata", GetLogMetadataAsync);
     }
 
-// Add a new log
     private static async Task<IResult> AddLogAsync(LogService logRepository, LogEntry log)
     {
         await logRepository.AddLogAsync(log);
@@ -42,9 +41,20 @@ public static class LogEndpoints
         return Results.Ok(new { Count = count });
     }
 
-    private static async Task<IResult> GetLogMetadataAsync(LogService repository)
+    private static async Task<IResult> GetLogMetadataAsync(
+        LogService repository,
+        DateTimeOffset? from,
+        DateTimeOffset? to,
+        int? lastDays)
     {
-        var metadata = await repository.GetLogMetadataAsync();
+        if (lastDays.HasValue && lastDays > 0)
+        {
+            to ??= DateTimeOffset.UtcNow;
+            from = to.Value.AddDays(-lastDays.Value);
+        }
+
+        var metadata = await repository.GetLogMetadataAsync(from, to);
         return Results.Ok(metadata);
     }
+
 }

@@ -93,7 +93,7 @@ public class LogServiceTests
     [Test]
     public async Task GetLogMetadataAsync_UsesCache()
     {
-        var key = CacheKeys.LogMetadata;
+        var key = CacheKeys.BuildLogMetadataCacheKey();
         var expected = new LogMetadata();
 
         _cache.GetAsync<LogMetadata>(key).Returns(expected);
@@ -107,7 +107,7 @@ public class LogServiceTests
     [Test]
     public async Task GetLogMetadataAsync_FetchesAndCaches()
     {
-        var key = CacheKeys.LogMetadata;
+        var key = CacheKeys.BuildLogMetadataCacheKey();
 
         _cache.GetAsync<LogMetadata>(key).Returns((LogMetadata)null);
         var repoResult = new LogMetadata();

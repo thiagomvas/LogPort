@@ -1,0 +1,111 @@
+.layout {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  /* sidebar + content */
+  min-height: 100vh;
+  background-color: var(--color-background);
+  color: var(--text-main);
+}
+
+
+.sidebar {
+  background-color: var(--color-surface);
+  color: var(--text-main);
+  padding: 12px;
+
+  width: max-content;
+  max-width: 280px;
+  box-sizing: border-box;
+  overflow-x: hidden;
+
+  border-right: 1px solid var(--border-color);
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+
+
+.sidebar-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.app-logo {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.app-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-main);
+  text-align: center;
+  white-space: nowrap;
+}
+
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 6px 10px;
+  cursor: pointer;
+  box-sizing: border-box;
+
+  white-space: nowrap;
+  color: var(--text-secondary);
+  border-radius: 6px;
+  text-decoration: none;
+
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.sidebar-item:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-main);
+}
+
+.sidebar-item.active {
+  background-color: var(--color-primary-dark);
+  color: var(--text-main);
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: inherit;
+}
+
+.label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.content {
+  padding: 16px;
+  box-sizing: border-box;
+  background-color: var(--color-background);
+  color: var(--text-main);
+  overflow-y: auto;
+  min-width: 0;
+}

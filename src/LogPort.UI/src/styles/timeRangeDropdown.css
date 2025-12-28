@@ -1,0 +1,62 @@
+/* =========================
+   Time range picker
+   ========================= */
+
+.time-range-picker {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.time-range-picker select,
+.time-range-picker input {
+  background: var(--color-surface);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  box-shadow: var(--shadow-small);
+}
+
+.time-range-picker select:hover,
+.time-range-picker input:hover {
+  background: var(--bg-hover);
+}
+
+.time-range-picker select:focus,
+.time-range-picker input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+/* Custom date inputs group */
+.time-range-picker .custom-range {
+  display: flex;
+  gap: 8px;
+}
+
+/* Optional label (if you add one) */
+.time-range-picker-label {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .time-range-picker {
+    gap: 8px;
+  }
+
+  .time-range-picker .custom-range {
+    width: 100%;
+  }
+
+  .time-range-picker select,
+  .time-range-picker input {
+    flex: 1;
+  }
+}
