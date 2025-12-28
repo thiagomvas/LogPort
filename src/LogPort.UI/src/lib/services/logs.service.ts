@@ -33,27 +33,27 @@ export function getMetadata(
 ): Promise<LogMetadata> {
   const qs = new URLSearchParams();
 
-  // if (params?.from) {
-  //   qs.set(
-  //     'from',
-  //     params.from instanceof Date
-  //       ? params.from.toISOString()
-  //       : params.from
-  //   );
-  // }
+  if (params?.from) {
+    qs.set(
+      'from',
+      params.from instanceof Date
+        ? params.from.toISOString()
+        : params.from
+    );
+  }
 
-  // if (params?.to) {
-  //   qs.set(
-  //     'to',
-  //     params.to instanceof Date
-  //       ? params.to.toISOString()
-  //       : params.to
-  //   );
-  // }
+  if (params?.to) {
+    qs.set(
+      'to',
+      params.to instanceof Date
+        ? params.to.toISOString()
+        : params.to
+    );
+  }
 
-  // if (params?.lastDays !== null) {
-  //   qs.set('lastDays', String(params!.lastDays));
-  // }
+  if (params?.lastDays) {
+    qs.set('lastDays', String(params!.lastDays));
+  }
 
   const url = qs.toString()
     ? `/api/logs/metadata?${qs.toString()}`

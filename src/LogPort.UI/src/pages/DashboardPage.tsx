@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import '../styles/dashboardPage.css';
 import { getMetadata } from '../lib/services/logs.service';
 import type { LogMetadata } from '../lib/types/log';
+import type { TimeRange } from '../lib/types/timeRange';
+import TimeRangeDropdown from '../components/timeRangeDropdown';
 
 const topEntry = (map: Record<string, number>) =>
   Object.entries(map)
@@ -13,10 +15,24 @@ const percentage = (part: number, total: number) =>
 
 function DashboardPage() {
   const [meta, setMeta] = useState<LogMetadata | null>(null);
-
+  const [range, setRange] = useState<TimeRange | null>(null);
+  
   useEffect(() => {
-    getMetadata().then(setMeta).catch(console.error);
-  }, []);
+    const to = range?.to ?? new Date();
+    const from =
+    range?.from ??
+    (() => {
+      const d = new Date(to);
+      d.setHours(d.getHours() - 24);
+      return d;
+    })();
+    console.log("Requerying with", { from, to });
+    getMetadata({ from, to })
+      .then(setMeta)
+      .catch(console.error);
+    console.log("Got results ", meta);
+  }, [range]);
+
 
   if (!meta) {return <div>Loading dashboard…</div>;}
 
@@ -29,6 +45,7 @@ function DashboardPage() {
 
   return (
     <div className="dashboard-page">
+      <TimeRangeDropdown onChange={setRange} />
       {/* Summary */}
       <div className="stat-grid">
         <Stat title="Total Logs" value={total} />

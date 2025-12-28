@@ -199,8 +199,9 @@ WITH
     SELECT *
     FROM logs
     WHERE
-      (@from IS NULL OR timestamp >= @from)
-      AND (@to IS NULL OR timestamp <= @to)
+      (@from_ts IS NULL OR ""timestamp"" >= @from_ts::timestamptz)
+      AND (@to_ts IS NULL OR ""timestamp"" <= @to_ts::timestamptz)
+
   ),
   lvl_counts AS (
     SELECT jsonb_object_agg(level, count) AS data
@@ -265,6 +266,13 @@ FROM distincts d, lvl_counts l, svc_counts s, env_counts e, host_counts h;
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
         await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.Add("from_ts", NpgsqlDbType.TimestampTz)
+            .Value = from ?? (object)DBNull.Value;
+
+        cmd.Parameters.Add("to_ts", NpgsqlDbType.TimestampTz)
+            .Value = to ?? (object)DBNull.Value;
+
+
         await using var reader = await cmd.ExecuteReaderAsync();
 
         if (!await reader.ReadAsync())

@@ -6,10 +6,6 @@
   color: var(--text-main);
 }
 
-/* =========================
-   Stat cards
-   ========================= */
-
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -40,7 +36,6 @@
   color: var(--text-main);
 }
 
-/* Intent variants */
 .stat-card.danger {
   border-color: var(--color-error);
   background: linear-gradient(
@@ -49,10 +44,6 @@
     transparent
   );
 }
-
-/* =========================
-   Sections
-   ========================= */
 
 .dashboard-page section {
   background: var(--color-surface-alt);
@@ -68,10 +59,6 @@
   font-weight: 600;
   color: var(--text-secondary);
 }
-
-/* =========================
-   Key-value bars
-   ========================= */
 
 .kv-bars {
   display: flex;
@@ -110,10 +97,6 @@
   );
   transition: width 0.2s ease;
 }
-
-/* =========================
-   Actions
-   ========================= */
 
 .dashboard-actions {
   display: flex;
@@ -154,10 +137,6 @@
 .dashboard-actions .btn-danger:hover {
   background: var(--accent-error);
 }
-
-/* =========================
-   Responsive
-   ========================= */
 
 @media (max-width: 600px) {
   .kv-row {
