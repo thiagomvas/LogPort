@@ -63,7 +63,7 @@ public class LogService
         DateTimeOffset? from = null,
         DateTimeOffset? to = null)
     {
-        var key = $"{CacheKeys.LogMetadata}:{from?.ToUnixTimeSeconds() ?? 0}:{to?.ToUnixTimeSeconds() ?? 0}";
+        var key = CacheKeys.BuildLogMetadataCacheKey(from, to);
 
         var cachedMetadata = await _cache.GetAsync<LogMetadata>(key);
         if (cachedMetadata is not null)
@@ -104,4 +104,6 @@ public class LogService
 
         return result;
     }
+
+
 }
