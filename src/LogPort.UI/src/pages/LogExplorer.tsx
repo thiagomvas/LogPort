@@ -7,6 +7,7 @@ import { getHistogramData } from '../lib/services/analytics.service';
 import { getMetadata, getLogs } from '../lib/services/logs.service';
 import type { LogBucket } from '../lib/types/analytics';
 import type { LogEntry, LogMetadata, LogQueryParameters } from '../lib/types/log';
+import { paramsToQueryString, queryStringToParams } from '../lib/utils/query';
 
 const toInputValue = (d?: Date) =>
   d
@@ -27,17 +28,25 @@ function LogExplorer() {
   const [hasMore, setHasMore] = useState(true);
   const [metadata, setMetadata] = useState<LogMetadata | null>(null);
 
-  const [queryParams, setQueryParams] = useState<LogQueryParameters>({
-    from: initialFrom,
-    to: initialTo,
-    page: 1,
-    pageSize: 100,
-    level: '',
-    search: '',
-    serviceName: '',
-    hostname: '',
-    environment: '',
+  const [queryParams, setQueryParams] = useState<LogQueryParameters>(() => {
+    const initialTo = new Date();
+    const initialFrom = new Date(initialTo);
+    initialFrom.setHours(initialTo.getHours() - 24);
+
+    return {
+      from: initialFrom,
+      to: initialTo,
+      page: 1,
+      pageSize: 100,
+      level: '',
+      search: '',
+      serviceName: '',
+      hostname: '',
+      environment: '',
+      ...queryStringToParams(),
+    };
   });
+
 
   const lastUpdatedRef = useRef<Date | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
@@ -60,6 +69,21 @@ function LogExplorer() {
       wsRef.current?.close();
     };
   }, []);
+
+  useEffect(() => {
+    const qs = paramsToQueryString(queryParams);
+    const url = qs ? `?${qs}` : window.location.pathname;
+    window.history.replaceState(null, '', url);
+  }, [
+    queryParams.from,
+    queryParams.to,
+    queryParams.level,
+    queryParams.search,
+    queryParams.serviceName,
+    queryParams.hostname,
+    queryParams.environment,
+  ]);
+
 
   useEffect(() => {
     setLogs([]);
