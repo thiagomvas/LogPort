@@ -20,6 +20,9 @@ jobs:
       - name: Restore
         run: dotnet restore
 
+      - name: Verify formatting (C#)
+        run: dotnet format --verify-no-changes --no-restore
+
       - name: Build
         run: dotnet build --no-restore --configuration Release
 
@@ -30,6 +33,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      - name: Verify formatting (TypeScript & React)
+        working-directory: src/LogPort.UI
+        run: npm run lint
 
       - name: Install Frontend Dependencies
         working-directory: src/LogPort.UI
