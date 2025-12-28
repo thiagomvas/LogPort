@@ -1,5 +1,5 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -7,4 +7,4 @@ export default defineConfig({
   define: {
     'import.meta.env.LOGPORT_AGENT_URL': JSON.stringify(process.env.LOGPORT_AGENT_URL),
   },
-})
+});
