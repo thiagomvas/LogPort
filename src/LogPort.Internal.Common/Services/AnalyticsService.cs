@@ -7,7 +7,7 @@ namespace LogPort.Internal.Common.Services;
 public class AnalyticsService
 {
     private readonly ILogRepository _logRepository;
-    
+
     public AnalyticsService(ILogRepository logRepository)
     {
         _logRepository = logRepository;
@@ -23,7 +23,7 @@ public class AnalyticsService
         parameters.From ??= current;
         var to = parameters.To ?? DateTime.UtcNow;
         parameters.To ??= to;
-        
+
         // Prefill
         while (current < to)
         {
@@ -38,13 +38,13 @@ public class AnalyticsService
                 if (log.Timestamp < (parameters.From ?? DateTime.MinValue) ||
                     log.Timestamp > (parameters.To ?? DateTime.MaxValue))
                     continue;
-                
+
                 var bucketStart = AlignToStep(log.Timestamp, parameters.From.Value, stepDuration.Value);
                 if (buckets.ContainsKey(bucketStart))
                     buckets[bucketStart]++;
             }
         }
-        
+
         return buckets
             .OrderBy(b => b.Key)
             .Select(b => new LogBucket(b.Key, b.Value))
@@ -71,7 +71,7 @@ public class AnalyticsService
         }
 
         return counts;
-        
+
     }
 
 

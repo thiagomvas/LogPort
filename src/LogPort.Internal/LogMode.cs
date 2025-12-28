@@ -4,5 +4,5 @@ public enum LogMode
 {
     Agent,
     Relay
-    
+
 }

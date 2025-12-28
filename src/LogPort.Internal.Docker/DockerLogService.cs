@@ -1,8 +1,11 @@
 using System.Text.Json;
+
 using Docker.DotNet;
 using Docker.DotNet.Models;
+
 using LogPort.Core;
 using LogPort.Core.Models;
+
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -83,7 +86,7 @@ public class DockerLogService : BackgroundService
             containers.Count
         );
 
-        
+
         await Task.Delay(Timeout.Infinite, stoppingToken);
     }
 

@@ -1,6 +1,7 @@
 using LogPort.Core;
 using LogPort.Core.Models;
 using LogPort.SDK;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -34,8 +35,8 @@ public static class IServiceCollectionExtensions
             return new MicrosoftLoggerAdapter<LogPortClient>(msLogger);
         });
 
-        
-        
+
+
 
         builder.Services.AddSingleton<LogPortClient>(sp =>
         {
@@ -56,14 +57,14 @@ public static class IServiceCollectionExtensions
         _ = Task.Run(() => client.EnsureConnectedAsync(cancellationToken)); // non-blocking
 
         app.UseMiddleware<LogPortHttpRequestMiddleware>();
-        
+
         var lifetime = app.ApplicationServices.GetRequiredService<IHostApplicationLifetime>();
         lifetime.ApplicationStopping.Register(() =>
         {
             client.FlushAsync().GetAwaiter().GetResult();
             client.Dispose();
         });
-        
+
         return app;
     }
 

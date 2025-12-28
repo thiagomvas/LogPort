@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+
 using Nest;
 
 namespace LogPort.Agent.HealthChecks;

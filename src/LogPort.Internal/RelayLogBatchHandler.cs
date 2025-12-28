@@ -7,12 +7,12 @@ namespace LogPort.Internal;
 public class RelayLogBatchHandler : ILogBatchHandler
 {
     private readonly LogPortClient _client;
-    
+
     public RelayLogBatchHandler(LogPortClient client)
     {
         _client = client;
     }
-    
+
     public async Task HandleBatchAsync(IEnumerable<LogEntry> batch, CancellationToken ct)
     {
         await _client.EnsureConnectedAsync(ct);

@@ -1,5 +1,6 @@
 using LogPort.Core.Models;
 using LogPort.SDK;
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
@@ -10,14 +11,14 @@ internal sealed class LogPortHttpRequestMiddleware
     private readonly RequestDelegate _next;
     private readonly LogPortClient _client;
     private readonly LogPortClientConfig _config;
-    
+
     public LogPortHttpRequestMiddleware(RequestDelegate next, LogPortClient client, LogPortClientConfig config)
     {
         _next = next;
         _client = client;
         _config = config;
     }
-    
+
     public async Task InvokeAsync(HttpContext context)
     {
         var request = context.Request;
@@ -38,7 +39,7 @@ internal sealed class LogPortHttpRequestMiddleware
             Environment = _config.Environment ?? Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production",
             Hostname = _config.Hostname ?? Environment.MachineName
         };
-        
+
         var bodyStream = new MemoryStream();
         if (request.ContentLength > 0 && request.Body.CanRead)
         {

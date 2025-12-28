@@ -13,7 +13,7 @@ public interface ILogRepository
     Task<LogMetadata> GetLogMetadataAsync(
         DateTimeOffset? from = null,
         DateTimeOffset? to = null);
-    
+
     Task<LogPattern?> GetPatternByHashAsync(string patternHash);
     Task<long> CreatePatternAsync(string normalizedMessage, string patternHash, string level = "INFO");
 

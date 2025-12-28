@@ -1,5 +1,7 @@
 using System.Net.WebSockets;
+
 using LogPort.Core.Models;
+
 using Microsoft.Extensions.Logging;
 
 namespace LogPort.Internal.Common.Services;
@@ -9,7 +11,7 @@ public class WebSocketManager
     private readonly HashSet<WebSocket> _sockets = new();
     private readonly Lock _lock = new();
     private readonly ILogger<WebSocketManager>? _logger;
-    
+
     public WebSocketManager(ILogger<WebSocketManager>? logger = null)
     {
         _logger = logger;
@@ -94,7 +96,7 @@ public class WebSocketManager
                 if (socket.State == WebSocketState.Open ||
                     socket.State == WebSocketState.CloseReceived)
                 {
-                    socket.Abort(); 
+                    socket.Abort();
                 }
             }
             catch { }

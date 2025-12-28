@@ -1,10 +1,13 @@
-using LogPort.Core.Models;
-using Microsoft.AspNetCore.WebSockets;
 using System.Text;
 using System.Text.Json;
+
 using LogPort.Core;
+using LogPort.Core.Models;
 using LogPort.Internal.Abstractions;
+
+using Microsoft.AspNetCore.WebSockets;
 using Microsoft.Extensions.Logging;
+
 using WebSocketManager = LogPort.Internal.Common.Services.WebSocketManager;
 
 namespace LogPort.Agent.Endpoints;

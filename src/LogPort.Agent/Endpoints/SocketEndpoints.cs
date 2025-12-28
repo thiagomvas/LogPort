@@ -1,9 +1,12 @@
 using System.Text;
 using System.Text.Json;
+
 using LogPort.Core;
 using LogPort.Core.Models;
 using LogPort.Internal.Abstractions;
+
 using Microsoft.Extensions.Logging;
+
 using WebSocketManager = LogPort.Internal.Common.Services.WebSocketManager;
 
 namespace LogPort.Agent.Endpoints;
@@ -27,7 +30,7 @@ public static class SocketEndpoints
             }
 
             using var socket = await context.WebSockets.AcceptWebSocketAsync();
-            
+
             var buffer = new byte[8192];
             var queue = context.RequestServices.GetRequiredService<LogQueue>();
             var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();

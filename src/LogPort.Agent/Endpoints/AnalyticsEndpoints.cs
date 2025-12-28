@@ -1,6 +1,8 @@
 using System.Net.Http.Headers;
+
 using LogPort.Core.Models;
 using LogPort.Internal.Common.Services;
+
 using Microsoft.AspNetCore.Mvc;
 
 namespace LogPort.Agent.Endpoints;
@@ -32,5 +34,5 @@ public static class AnalyticsEndpoints
 
         return Results.Ok(counts);
     }
-    
+
 }

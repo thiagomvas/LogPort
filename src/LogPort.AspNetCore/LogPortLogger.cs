@@ -1,9 +1,12 @@
 using System.Reflection;
+
 using LogPort.Core.Models;
 using LogPort.SDK;
+
 using Microsoft.Extensions.Logging;
 
 namespace LogPort.AspNetCore;
+
 internal class LogPortLogger : ILogger
 {
     private readonly string _category;
@@ -55,7 +58,7 @@ internal class LogPortLogger : ILogger
                 }
             }
         }
-        
+
         client.Log(entry);
     }
 }

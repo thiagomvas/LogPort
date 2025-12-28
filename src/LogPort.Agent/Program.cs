@@ -1,22 +1,27 @@
 using System.Text.Json;
+
 using Docker.DotNet;
+
 using LogPort.Agent;
 using LogPort.Agent.Endpoints;
 using LogPort.Agent.HealthChecks;
 using LogPort.Agent.Services;
 using LogPort.AspNetCore;
 using LogPort.Core;
-using LogPort.Internal.Abstractions;
 using LogPort.Core.Models;
-using LogPort.Internal.ElasticSearch;
 using LogPort.Data.Postgres;
 using LogPort.Internal;
+using LogPort.Internal.Abstractions;
 using LogPort.Internal.Common.Services;
 using LogPort.Internal.Docker;
+using LogPort.Internal.ElasticSearch;
 using LogPort.Internal.Redis;
+
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.WebSockets;
+
 using StackExchange.Redis;
+
 using WebSocketManager = LogPort.Internal.Common.Services.WebSocketManager;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -37,7 +42,7 @@ builder.Configuration.GetSection("LOGPORT").Bind(logPortConfig);
 builder.Services.AddSingleton(logPortConfig);
 builder.Services.AddHttpClient();
 bool isAgent = logPortConfig.Mode is LogMode.Agent;
- 
+
 if (isAgent)
     builder.Services.AddLogPortAgent(logPortConfig);
 else
@@ -73,28 +78,28 @@ var adminPass = Environment.GetEnvironmentVariable("LOGPORT_ADMIN_PASS");
 app.Use(async (context, next) =>
 {
     if (!context.Request.Path.StartsWithSegments("/analytics"))
-{
-    await next();
-    return;
-}
+    {
+        await next();
+        return;
+    }
 
-if (string.IsNullOrWhiteSpace(adminUser) || string.IsNullOrWhiteSpace(adminPass))
-{
-    context.Response.StatusCode = 503;
-    await context.Response.WriteAsync("Admin credentials are not configured.");
-    return;
-}
+    if (string.IsNullOrWhiteSpace(adminUser) || string.IsNullOrWhiteSpace(adminPass))
+    {
+        context.Response.StatusCode = 503;
+        await context.Response.WriteAsync("Admin credentials are not configured.");
+        return;
+    }
 
-var auth = context.Request.Headers.Authorization.ToString();
+    var auth = context.Request.Headers.Authorization.ToString();
 
-if (string.IsNullOrWhiteSpace(auth) || !auth.StartsWith("Basic ", StringComparison.OrdinalIgnoreCase))
+    if (string.IsNullOrWhiteSpace(auth) || !auth.StartsWith("Basic ", StringComparison.OrdinalIgnoreCase))
     {
         context.Response.StatusCode = 401;
         context.Response.Headers.WWWAuthenticate = "Basic";
         return;
     }
 
-try
+    try
     {
         var encoded = auth["Basic ".Length..].Trim();
         var decoded = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(encoded));
@@ -123,7 +128,7 @@ try
         return;
     }
 
-   await next();
+    await next();
 });
 
 

@@ -7,7 +7,7 @@ public class LogEntry
     public string Level { get; set; }
     public string? ServiceName { get; set; }
     public Dictionary<string, object> Metadata { get; set; }
-    
+
     public string? TraceId { get; set; }
     public string? SpanId { get; set; }
     public string? Hostname { get; set; }

@@ -1,5 +1,6 @@
 using LogPort.Core.Models;
 using LogPort.Internal.Abstractions;
+
 using Nest;
 
 namespace LogPort.Internal.ElasticSearch;

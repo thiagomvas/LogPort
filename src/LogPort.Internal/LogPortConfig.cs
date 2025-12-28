@@ -8,7 +8,7 @@ public class LogPortConfig
     public CacheConfig Cache { get; set; } = new();
 
     public uint Port { get; set; } = 8080;
-    public string? UpstreamUrl { get; set; } 
+    public string? UpstreamUrl { get; set; }
     public int BatchSize { get; set; } = 100;
     public int FlushIntervalMs { get; set; } = 250;
     public LogMode Mode { get; set; } = LogMode.Agent;
@@ -58,7 +58,7 @@ public class LogPortConfig
         config.Docker.SocketPath = Environment.GetEnvironmentVariable("LOGPORT_DOCKER_SOCKET_PATH") ?? "unix:///var/run/docker.sock";
         config.Docker.ExtractorConfigPath = Environment.GetEnvironmentVariable("LOGPORT_DOCKER_EXTRACTOR_CONFIG_PATH");
         config.Docker.WatchAllContainers = GetEnvBool("LOGPORT_DOCKER_WATCH_ALL");
-        
+
         // Cache
         config.Cache.UseRedis = GetEnvBool("LOGPORT_CACHE_USE_REDIS");
         config.Cache.RedisConnectionString = Environment.GetEnvironmentVariable("LOGPORT_CACHE_REDIS_CONNECTION_STRING");
@@ -119,10 +119,10 @@ public class LogPortConfig
     public class CacheConfig
     {
         public bool UseRedis { get; set; } = false;
-        public string? RedisConnectionString { get; set; } 
+        public string? RedisConnectionString { get; set; }
         public TimeSpan DefaultExpiration { get; set; } = TimeSpan.FromMinutes(10);
-        
-        
+
+
     }
 
 }

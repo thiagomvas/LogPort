@@ -1,5 +1,6 @@
 using LogPort.Core.Models;
 using LogPort.Internal.Abstractions;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -24,4 +25,3 @@ public class AgentLogBatchHandler : ILogBatchHandler
         _logger.LogDebug("Inserted {Count} logs", batch.Count());
     }
 }
-

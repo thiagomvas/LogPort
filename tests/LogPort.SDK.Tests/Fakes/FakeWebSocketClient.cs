@@ -1,4 +1,5 @@
 using System.Net.WebSockets;
+
 using LogPort.Core.Models;
 
 namespace LogPort.SDK.Tests.Fakes;
@@ -7,12 +8,12 @@ public class FakeWebSocketClient : IWebSocketClient
 {
     public WebSocketState State { get; private set; } = WebSocketState.None;
     public readonly FakeServer Server = new FakeServer();
-    
+
     public bool ConnectCalled { get; private set; }
     public bool SendCalled { get; private set; }
     public bool AbortCalled { get; private set; }
     public bool DisposeCalled { get; private set; }
-    
+
     public int SentMessagesCount { get; private set; }
 
     public Task ConnectAsync(Uri uri, CancellationToken cancellationToken)

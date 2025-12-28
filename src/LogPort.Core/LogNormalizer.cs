@@ -15,7 +15,7 @@ public sealed partial class LogNormalizer
     public const string FatalLevel = "Fatal";
     public const string DebugLevel = "Debug";
     public const string TraceLevel = "Trace";
-    
+
     private readonly ConcurrentDictionary<string, string> _levelMapping = new(StringComparer.OrdinalIgnoreCase)
     {
         ["trace"] = TraceLevel,
@@ -32,7 +32,7 @@ public sealed partial class LogNormalizer
         ["fatal"] = FatalLevel,
         ["panic"] = FatalLevel
     };
-    
+
     public string NormalizeMessage(string message, Dictionary<string, object>? metadata = null)
     {
         string result = message ?? string.Empty;
@@ -43,15 +43,15 @@ public sealed partial class LogNormalizer
                 continue;
             result = result.Replace(valueString, $"{{{kvp.Key}}}", StringComparison.OrdinalIgnoreCase);
         }
-        
+
         result = IsoTimestampRegex().Replace(result, "{timestamp}");
         result = GuidRegex().Replace(result, "{guid}");
         result = UnixPathRegex().Replace(result, "{path}");
         result = NumberRegex().Replace(result, "{number}");
-        
+
         return result;
     }
-    
+
     public static ulong ComputePatternHash(string text)
     {
         const ulong offset = 14695981039346656037;

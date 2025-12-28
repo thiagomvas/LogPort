@@ -11,13 +11,13 @@ public sealed class LogPortClientConfig
     public TimeSpan ClientHeartbeatInterval { get; set; } = TimeSpan.FromSeconds(10);
 
     public TimeSpan ClientHeartbeatTimeout { get; set; } = TimeSpan.FromSeconds(30);
-    
+
     public static LogPortClientConfig LoadFromEnvironment()
     {
         var config = new LogPortClientConfig();
 
         var agentUrl = System.Environment.GetEnvironmentVariable("LOGPORT_SERVER_URL");
-        
+
         if (!string.IsNullOrWhiteSpace(agentUrl))
         {
             config.AgentUrl = agentUrl;
@@ -42,7 +42,7 @@ public sealed class LogPortClientConfig
         {
             config.ClientHeartbeatTimeout = heartbeatTimeout;
         }
-        
+
         var environment = System.Environment.GetEnvironmentVariable("LOGPORT_ENVIRONMENT");
         if (!string.IsNullOrWhiteSpace(environment))
         {

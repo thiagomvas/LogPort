@@ -1,5 +1,7 @@
 using System.Text.Json;
+
 using LogPort.Internal.Abstractions;
+
 using StackExchange.Redis;
 
 namespace LogPort.Internal.Redis;

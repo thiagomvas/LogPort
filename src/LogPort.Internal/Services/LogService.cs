@@ -1,6 +1,7 @@
 using LogPort.Core.Models;
 using LogPort.Internal;
 using LogPort.Internal.Abstractions;
+
 using Microsoft.Extensions.Logging;
 
 public class LogService
@@ -17,12 +18,12 @@ public class LogService
         _config = config;
         _logger = logger;
     }
-    
+
     public async Task AddLogAsync(LogEntry log)
     {
         await _repository.AddLogAsync(log);
     }
-    
+
     public async Task<IEnumerable<LogEntry>> GetLogsAsync(LogQueryParameters parameters)
     {
         var key = $"{CacheKeys.LogPrefix}{parameters.GetCacheKey()}";
@@ -40,7 +41,7 @@ public class LogService
 
         return result;
     }
-    
+
     public async Task<long> CountLogsAsync(LogQueryParameters parameters)
     {
         var key = $"{CacheKeys.CountPrefix}{parameters.GetCacheKey()}";
@@ -58,7 +59,7 @@ public class LogService
 
         return result;
     }
-    
+
     public async Task<LogMetadata> GetLogMetadataAsync(
         DateTimeOffset? from = null,
         DateTimeOffset? to = null)
@@ -86,7 +87,7 @@ public class LogService
         return result;
     }
 
-    
+
     public async Task<IEnumerable<LogPattern>> GetLogPatternsAsync(int limit = 100, int offset = 0)
     {
         var key = CacheKeys.LogPatterns;

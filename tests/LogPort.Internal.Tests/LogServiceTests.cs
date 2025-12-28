@@ -1,6 +1,8 @@
 using LogPort.Core.Models;
 using LogPort.Internal.Abstractions;
+
 using Microsoft.Extensions.Logging;
+
 using NSubstitute;
 
 namespace LogPort.Internal.Tests;

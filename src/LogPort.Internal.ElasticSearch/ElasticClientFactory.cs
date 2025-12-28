@@ -1,5 +1,7 @@
 using System.Collections.Specialized;
+
 using LogPort.Core.Models;
+
 using Nest;
 
 namespace LogPort.Internal.ElasticSearch;

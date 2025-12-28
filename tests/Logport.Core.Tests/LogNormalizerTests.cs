@@ -1,6 +1,8 @@
 using System.Collections.Generic;
-using NUnit.Framework;
+
 using LogPort.Core;
+
+using NUnit.Framework;
 
 namespace Logport.Core.Tests;
 

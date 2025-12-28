@@ -18,7 +18,7 @@ public class LogQueryParameters
     public int? Page { get; set; } = 1;
     public bool? SearchExact { get; set; } = true;
     public int? PageSize { get; set; } = 100;
-    
+
     public string GetCacheKey()
     {
         return $"{From}_{To}_{Level}_{Search}_{ServiceName}_{Hostname}_{Environment}_{Metadata}_{TraceId}_{SpanId}_{Page}_{SearchExact}_{PageSize}";

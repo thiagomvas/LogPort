@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+
 using LogPort.Core;
 using LogPort.Core.Models;
 
@@ -35,7 +36,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
 
     private const int SendDelayMs = 50;
     bool _isAlive = false;
-    
+
     public LogPortClient(
         LogPortClientConfig config,
         LogNormalizer? normalizer = null,
@@ -56,7 +57,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
         _maxReconnectDelay = config.ClientMaxReconnectDelay;
         _heartbeatInterval = config.ClientHeartbeatInterval;
         _heartbeatTimeout = config.ClientHeartbeatTimeout;
-        
+
         _normalizer = normalizer ?? new LogNormalizer();
         _logger = logger;
     }
@@ -64,9 +65,9 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     public LogPortClient(LogPortClientConfig config, Func<IWebSocketClient>? socketFactory = null)
         : this(config, null, socketFactory)
     {
-        
+
     }
-    
+
     private LogPortClient(string serverUrl, Func<IWebSocketClient>? socketFactory = null)
         : this(new LogPortClientConfig() { AgentUrl = serverUrl }, null, socketFactory)
     {
@@ -132,13 +133,13 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
 
         if (string.IsNullOrWhiteSpace(entry.TraceId))
             entry.TraceId = TraceContext.TraceId;
-        
+
         if (string.IsNullOrWhiteSpace(entry.SpanId))
             entry.SpanId = TraceContext.SpanId;
-        
+
         _messageQueue.Enqueue(entry);
     }
-    
+
     /// <summary>
     /// Enqueues a batch of <see cref="LogEntry"/> items to be sent asynchronously to the server.
     /// </summary>
@@ -196,7 +197,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
                     {
                         string json = JsonSerializer.Serialize(entry);
                         var bytes = Encoding.UTF8.GetBytes(json);
-                        
+
                         entry.Level = _normalizer.NormalizeLevel(entry.Level);
 
                         await _webSocket.SendAsync(
@@ -250,7 +251,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
         _logger?.Debug("Flushing log queue...");
         while (!_messageQueue.IsEmpty && _isAlive)
             await Task.Delay(SendDelayMs).ConfigureAwait(false);
-        
+
         _logger?.Debug("Log queue flushed.");
     }
 

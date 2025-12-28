@@ -1,4 +1,5 @@
 using LogPort.Internal.Abstractions;
+
 using Microsoft.Extensions.Caching.Memory;
 
 namespace LogPort.Agent.Services;

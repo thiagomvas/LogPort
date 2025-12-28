@@ -8,6 +8,7 @@ using LogPort.Internal.Abstractions;
 using LogPort.Internal.Common.Services;
 using LogPort.Internal.ElasticSearch;
 using LogPort.Internal.Redis;
+
 using StackExchange.Redis;
 
 namespace LogPort.Agent;

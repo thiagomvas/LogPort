@@ -1,6 +1,8 @@
 using LogPort.Core.Models;
 using LogPort.Internal;
+
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+
 using Npgsql;
 
 namespace LogPort.Agent.HealthChecks;
@@ -8,7 +10,7 @@ namespace LogPort.Agent.HealthChecks;
 public class PostgresHealthCheck : IHealthCheck
 {
     private readonly string _connectionString;
-    
+
     public PostgresHealthCheck(LogPortConfig config)
     {
         _connectionString = config.Postgres.ConnectionString;

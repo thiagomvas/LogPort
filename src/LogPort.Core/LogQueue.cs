@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+
 using LogPort.Core.Models;
 
 namespace LogPort.Core;

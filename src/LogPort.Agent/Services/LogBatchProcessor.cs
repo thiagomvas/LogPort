@@ -2,6 +2,7 @@ using LogPort.Core;
 using LogPort.Core.Models;
 using LogPort.Internal;
 using LogPort.Internal.Abstractions;
+
 using WebSocketManager = LogPort.Internal.Common.Services.WebSocketManager;
 
 namespace LogPort.Agent.Services;
@@ -22,7 +23,7 @@ public class LogBatchProcessor : BackgroundService
         _queue = queue;
         _logger = logger;
         _socketManager = socketManager;
-        
+
         var config = services.GetRequiredService<LogPortConfig>();
         _batchSize = config.BatchSize > 0 ? config.BatchSize : _batchSize;
         _flushInterval = config.FlushIntervalMs > 0 ? TimeSpan.FromMilliseconds(config.FlushIntervalMs) : _flushInterval;
@@ -39,7 +40,7 @@ public class LogBatchProcessor : BackgroundService
             try
             {
                 await _socketManager.BroadcastBatchAsync(batch);
-                
+
                 using var scope = _services.CreateScope();
                 var handler = scope.ServiceProvider.GetRequiredService<ILogBatchHandler>();
                 await handler.HandleBatchAsync(batch, stoppingToken);
