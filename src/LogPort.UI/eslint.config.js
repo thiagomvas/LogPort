@@ -21,6 +21,18 @@ export default defineConfig([
     },
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      'no-debugger': 'error',
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      indent: ['error', 2, {
+        SwitchCase: 1,
+        ignoredNodes: ['TSUnionType', 'TSIntersectionType'],
+      }],
+      'eqeqeq': ['error', 'always'],
+      'curly': ['error', 'all'],
+      'object-shorthand': 'error',
+      semi: ['error', 'always'],
     },
   },
 ])

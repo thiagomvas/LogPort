@@ -1,7 +1,7 @@
-import { Routes, Route } from 'react-router-dom'
-import LogExplorer from './lib/pages/LogExplorer'
-import LogTailPage from './lib/pages/LogTail'
-import Layout from './components/layout'
+import { Routes, Route } from 'react-router-dom';
+import LogExplorer from './lib/pages/LogExplorer';
+import LogTailPage from './lib/pages/LogTail';
+import Layout from './components/layout';
 
 export default function App() {
   return (
@@ -12,5 +12,5 @@ export default function App() {
         <Route path="/logs/tail" element={<LogTailPage />} />
       </Routes>
     </Layout>
-  )
+  );
 }
