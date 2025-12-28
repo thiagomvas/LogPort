@@ -79,10 +79,10 @@ function DashboardPage() {
         <a href="/logs/tail" className="btn btn-primary">
           Live Tail
         </a>
-        <a href="/logs/explorer" className="btn">
+        <a href="/logs" className="btn">
           Explore Logs
         </a>
-        <a href="/logs/explorer?level=error" className="btn btn-danger">
+        <a href="/logs" className="btn btn-danger">
           Errors Only
         </a>
       </div>
