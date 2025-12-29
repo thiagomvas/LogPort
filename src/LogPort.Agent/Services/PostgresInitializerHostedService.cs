@@ -20,15 +20,18 @@ public class PostgresInitializerHostedService : IHostedService
         try
         {
             _logger.LogInformation("Initializing Postgres...");
-            var initializer = new DatabaseInitializer(msg => _logger.LogInformation(msg));
-            await initializer.InitializeAsync(_config.Postgres.ConnectionString!);
+            var initializer = new DatabaseInitializer(msg => _logger.LogDebug(msg));
+            await initializer.InitializeAsync(_config.Postgres.ConnectionString!, cancellation: cancellationToken);
             _logger.LogInformation("Postgres initialized successfully.");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to initialize Postgres database");
+            var inner = ex.GetBaseException();
+            _logger.LogCritical("Failed to initialize Postgres database: {Message}", inner.Message);
+            throw;
         }
     }
+
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }
