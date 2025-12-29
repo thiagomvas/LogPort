@@ -63,10 +63,11 @@ function LogTailPage() {
       }
 
       // 2️⃣ Start live tailing
-      const wsProtocol =
-                import.meta.env.USE_SSL === 'true' ? 'wss' : 'ws';
-      const wsHost = import.meta.env.LOGPORT_AGENT_URL;
-      const wsUrl = `${wsProtocol}://${wsHost}/api/live-logs`;
+      const wsHost =
+        import.meta.env.LOGPORT_AGENT_URL || window.location.host;
+
+      const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws";
+      const wsUrl = `${wsProtocol}://${wsHost}/agent/live-logs`;
 
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
