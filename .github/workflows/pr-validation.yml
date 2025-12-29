@@ -34,13 +34,13 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Verify formatting (TypeScript & React)
-        working-directory: src/LogPort.UI
-        run: npm run lint
-
       - name: Install Frontend Dependencies
         working-directory: src/LogPort.UI
         run: npm ci
+
+      - name: Verify formatting (TypeScript & React)
+        working-directory: src/LogPort.UI
+        run: npm run lint
 
       - name: Build Frontend
         working-directory: src/LogPort.UI
