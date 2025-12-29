@@ -6,7 +6,8 @@ public static class ConfigLoader
 {
     public static LogPortConfig Load()
     {
-        bool fileExists = File.Exists("config.json");
+        var path = GetEnvString(EnvVars.ConfigPath, "config.json");
+        bool fileExists = File.Exists(path);
         LogPortConfig? result = null;
 
         if (fileExists)
@@ -20,7 +21,7 @@ public static class ConfigLoader
         if (!fileExists)
         {
             var opt = new JsonSerializerOptions() { WriteIndented = true, };
-            File.WriteAllText("config.json", JsonSerializer.Serialize(result, opt));
+            File.WriteAllText(path, JsonSerializer.Serialize(result, opt));
         }
 
         LoadFromEnvironment(result);
@@ -35,46 +36,41 @@ public static class ConfigLoader
     /// <returns>The same <see cref="LogPortConfig"/> instance with environment overrides applied.</returns>
     public static LogPortConfig LoadFromEnvironment(LogPortConfig target)
     {
-        // Core settings
-        target.Port = GetEnvUInt("LOGPORT_PORT", target.Port);
-        target.UpstreamUrl = GetEnvString("LOGPORT_UPSTREAM_URL", target.UpstreamUrl)?.Trim('/');
-        target.BatchSize = GetEnvInt("LOGPORT_BATCH_SIZE", target.BatchSize);
-        target.FlushIntervalMs = GetEnvInt("LOGPORT_FLUSH_INTERVAL_MS", target.FlushIntervalMs);
+        target.Port = GetEnvUInt(EnvVars.Port, target.Port);
+        target.UpstreamUrl = GetEnvString(EnvVars.UpstreamUrl, target.UpstreamUrl)?.Trim('/');
+        target.BatchSize = GetEnvInt(EnvVars.BatchSize, target.BatchSize);
+        target.FlushIntervalMs = GetEnvInt(EnvVars.FlushIntervalMs, target.FlushIntervalMs);
 
-        var modeStr = GetEnvString("LOGPORT_MODE", target.Mode.ToString());
+        var modeStr = GetEnvString(EnvVars.Mode, target.Mode.ToString());
         if (Enum.TryParse<LogMode>(modeStr, true, out var mode))
             target.Mode = mode;
 
         target.ClientMaxReconnectDelay = TimeSpan.FromMilliseconds(
-            GetEnvInt("LOGPORT_CLIENT_MAX_RECONNECT_DELAY_MS", (int)target.ClientMaxReconnectDelay.TotalMilliseconds));
+            GetEnvInt(EnvVars.ClientMaxReconnectDelayMs, (int)target.ClientMaxReconnectDelay.TotalMilliseconds));
         target.ClientHeartbeatInterval = TimeSpan.FromMilliseconds(
-            GetEnvInt("LOGPORT_CLIENT_HEARTBEAT_INTERVAL_MS", (int)target.ClientHeartbeatInterval.TotalMilliseconds));
+            GetEnvInt(EnvVars.ClientHeartbeatIntervalMs, (int)target.ClientHeartbeatInterval.TotalMilliseconds));
         target.ClientHeartbeatTimeout = TimeSpan.FromMilliseconds(
-            GetEnvInt("LOGPORT_CLIENT_HEARTBEAT_TIMEOUT_MS", (int)target.ClientHeartbeatTimeout.TotalMilliseconds));
+            GetEnvInt(EnvVars.ClientHeartbeatTimeoutMs, (int)target.ClientHeartbeatTimeout.TotalMilliseconds));
 
-        // Postgres
-        target.Postgres.Use = GetEnvBool("LOGPORT_USE_POSTGRES", target.Postgres.Use);
-        target.Postgres.Host = GetEnvString("LOGPORT_POSTGRES_HOST", target.Postgres.Host);
-        target.Postgres.Port = GetEnvInt("LOGPORT_POSTGRES_PORT", target.Postgres.Port);
-        target.Postgres.Database = GetEnvString("LOGPORT_POSTGRES_DATABASE", target.Postgres.Database);
-        target.Postgres.Username = GetEnvString("LOGPORT_POSTGRES_USERNAME", target.Postgres.Username);
-        target.Postgres.Password = GetEnvString("LOGPORT_POSTGRES_PASSWORD", target.Postgres.Password);
-        target.Postgres.PartitionLength =
-            GetEnvInt("LOGPORT_POSTGRES_PARTITION_LENGTH", target.Postgres.PartitionLength);
+        target.Postgres.Use = GetEnvBool(EnvVars.UsePostgres, target.Postgres.Use);
+        target.Postgres.Host = GetEnvString(EnvVars.PostgresHost, target.Postgres.Host);
+        target.Postgres.Port = GetEnvInt(EnvVars.PostgresPort, target.Postgres.Port);
+        target.Postgres.Database = GetEnvString(EnvVars.PostgresDatabase, target.Postgres.Database);
+        target.Postgres.Username = GetEnvString(EnvVars.PostgresUsername, target.Postgres.Username);
+        target.Postgres.Password = GetEnvString(EnvVars.PostgresPassword, target.Postgres.Password);
+        target.Postgres.PartitionLength = GetEnvInt(EnvVars.PostgresPartitionLength, target.Postgres.PartitionLength);
 
-        // Docker
-        target.Docker.Use = GetEnvBool("LOGPORT_USE_DOCKER", target.Docker.Use);
-        target.Docker.SocketPath = GetEnvString("LOGPORT_DOCKER_SOCKET_PATH", target.Docker.SocketPath);
+        target.Docker.Use = GetEnvBool(EnvVars.UseDocker, target.Docker.Use);
+        target.Docker.SocketPath = GetEnvString(EnvVars.DockerSocketPath, target.Docker.SocketPath);
         target.Docker.ExtractorConfigPath =
-            GetEnvString("LOGPORT_DOCKER_EXTRACTOR_CONFIG_PATH", target.Docker.ExtractorConfigPath);
-        target.Docker.WatchAllContainers = GetEnvBool("LOGPORT_DOCKER_WATCH_ALL", target.Docker.WatchAllContainers);
+            GetEnvString(EnvVars.DockerExtractorConfigPath, target.Docker.ExtractorConfigPath);
+        target.Docker.WatchAllContainers = GetEnvBool(EnvVars.DockerWatchAll, target.Docker.WatchAllContainers);
 
-        // Cache
-        target.Cache.UseRedis = GetEnvBool("LOGPORT_CACHE_USE_REDIS", target.Cache.UseRedis);
+        target.Cache.UseRedis = GetEnvBool(EnvVars.UseRedis, target.Cache.UseRedis);
         target.Cache.RedisConnectionString =
-            GetEnvString("LOGPORT_CACHE_REDIS_CONNECTION_STRING", target.Cache.RedisConnectionString);
+            GetEnvString(EnvVars.RedisConnectionString, target.Cache.RedisConnectionString);
         target.Cache.DefaultExpiration = TimeSpan.FromMilliseconds(
-            GetEnvInt("LOGPORT_CACHE_DEFAULT_EXPIRATION_MS", (int)target.Cache.DefaultExpiration.TotalMilliseconds));
+            GetEnvInt(EnvVars.CacheDefaultExpirationMs, (int)target.Cache.DefaultExpiration.TotalMilliseconds));
 
         if (target.Mode is LogMode.Agent && !target.Postgres.Use)
             throw new InvalidOperationException("At least one storage backend must be enabled.");
