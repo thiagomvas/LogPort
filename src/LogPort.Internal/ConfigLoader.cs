@@ -42,13 +42,6 @@ public static class ConfigLoader
         if (Enum.TryParse<LogMode>(modeStr, true, out var mode))
             target.Mode = mode;
 
-        target.ClientMaxReconnectDelay = TimeSpan.FromMilliseconds(
-            GetEnvInt(EnvVars.ClientMaxReconnectDelayMs, (int)target.ClientMaxReconnectDelay.TotalMilliseconds));
-        target.ClientHeartbeatInterval = TimeSpan.FromMilliseconds(
-            GetEnvInt(EnvVars.ClientHeartbeatIntervalMs, (int)target.ClientHeartbeatInterval.TotalMilliseconds));
-        target.ClientHeartbeatTimeout = TimeSpan.FromMilliseconds(
-            GetEnvInt(EnvVars.ClientHeartbeatTimeoutMs, (int)target.ClientHeartbeatTimeout.TotalMilliseconds));
-
         target.Postgres.Use = GetEnvBool(EnvVars.UsePostgres, target.Postgres.Use);
         target.Postgres.Host = GetEnvString(EnvVars.PostgresHost, target.Postgres.Host);
         target.Postgres.Port = GetEnvInt(EnvVars.PostgresPort, target.Postgres.Port);
