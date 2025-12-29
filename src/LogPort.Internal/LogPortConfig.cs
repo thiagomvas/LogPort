@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace LogPort.Internal;
 
 public class LogPortConfig
@@ -126,6 +128,7 @@ public class LogPortConfig
         /// </summary>
         public string Password { get; set; } = "postgres";
 
+        [JsonIgnore]
         public string ConnectionString =>
             $"Host={Host};Port={Port};Database={Database};Username={Username};Password={Password};";
 
