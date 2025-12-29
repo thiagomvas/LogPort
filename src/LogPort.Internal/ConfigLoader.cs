@@ -7,7 +7,10 @@ public static class ConfigLoader
     public static LogPortConfig Load()
     {
         var path = GetEnvString(EnvVars.ConfigPath, "/conf/config.json");
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var dir = Path.GetDirectoryName(path);
+        if (!string.IsNullOrWhiteSpace(dir) && !Directory.Exists(dir))
+            Directory.CreateDirectory(dir);
+        
         bool fileExists = File.Exists(path);
         LogPortConfig? result = null;
 

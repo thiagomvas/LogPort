@@ -65,7 +65,7 @@ builder.Services.AddSingleton<WebSocketManager>();
 builder.Services.AddWebSockets(options => { options.KeepAliveInterval = TimeSpan.FromSeconds(30); });
 
 var app = builder.Build();
-
+var logger = app.Services.GetRequiredService<ILogger<Program>>();
 if (logPortConfig.Mode is LogMode.Relay)
     await app.UseLogPortAsync();
 
@@ -76,10 +76,26 @@ app.UseWhen(
     branch => branch.UseMiddleware<BasicAuthMiddleware>()
 );
 
-app.UseWhen(
-    ctx => ctx.Request.Path.StartsWithSegments("/agent"),
-    branch => branch.UseMiddleware<ApiTokenMiddleware>()
-);
+if (!string.IsNullOrWhiteSpace(logPortConfig.ApiSecret))
+{
+    app.UseWhen(
+        ctx => ctx.Request.Path.StartsWithSegments("/agent"),
+        branch => branch.UseMiddleware<ApiTokenMiddleware>()
+    );
+
+    logger.LogInformation(
+        "API token authentication ENABLED for /agent endpoints."
+    );
+}
+else
+{
+    logger.LogWarning(
+        "API token authentication is DISABLED. " +
+        "No ApiSecret is configured, so any external application can stream logs to LogPort. " +
+        "THIS IS NOT RECOMMENDED FOR PRODUCTION."
+    );
+}
+
 
 
 if (app.Environment.IsDevelopment())
