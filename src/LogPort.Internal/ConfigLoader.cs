@@ -19,7 +19,8 @@ public static class ConfigLoader
 
         if (!fileExists)
         {
-            File.WriteAllText("config.json", JsonSerializer.Serialize(result));
+            var opt = new JsonSerializerOptions() { WriteIndented = true, };
+            File.WriteAllText("config.json", JsonSerializer.Serialize(result, opt));
         }
 
         LoadFromEnvironment(result);
