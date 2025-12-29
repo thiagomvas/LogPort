@@ -73,7 +73,7 @@ public static class SocketEndpoints
 
     private static void MapLiveLogs(WebApplication app)
     {
-        app.Map("agent/live-logs", async context =>
+        app.Map("api/live-logs", async context =>
         {
             if (!context.WebSockets.IsWebSocketRequest)
             {

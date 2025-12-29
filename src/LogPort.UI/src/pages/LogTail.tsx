@@ -67,7 +67,7 @@ function LogTailPage() {
         import.meta.env.LOGPORT_AGENT_URL || window.location.host;
 
       const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws";
-      const wsUrl = `${wsProtocol}://${wsHost}/agent/live-logs`;
+      const wsUrl = `${wsProtocol}://${wsHost}/api/live-logs`;
 
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
