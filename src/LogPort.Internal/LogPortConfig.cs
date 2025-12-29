@@ -27,7 +27,7 @@ public class LogPortConfig
     /// It represents the URL where the relay will forward all request and data received.
     /// </remarks>
     public string? UpstreamUrl { get; set; }
-    
+
     /// <summary>
     /// Gets or sets the size of the batch that logs will be processed in the background.
     /// </summary>
@@ -36,7 +36,7 @@ public class LogPortConfig
     /// Gets or sets the interval that log batches will be processed in milliseconds.
     /// </summary>
     public int FlushIntervalMs { get; set; } = 250;
-    
+
     /// <summary>
     /// Gets or sets the mode of the agent.
     /// </summary>
@@ -115,12 +115,12 @@ public class LogPortConfig
         /// Gets or sets the PostgreSQL database
         /// </summary>
         public string Database { get; set; } = "logport";
-        
+
         /// <summary>
         /// Gets or sets the user of the PostgreSQL database
         /// </summary>
         public string Username { get; set; } = "postgres";
-        
+
         /// <summary>
         /// Gets or sets the password of the PostgreSQL database
         /// </summary>
