@@ -21,7 +21,7 @@ public static class SocketEndpoints
 
     private static void MapStream(WebApplication app)
     {
-        app.Map("api/stream", async context =>
+        app.Map("agent/stream", async context =>
         {
             if (!context.WebSockets.IsWebSocketRequest)
             {
@@ -73,7 +73,7 @@ public static class SocketEndpoints
 
     private static void MapLiveLogs(WebApplication app)
     {
-        app.Map("api/live-logs", async context =>
+        app.Map("agent/live-logs", async context =>
         {
             if (!context.WebSockets.IsWebSocketRequest)
             {

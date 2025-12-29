@@ -40,6 +40,29 @@ public class LogPortConfig
     public int FlushIntervalMs { get; set; } = 250;
 
     /// <summary>
+    /// Gets or sets the administrator username used for HTTP Basic authentication.
+    /// </summary>
+    public string AdminLogin { get; set; } = "admin";
+
+    /// <summary>
+    /// Gets or sets the administrator password used for HTTP Basic authentication.
+    /// </summary>
+    /// <remarks>
+    /// This value should be provided via configuration or environment variables
+    /// and should not be hard-coded in production environments.
+    /// </remarks>
+    public string AdminPassword { get; set; } = "changeme";
+    
+    /// <summary>
+    /// Gets or sets the shared secret used for API token authentication.
+    /// </summary>
+    /// <remarks>
+    /// This value is used to authenticate applications to the agent, allowing them
+    /// to stream logs directly to LogPort.
+    /// </remarks>
+    public string ApiSecret { get; set; } = Guid.NewGuid().ToString("N");
+    
+    /// <summary>
     /// Gets or sets the mode of the agent.
     /// </summary>
     public LogMode Mode { get; set; } = LogMode.Agent;

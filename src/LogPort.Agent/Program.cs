@@ -72,7 +72,7 @@ if (logPortConfig.Mode is LogMode.Relay)
 app.UseCors("AllowAll");
 
 app.UseWhen(
-    ctx => ctx.Request.Path.StartsWithSegments("/api/analytics"),
+    ctx => !ctx.Request.Path.StartsWithSegments("/agent"),
     branch => branch.UseMiddleware<BasicAuthMiddleware>()
 );
 

@@ -1,17 +1,21 @@
 using System.Security.Cryptography;
 using System.Text;
 
+using LogPort.Internal;
+
 namespace LogPort.Agent.Middlewares;
 
 public sealed class BasicAuthMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly string _user = "admin";
-    private readonly string _pass = "admin";
+    private readonly string _user;
+    private readonly string _pass;
 
-    public BasicAuthMiddleware(RequestDelegate next)
+    public BasicAuthMiddleware(RequestDelegate next, LogPortConfig _config)
     {
         _next = next;
+        _user = _config.AdminLogin;
+        _pass = _config.AdminPassword;
     }
 
     public async Task InvokeAsync(HttpContext context)
