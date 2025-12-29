@@ -23,7 +23,7 @@ public sealed class LogPortClientConfig
         {
             config.AgentUrl = agentUrl;
         }
-        
+
         config.ApiSecret = System.Environment.GetEnvironmentVariable("LOGPORT_SECRET");
 
         config.ServiceName = System.Environment.GetEnvironmentVariable("LOGPORT_SERVICE_NAME");

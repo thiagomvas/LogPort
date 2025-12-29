@@ -52,7 +52,7 @@ public class LogPortConfig
     /// and should not be hard-coded in production environments.
     /// </remarks>
     public string AdminPassword { get; set; } = "changeme";
-    
+
     /// <summary>
     /// Gets or sets the shared secret used for API token authentication.
     /// </summary>
@@ -61,7 +61,7 @@ public class LogPortConfig
     /// to stream logs directly to LogPort.
     /// </remarks>
     public string ApiSecret { get; set; } = Guid.NewGuid().ToString("N");
-    
+
     /// <summary>
     /// Gets or sets the mode of the agent.
     /// </summary>

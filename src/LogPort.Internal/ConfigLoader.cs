@@ -14,7 +14,7 @@ public static class ConfigLoader
         var dir = Path.GetDirectoryName(path);
         if (!string.IsNullOrWhiteSpace(dir) && !Directory.Exists(dir))
             Directory.CreateDirectory(dir);
-        
+
         bool fileExists = File.Exists(path);
         LogPortConfig? result = null;
 

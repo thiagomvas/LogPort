@@ -31,5 +31,5 @@ public static class EnvVars
     public const string UseRedis = "LOGPORT_CACHE_USE_REDIS";
     public const string RedisConnectionString = "LOGPORT_CACHE_REDIS_CONNECTION_STRING";
     public const string CacheDefaultExpirationMs = "LOGPORT_CACHE_DEFAULT_EXPIRATION_MS";
-    
+
 }
