@@ -13,8 +13,6 @@ This document outlines how to contribute effectively and get your changes merged
 3. [Proposing Changes](#proposing-changes)
 4. [Pull Request Process](#pull-request-process)
 5. [Code Style and Linting](#code-style-and-linting)
-6. [Communication](#communication)
-7. [Code of Conduct](#code-of-conduct)
 
 ---
 
@@ -72,3 +70,24 @@ We follow **trunk-based development**, so here’s the workflow:
 6. Link the PR to the relevant issue.
 7. A maintainer will review, provide feedback, and merge once approved.
 
+## Code Style and Linting
+To keep Logport consistent and maintainable, we follow specific code style rules for both backend and frontend. All contributions must pass these checks before merging.
+
+### Backend
+- There is an `.editorconfig` file at the root of the repository. Said file contains the formatting rules for any C# backend code written. Execute the snippet below to apply the formatting rules.
+  ```bash
+  dotnet format
+  ```
+
+- The CI pipeline enforces formatting automatically:
+  ```bash
+  dotnet format --verify-no-changes --no-restore
+  ```
+### Frontend
+
+- Use TypeScript and React functional components.
+- Lint and check formatting while on the `LogPort.UI` project with:
+  ```bash
+  npm run lint
+  npm run format
+  ```
