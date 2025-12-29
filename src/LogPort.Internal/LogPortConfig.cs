@@ -2,19 +2,45 @@ namespace LogPort.Internal;
 
 public class LogPortConfig
 {
-    public ElasticConfig Elastic { get; set; } = new();
+    /// <summary>
+    /// Gets or sets the configuration for the PostgreSQL module in the agent.
+    /// </summary>
     public PostgresConfig Postgres { get; set; } = new();
+    /// <summary>
+    /// Gets or sets the configuration for the Docker module in the agent.
+    /// </summary>
     public DockerConfig Docker { get; set; } = new();
+    /// <summary>
+    /// Gets or sets the configuration for the caching module in the agent.
+    /// </summary>
     public CacheConfig Cache { get; set; } = new();
 
+    /// <summary>
+    /// Gets or sets the port that the agent will listen on.
+    /// </summary>
     public uint Port { get; set; } = 8080;
+    /// <summary>
+    /// Gets or sets the Upstream Agent URL.
+    /// </summary>
+    /// <remarks>
+    /// This is only used when <see cref="LogPortConfig.Mode"/> is <see cref="LogMode.Relay"/>.
+    /// It represents the URL where the relay will forward all request and data received.
+    /// </remarks>
     public string? UpstreamUrl { get; set; }
+
+    /// <summary>
+    /// Gets or sets the size of the batch that logs will be processed in the background.
+    /// </summary>
     public int BatchSize { get; set; } = 100;
+    /// <summary>
+    /// Gets or sets the interval that log batches will be processed in milliseconds.
+    /// </summary>
     public int FlushIntervalMs { get; set; } = 250;
+
+    /// <summary>
+    /// Gets or sets the mode of the agent.
+    /// </summary>
     public LogMode Mode { get; set; } = LogMode.Agent;
-    public TimeSpan ClientMaxReconnectDelay { get; set; } = TimeSpan.FromSeconds(30);
-    public TimeSpan ClientHeartbeatInterval { get; set; } = TimeSpan.FromSeconds(10);
-    public TimeSpan ClientHeartbeatTimeout { get; set; } = TimeSpan.FromSeconds(10);
 
     public static LogPortConfig LoadFromEnvironment()
     {
@@ -27,22 +53,6 @@ public class LogPortConfig
         var modeStr = Environment.GetEnvironmentVariable("LOGPORT_MODE") ?? "Agent";
         config.Mode = Enum.TryParse<LogMode>(modeStr, true, out var mode) ? mode : LogMode.Agent;
 
-        config.ClientMaxReconnectDelay =
-            TimeSpan.FromMilliseconds(GetEnvInt("LOGPORT_CLIENT_MAX_RECONNECT_DELAY_MS", 30000));
-        config.ClientHeartbeatInterval =
-            TimeSpan.FromMilliseconds(GetEnvInt("LOGPORT_CLIENT_HEARTBEAT_INTERVAL_MS", 10000));
-        config.ClientHeartbeatTimeout =
-            TimeSpan.FromMilliseconds(GetEnvInt("LOGPORT_CLIENT_HEARTBEAT_TIMEOUT_MS", 10000));
-
-        // Elastic
-        config.Elastic.Use = GetEnvBool("LOGPORT_USE_ELASTICSEARCH");
-        config.Elastic.Uri = Environment.GetEnvironmentVariable("LOGPORT_ELASTIC_URI")
-                             ?? (config.Elastic.Use
-                                 ? throw new InvalidOperationException("LOGPORT_ELASTIC_URI is required")
-                                 : null);
-        config.Elastic.DefaultIndex = Environment.GetEnvironmentVariable("LOGPORT_ELASTIC_DEFAULT_INDEX") ?? "logs";
-        config.Elastic.Username = Environment.GetEnvironmentVariable("LOGPORT_ELASTIC_USERNAME");
-        config.Elastic.Password = Environment.GetEnvironmentVariable("LOGPORT_ELASTIC_PASSWORD");
 
         // Postgres
         config.Postgres.Use = GetEnvBool("LOGPORT_USE_POSTGRES");
@@ -64,7 +74,7 @@ public class LogPortConfig
         config.Cache.RedisConnectionString = Environment.GetEnvironmentVariable("LOGPORT_CACHE_REDIS_CONNECTION_STRING");
         config.Cache.DefaultExpiration =
             TimeSpan.FromMilliseconds(GetEnvInt("LOGPORT_CACHE_DEFAULT_EXPIRATION_MS", 600000));
-        if (config.Mode is LogMode.Agent && !config.Postgres.Use && !config.Elastic.Use)
+        if (config.Mode is LogMode.Agent && !config.Postgres.Use)
             throw new InvalidOperationException("At least one storage backend must be enabled.");
         return config;
     }
@@ -84,42 +94,85 @@ public class LogPortConfig
         return uint.TryParse(Environment.GetEnvironmentVariable(key), out var val) ? val : defaultValue;
     }
 
-    public class ElasticConfig
-    {
-        public bool Use { get; set; } = false;
-        public string? Uri { get; set; }
-        public string DefaultIndex { get; set; } = "logs";
-        public string? Username { get; set; }
-        public string? Password { get; set; }
-    }
-
     public class PostgresConfig
     {
-        public bool Use { get; set; } = false;
+        /// <summary>
+        /// Gets or sets whether or not it should use postgres.
+        /// </summary>
+        /// <remarks>
+        /// Currently it is the only data store provider supported, has to be true.
+        /// </remarks>
+        public bool Use { get; set; } = true;
+        /// <summary>
+        /// Gets or sets the host of the PostgreSQL database
+        /// </summary>
         public string Host { get; set; } = "localhost";
+        /// <summary>
+        /// Gets or sets the port of the PostgreSQL database
+        /// </summary>
         public int Port { get; set; } = 5432;
+        /// <summary>
+        /// Gets or sets the PostgreSQL database
+        /// </summary>
         public string Database { get; set; } = "logport";
+
+        /// <summary>
+        /// Gets or sets the user of the PostgreSQL database
+        /// </summary>
         public string Username { get; set; } = "postgres";
+
+        /// <summary>
+        /// Gets or sets the password of the PostgreSQL database
+        /// </summary>
         public string Password { get; set; } = "postgres";
 
         public string ConnectionString =>
             $"Host={Host};Port={Port};Database={Database};Username={Username};Password={Password};";
 
+        /// <summary>
+        /// Gets or sets the partition length in days of the logs table
+        /// </summary>
         public int PartitionLength { get; set; } = 1;
     }
 
     public class DockerConfig
     {
+        /// <summary>
+        /// Gets or sets whether to enable the Docker module.
+        /// </summary>
         public bool Use { get; set; } = false;
+        /// <summary>
+        /// Gets or sets the Docker socket path.
+        /// </summary>
         public string SocketPath { get; set; } = "unix:///var/run/docker.sock";
+
+        /// <summary>
+        /// Gets or sets the path of a file containing Docker log extraction rules for enriching logs processed by the Agent.
+        /// </summary>
         public string? ExtractorConfigPath { get; set; }
+        /// <summary>
+        /// Gets or sets whether the agent should monitor <b>EVERY</b> container in the host.
+        /// </summary>
+        /// <remarks>
+        /// Depending on the environment, this can lead to excessive log throughput.
+        /// It is recommended to use labels to mark which containers should be monitored
+        /// </remarks>
         public bool WatchAllContainers { get; set; } = false;
     }
 
     public class CacheConfig
     {
+        /// <summary>
+        /// Gets or sets whether the cache should use redis or not.
+        /// </summary>
         public bool UseRedis { get; set; } = false;
+        /// <summary>
+        /// Gets or sets the connection string for the redis cache.
+        /// </summary>
         public string? RedisConnectionString { get; set; }
+        /// <summary>
+        /// Gets or sets the default expiration of cached data.
+        /// </summary>
         public TimeSpan DefaultExpiration { get; set; } = TimeSpan.FromMinutes(10);
 
 

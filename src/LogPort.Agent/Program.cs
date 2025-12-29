@@ -14,7 +14,6 @@ using LogPort.Internal;
 using LogPort.Internal.Abstractions;
 using LogPort.Internal.Common.Services;
 using LogPort.Internal.Docker;
-using LogPort.Internal.ElasticSearch;
 using LogPort.Internal.Redis;
 
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -37,8 +36,7 @@ builder.Services.AddCors(options =>
     });
 });
 builder.Configuration.AddEnvironmentVariables(prefix: "LOGPORT_");
-var logPortConfig = LogPortConfig.LoadFromEnvironment();
-builder.Configuration.GetSection("LOGPORT").Bind(logPortConfig);
+var logPortConfig = ConfigLoader.Load();
 builder.Services.AddSingleton(logPortConfig);
 builder.Services.AddHttpClient();
 bool isAgent = logPortConfig.Mode is LogMode.Agent;
