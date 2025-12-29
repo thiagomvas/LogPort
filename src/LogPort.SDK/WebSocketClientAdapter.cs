@@ -5,6 +5,17 @@ namespace LogPort.SDK;
 public sealed class WebSocketClientAdapter : IWebSocketClient
 {
     private readonly ClientWebSocket _socket = new();
+    private readonly string? _apiToken;
+
+    public WebSocketClientAdapter(string? apiToken = null)
+    {
+        _apiToken = apiToken;
+
+        if (!string.IsNullOrWhiteSpace(_apiToken))
+        {
+            _socket.Options.SetRequestHeader("X-API-Token", _apiToken);
+        }
+    }
 
     public WebSocketState State => _socket.State;
 

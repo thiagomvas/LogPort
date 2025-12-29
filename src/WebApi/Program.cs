@@ -11,6 +11,7 @@ builder.AddLogPort(options =>
 {
     options.AgentUrl = "ws://localhost:8080/";
     options.ServiceName = "logport-testapi";
+    options.ApiSecret = "secret";
 });
 
 builder.Logging.SetMinimumLevel(LogLevel.Debug);

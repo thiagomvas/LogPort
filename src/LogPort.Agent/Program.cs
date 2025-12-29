@@ -76,6 +76,11 @@ app.UseWhen(
     branch => branch.UseMiddleware<BasicAuthMiddleware>()
 );
 
+app.UseWhen(
+    ctx => ctx.Request.Path.StartsWithSegments("/agent"),
+    branch => branch.UseMiddleware<ApiTokenMiddleware>()
+);
+
 
 if (app.Environment.IsDevelopment())
     app.MapOpenApi();

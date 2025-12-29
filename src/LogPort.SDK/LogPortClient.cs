@@ -49,7 +49,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
 
         var baseUrl = config.AgentUrl.Trim('/');
         _serverUri = new Uri($"{baseUrl}/agent/stream");
-        _socketFactory = socketFactory ?? (() => new WebSocketClientAdapter());
+        _socketFactory = socketFactory ?? (() => new WebSocketClientAdapter(config.ApiSecret));
         _webSocket = _socketFactory();
         _messageQueue = new ConcurrentQueue<LogEntry>();
         _cts = new CancellationTokenSource();

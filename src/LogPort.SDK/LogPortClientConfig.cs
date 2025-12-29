@@ -6,6 +6,7 @@ public sealed class LogPortClientConfig
     public string? ServiceName { get; set; }
     public string? Environment { get; set; }
     public string? Hostname { get; set; }
+    public string ApiSecret { get; set; }
     public TimeSpan ClientMaxReconnectDelay { get; set; } = TimeSpan.FromSeconds(30);
 
     public TimeSpan ClientHeartbeatInterval { get; set; } = TimeSpan.FromSeconds(10);
@@ -22,6 +23,8 @@ public sealed class LogPortClientConfig
         {
             config.AgentUrl = agentUrl;
         }
+        
+        config.ApiSecret = System.Environment.GetEnvironmentVariable("LOGPORT_SECRET");
 
         config.ServiceName = System.Environment.GetEnvironmentVariable("LOGPORT_SERVICE_NAME");
 
