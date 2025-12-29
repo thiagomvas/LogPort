@@ -6,7 +6,6 @@ using LogPort.Data.Postgres;
 using LogPort.Internal;
 using LogPort.Internal.Abstractions;
 using LogPort.Internal.Common.Services;
-using LogPort.Internal.ElasticSearch;
 using LogPort.Internal.Redis;
 
 using StackExchange.Redis;
@@ -17,13 +16,6 @@ public static class ServiceCollectionExtensions
 {
     public static void AddLogPortAgent(this IServiceCollection services, LogPortConfig config)
     {
-        if (config.Elastic.Use)
-        {
-            services.AddSingleton(ElasticClientFactory.Create(config));
-            services.AddScoped<ILogRepository, ElasticLogRepository>();
-            services.AddHealthChecks().AddCheck<ElasticsearchHealthCheck>("elasticsearch");
-        }
-
         if (config.Postgres.Use)
         {
             services.AddScoped<ILogRepository, PostgresLogRepository>();

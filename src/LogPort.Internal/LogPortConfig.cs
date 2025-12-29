@@ -2,7 +2,6 @@ namespace LogPort.Internal;
 
 public class LogPortConfig
 {
-    public ElasticConfig Elastic { get; set; } = new();
     public PostgresConfig Postgres { get; set; } = new();
     public DockerConfig Docker { get; set; } = new();
     public CacheConfig Cache { get; set; } = new();
@@ -34,16 +33,6 @@ public class LogPortConfig
         config.ClientHeartbeatTimeout =
             TimeSpan.FromMilliseconds(GetEnvInt("LOGPORT_CLIENT_HEARTBEAT_TIMEOUT_MS", 10000));
 
-        // Elastic
-        config.Elastic.Use = GetEnvBool("LOGPORT_USE_ELASTICSEARCH");
-        config.Elastic.Uri = Environment.GetEnvironmentVariable("LOGPORT_ELASTIC_URI")
-                             ?? (config.Elastic.Use
-                                 ? throw new InvalidOperationException("LOGPORT_ELASTIC_URI is required")
-                                 : null);
-        config.Elastic.DefaultIndex = Environment.GetEnvironmentVariable("LOGPORT_ELASTIC_DEFAULT_INDEX") ?? "logs";
-        config.Elastic.Username = Environment.GetEnvironmentVariable("LOGPORT_ELASTIC_USERNAME");
-        config.Elastic.Password = Environment.GetEnvironmentVariable("LOGPORT_ELASTIC_PASSWORD");
-
         // Postgres
         config.Postgres.Use = GetEnvBool("LOGPORT_USE_POSTGRES");
         config.Postgres.Host = Environment.GetEnvironmentVariable("LOGPORT_POSTGRES_HOST") ?? "localhost";
@@ -64,7 +53,7 @@ public class LogPortConfig
         config.Cache.RedisConnectionString = Environment.GetEnvironmentVariable("LOGPORT_CACHE_REDIS_CONNECTION_STRING");
         config.Cache.DefaultExpiration =
             TimeSpan.FromMilliseconds(GetEnvInt("LOGPORT_CACHE_DEFAULT_EXPIRATION_MS", 600000));
-        if (config.Mode is LogMode.Agent && !config.Postgres.Use && !config.Elastic.Use)
+        if (config.Mode is LogMode.Agent && !config.Postgres.Use)
             throw new InvalidOperationException("At least one storage backend must be enabled.");
         return config;
     }
@@ -82,15 +71,6 @@ public class LogPortConfig
     private static uint GetEnvUInt(string key, uint defaultValue)
     {
         return uint.TryParse(Environment.GetEnvironmentVariable(key), out var val) ? val : defaultValue;
-    }
-
-    public class ElasticConfig
-    {
-        public bool Use { get; set; } = false;
-        public string? Uri { get; set; }
-        public string DefaultIndex { get; set; } = "logs";
-        public string? Username { get; set; }
-        public string? Password { get; set; }
     }
 
     public class PostgresConfig
