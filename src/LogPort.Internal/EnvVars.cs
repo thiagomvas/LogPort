@@ -9,9 +9,8 @@ public static class EnvVars
     public const string BatchSize = "LOGPORT_BATCH_SIZE";
     public const string FlushIntervalMs = "LOGPORT_FLUSH_INTERVAL_MS";
     public const string Mode = "LOGPORT_MODE";
-    public const string ClientMaxReconnectDelayMs = "LOGPORT_CLIENT_MAX_RECONNECT_DELAY_MS";
-    public const string ClientHeartbeatIntervalMs = "LOGPORT_CLIENT_HEARTBEAT_INTERVAL_MS";
-    public const string ClientHeartbeatTimeoutMs = "LOGPORT_CLIENT_HEARTBEAT_TIMEOUT_MS";
+    public const string AdminLogin = "LOGPORT_ADMIN_LOGIN";
+    public const string AdminPassword = "LOGPORT_ADMIN_PASS";
 
     // Postgres
     public const string UsePostgres = "LOGPORT_USE_POSTGRES";
@@ -32,4 +31,5 @@ public static class EnvVars
     public const string UseRedis = "LOGPORT_CACHE_USE_REDIS";
     public const string RedisConnectionString = "LOGPORT_CACHE_REDIS_CONNECTION_STRING";
     public const string CacheDefaultExpirationMs = "LOGPORT_CACHE_DEFAULT_EXPIRATION_MS";
+
 }

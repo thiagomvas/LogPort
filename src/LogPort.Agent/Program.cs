@@ -5,6 +5,7 @@ using Docker.DotNet;
 using LogPort.Agent;
 using LogPort.Agent.Endpoints;
 using LogPort.Agent.HealthChecks;
+using LogPort.Agent.Middlewares;
 using LogPort.Agent.Services;
 using LogPort.AspNetCore;
 using LogPort.Core;
@@ -64,70 +65,37 @@ builder.Services.AddSingleton<WebSocketManager>();
 builder.Services.AddWebSockets(options => { options.KeepAliveInterval = TimeSpan.FromSeconds(30); });
 
 var app = builder.Build();
-
+var logger = app.Services.GetRequiredService<ILogger<Program>>();
 if (logPortConfig.Mode is LogMode.Relay)
     await app.UseLogPortAsync();
 
 app.UseCors("AllowAll");
 
-var adminUser = Environment.GetEnvironmentVariable("LOGPORT_ADMIN_USER");
-var adminPass = Environment.GetEnvironmentVariable("LOGPORT_ADMIN_PASS");
+app.UseWhen(
+    ctx => !ctx.Request.Path.StartsWithSegments("/agent"),
+    branch => branch.UseMiddleware<BasicAuthMiddleware>()
+);
 
-app.Use(async (context, next) =>
+if (!string.IsNullOrWhiteSpace(logPortConfig.ApiSecret))
 {
-    if (!context.Request.Path.StartsWithSegments("/analytics"))
-    {
-        await next();
-        return;
-    }
+    app.UseWhen(
+        ctx => ctx.Request.Path.StartsWithSegments("/agent"),
+        branch => branch.UseMiddleware<ApiTokenMiddleware>()
+    );
 
-    if (string.IsNullOrWhiteSpace(adminUser) || string.IsNullOrWhiteSpace(adminPass))
-    {
-        context.Response.StatusCode = 503;
-        await context.Response.WriteAsync("Admin credentials are not configured.");
-        return;
-    }
+    logger.LogInformation(
+        "API token authentication ENABLED for /agent endpoints."
+    );
+}
+else
+{
+    logger.LogWarning(
+        "API token authentication is DISABLED. " +
+        "No ApiSecret is configured, so any external application can stream logs to LogPort. " +
+        "THIS IS NOT RECOMMENDED FOR PRODUCTION."
+    );
+}
 
-    var auth = context.Request.Headers.Authorization.ToString();
-
-    if (string.IsNullOrWhiteSpace(auth) || !auth.StartsWith("Basic ", StringComparison.OrdinalIgnoreCase))
-    {
-        context.Response.StatusCode = 401;
-        context.Response.Headers.WWWAuthenticate = "Basic";
-        return;
-    }
-
-    try
-    {
-        var encoded = auth["Basic ".Length..].Trim();
-        var decoded = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(encoded));
-
-        var parts = decoded.Split(':', 2);
-        if (parts.Length != 2)
-        {
-            context.Response.StatusCode = 401;
-            context.Response.Headers.WWWAuthenticate = "Basic";
-            return;
-        }
-
-        var userOK = parts[0] == adminUser;
-        var PassOK = parts[1] == adminPass;
-
-        if (!userOK || !PassOK)
-        {
-            context.Response.StatusCode = 401;
-            context.Response.Headers.WWWAuthenticate = "Basic";
-            return;
-        }
-    }
-    catch
-    {
-        context.Response.StatusCode = 400;
-        return;
-    }
-
-    await next();
-});
 
 
 if (app.Environment.IsDevelopment())

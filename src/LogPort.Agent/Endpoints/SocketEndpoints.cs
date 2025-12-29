@@ -21,7 +21,7 @@ public static class SocketEndpoints
 
     private static void MapStream(WebApplication app)
     {
-        app.Map("api/stream", async context =>
+        app.Map("agent/stream", async context =>
         {
             if (!context.WebSockets.IsWebSocketRequest)
             {

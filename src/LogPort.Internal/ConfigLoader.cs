@@ -4,15 +4,23 @@ namespace LogPort.Internal;
 
 public static class ConfigLoader
 {
+    /// <summary>
+    /// Creates a <see cref="LogPortConfig"/> instance using a configuration file and environment variables.
+    /// </summary>
+    /// <returns>A <see cref="LogPortConfig"/> obtained from the configuration file and environment variables.</returns>
     public static LogPortConfig Load()
     {
-        var path = GetEnvString(EnvVars.ConfigPath, "config.json");
+        var path = GetEnvString(EnvVars.ConfigPath, "/conf/config.json");
+        var dir = Path.GetDirectoryName(path);
+        if (!string.IsNullOrWhiteSpace(dir) && !Directory.Exists(dir))
+            Directory.CreateDirectory(dir);
+
         bool fileExists = File.Exists(path);
         LogPortConfig? result = null;
 
         if (fileExists)
         {
-            var config = File.ReadAllText("config.json");
+            var config = File.ReadAllText(path);
             result = JsonSerializer.Deserialize<LogPortConfig>(config);
         }
 
@@ -37,6 +45,8 @@ public static class ConfigLoader
         target.UpstreamUrl = GetEnvString(EnvVars.UpstreamUrl, target.UpstreamUrl)?.Trim('/');
         target.BatchSize = GetEnvInt(EnvVars.BatchSize, target.BatchSize);
         target.FlushIntervalMs = GetEnvInt(EnvVars.FlushIntervalMs, target.FlushIntervalMs);
+        target.AdminLogin = GetEnvString(EnvVars.AdminLogin, target.AdminLogin);
+        target.AdminPassword = GetEnvString(EnvVars.AdminPassword, target.AdminPassword);
 
         var modeStr = GetEnvString(EnvVars.Mode, target.Mode.ToString());
         if (Enum.TryParse<LogMode>(modeStr, true, out var mode))
