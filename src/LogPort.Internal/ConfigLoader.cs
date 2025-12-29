@@ -4,6 +4,10 @@ namespace LogPort.Internal;
 
 public static class ConfigLoader
 {
+    /// <summary>
+    /// Creates a <see cref="LogPortConfig"/> instance using a configuration file and environment variables.
+    /// </summary>
+    /// <returns>A <see cref="LogPortConfig"/> obtained from the configuration file and environment variables.</returns>
     public static LogPortConfig Load()
     {
         var path = GetEnvString(EnvVars.ConfigPath, "/conf/config.json");
