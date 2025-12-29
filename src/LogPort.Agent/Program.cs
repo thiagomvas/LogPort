@@ -36,8 +36,7 @@ builder.Services.AddCors(options =>
     });
 });
 builder.Configuration.AddEnvironmentVariables(prefix: "LOGPORT_");
-var logPortConfig = LogPortConfig.LoadFromEnvironment();
-builder.Configuration.GetSection("LOGPORT").Bind(logPortConfig);
+var logPortConfig = ConfigLoader.Load();
 builder.Services.AddSingleton(logPortConfig);
 builder.Services.AddHttpClient();
 bool isAgent = logPortConfig.Mode is LogMode.Agent;
