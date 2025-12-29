@@ -18,11 +18,8 @@ public static class ConfigLoader
 
         result ??= new LogPortConfig();
 
-        if (!fileExists)
-        {
-            var opt = new JsonSerializerOptions() { WriteIndented = true, };
-            File.WriteAllText(path, JsonSerializer.Serialize(result, opt));
-        }
+        var opt = new JsonSerializerOptions() { WriteIndented = true, };
+        File.WriteAllText(path, JsonSerializer.Serialize(result, opt));
 
         LoadFromEnvironment(result);
 
