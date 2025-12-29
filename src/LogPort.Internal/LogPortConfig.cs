@@ -145,7 +145,10 @@ public class LogPortConfig
         /// Gets or sets the Docker socket path.
         /// </summary>
         public string SocketPath { get; set; } = "unix:///var/run/docker.sock";
-        [Obsolete]
+
+        /// <summary>
+        /// Gets or sets the path of a file containing Docker log extraction rules for enriching logs processed by the Agent.
+        /// </summary>
         public string? ExtractorConfigPath { get; set; }
         /// <summary>
         /// Gets or sets whether the agent should monitor <b>EVERY</b> container in the host.
