@@ -10,18 +10,18 @@ public sealed class LogEntryExtractionPipeline
 {
     private readonly FrozenDictionary<string, BaseLogEntryExtractor> _byService;
 
-    public LogEntryExtractionPipeline(IEnumerable<BaseLogEntryExtractorConfig> configs)
+    public LogEntryExtractionPipeline(LogPortConfig config)
     {
         var map = new Dictionary<string, BaseLogEntryExtractor>(
             StringComparer.OrdinalIgnoreCase);
 
-        foreach (var config in configs)
+        foreach (var extractorConfig in config.Extractors)
         {
-            if (string.IsNullOrWhiteSpace(config.ServiceName))
+            if (string.IsNullOrWhiteSpace(extractorConfig.ServiceName))
                 continue;
 
-            var extractor = CreateExtractor(config);
-            map[config.ServiceName] = extractor;
+            var extractor = CreateExtractor(extractorConfig);
+            map[extractorConfig.ServiceName] = extractor;
         }
 
         _byService = map.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);

@@ -7,6 +7,7 @@ using LogPort.Internal;
 using LogPort.Internal.Abstractions;
 using LogPort.Internal.Common.Services;
 using LogPort.Internal.Redis;
+using LogPort.Internal.Services;
 
 using StackExchange.Redis;
 
@@ -41,6 +42,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<LogNormalizer>();
         services.AddScoped<LogService>();
         services.AddScoped<ILogBatchHandler, AgentLogBatchHandler>();
+
+        services.AddSingleton<LogEntryExtractionPipeline>();
     }
 
     public static void AddLogPortRelay(this IServiceCollection services, LogPortConfig config, WebApplicationBuilder builder)
