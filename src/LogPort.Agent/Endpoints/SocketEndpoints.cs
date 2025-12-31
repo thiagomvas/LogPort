@@ -7,7 +7,7 @@ using LogPort.Internal.Abstractions;
 
 using Microsoft.Extensions.Logging;
 
-using WebSocketManager = LogPort.Internal.Common.Services.WebSocketManager;
+using WebSocketManager = LogPort.Internal.Services.WebSocketManager;
 
 namespace LogPort.Agent.Endpoints;
 

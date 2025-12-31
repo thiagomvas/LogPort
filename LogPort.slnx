@@ -4,7 +4,6 @@
     <Project Path="src/LogPort.Agent/LogPort.Agent.csproj" />
     <Project Path="src/LogPort.AspNetCore/LogPort.AspNetCore.csproj" />
     <Project Path="src/LogPort.Core/LogPort.Core.csproj" />
-    <Project Path="src/LogPort.Internal.Common/LogPort.Internal.Common.csproj" />
     <Project Path="src/LogPort.Internal.Docker/LogPort.Internal.Docker.csproj" />
     <Project Path="src/LogPort.Internal.Postgres/LogPort.Internal.Postgres.csproj" />
     <Project Path="src/LogPort.Internal.Redis/LogPort.Internal.Redis.csproj" />

@@ -1,9 +1,10 @@
 using LogPort.Core.Models;
-using LogPort.Internal;
 using LogPort.Internal.Abstractions;
 using LogPort.Internal.Configuration;
 
 using Microsoft.Extensions.Logging;
+
+namespace LogPort.Internal.Services;
 
 public class LogService
 {

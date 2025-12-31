@@ -1,3 +1,3 @@
-namespace LogPort.Internal.Common.Models;
+namespace LogPort.Internal.Models;
 
 public record LogBucket(DateTime PeriodStart, ulong Count);

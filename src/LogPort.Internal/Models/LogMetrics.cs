@@ -1,4 +1,4 @@
-namespace LogPort.Internal.Common.Models;
+namespace LogPort.Internal.Models;
 
 public class LogMetrics
 {

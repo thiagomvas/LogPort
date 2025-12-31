@@ -1,7 +1,7 @@
 using System.Net.Http.Headers;
 
 using LogPort.Core.Models;
-using LogPort.Internal.Common.Services;
+using LogPort.Internal.Services;
 
 using Microsoft.AspNetCore.Mvc;
 

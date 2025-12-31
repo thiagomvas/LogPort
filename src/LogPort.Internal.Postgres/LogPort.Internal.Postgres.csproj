@@ -9,7 +9,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\LogPort.Core\LogPort.Core.csproj" />
-      <ProjectReference Include="..\LogPort.Internal.Common\LogPort.Internal.Common.csproj" />
+      <ProjectReference Include="..\LogPort.Internal\LogPort.Internal.csproj" />
     </ItemGroup>
     
     <ItemGroup>
