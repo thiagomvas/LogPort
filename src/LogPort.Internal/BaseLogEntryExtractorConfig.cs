@@ -1,5 +1,9 @@
+using System.Text.Json.Serialization;
+
 namespace LogPort.Internal;
 
+
+[JsonConverter(typeof(BaseLogEntryExtractorConfigJsonConverter))]
 public class BaseLogEntryExtractorConfig
 {
     public string ServiceName { get; init; } = string.Empty;

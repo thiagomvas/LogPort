@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace LogPort.Internal;
 
@@ -33,6 +34,25 @@ public static class ConfigLoader
 
         return result;
     }
+    
+    public static LogPortConfig LoadFromJson(string json)
+    {
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            Converters =
+            {
+                new JsonStringEnumConverter(),
+                new BaseLogEntryExtractorConfigJsonConverter()
+            }
+        };
+        
+        var result = JsonSerializer.Deserialize<LogPortConfig>(json, options)
+                     ?? new LogPortConfig();
+
+        return result;
+    }
+
 
     /// <summary>
     /// Loads the LogPort configuration from environment values, overriding an existing instance of the config class.
@@ -71,9 +91,6 @@ public static class ConfigLoader
             GetEnvString(EnvVars.RedisConnectionString, target.Cache.RedisConnectionString);
         target.Cache.DefaultExpiration = TimeSpan.FromMilliseconds(
             GetEnvInt(EnvVars.CacheDefaultExpirationMs, (int)target.Cache.DefaultExpiration.TotalMilliseconds));
-
-        if (target.Mode is LogMode.Agent && !target.Postgres.Use)
-            throw new InvalidOperationException("At least one storage backend must be enabled.");
 
         return target;
     }
