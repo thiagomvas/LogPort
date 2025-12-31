@@ -26,18 +26,7 @@ public class LogService
 
     public async Task<IEnumerable<LogEntry>> GetLogsAsync(LogQueryParameters parameters)
     {
-        var key = $"{CacheKeys.LogPrefix}{parameters.GetCacheKey()}";
-
-        var cachedLogs = await _cache.GetAsync<IEnumerable<LogEntry>>(key);
-        if (cachedLogs is not null)
-        {
-            _logger?.LogDebug("Getting logs from cache with key: {CacheKey}", key);
-            return cachedLogs;
-        }
-
         var result = await _repository.GetLogsAsync(parameters);
-
-        await _cache.SetAsync(key, result, _config.Cache.DefaultExpiration);
 
         return result;
     }
