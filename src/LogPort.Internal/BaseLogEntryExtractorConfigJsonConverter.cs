@@ -1,6 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
+using LogPort.Internal.Configuration;
+
 namespace LogPort.Internal;
 
 public sealed class BaseLogEntryExtractorConfigJsonConverter

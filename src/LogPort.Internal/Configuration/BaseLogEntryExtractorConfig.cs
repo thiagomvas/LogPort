@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace LogPort.Internal;
+namespace LogPort.Internal.Configuration;
 
 
 [JsonConverter(typeof(BaseLogEntryExtractorConfigJsonConverter))]

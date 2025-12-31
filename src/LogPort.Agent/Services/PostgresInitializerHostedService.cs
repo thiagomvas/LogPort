@@ -1,6 +1,7 @@
 using LogPort.Core.Models;
 using LogPort.Data.Postgres;
 using LogPort.Internal;
+using LogPort.Internal.Configuration;
 
 namespace LogPort.Agent.Services;
 

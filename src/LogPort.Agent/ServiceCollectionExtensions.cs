@@ -6,6 +6,7 @@ using LogPort.Data.Postgres;
 using LogPort.Internal;
 using LogPort.Internal.Abstractions;
 using LogPort.Internal.Common.Services;
+using LogPort.Internal.Configuration;
 using LogPort.Internal.Redis;
 using LogPort.Internal.Services;
 

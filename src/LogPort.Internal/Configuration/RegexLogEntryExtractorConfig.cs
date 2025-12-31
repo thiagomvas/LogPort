@@ -1,4 +1,4 @@
-namespace LogPort.Internal;
+namespace LogPort.Internal.Configuration;
 
 public sealed class RegexLogEntryExtractorConfig : BaseLogEntryExtractorConfig
 {

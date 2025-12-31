@@ -1,4 +1,4 @@
-namespace LogPort.Internal;
+namespace LogPort.Internal.Configuration;
 
 public class JsonLogEntryExtractorConfig : BaseLogEntryExtractorConfig
 {

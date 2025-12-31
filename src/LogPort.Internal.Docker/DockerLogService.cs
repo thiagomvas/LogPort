@@ -5,6 +5,7 @@ using Docker.DotNet.Models;
 
 using LogPort.Core;
 using LogPort.Core.Models;
+using LogPort.Internal.Configuration;
 using LogPort.Internal.Services;
 
 using Microsoft.Extensions.Hosting;

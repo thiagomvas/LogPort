@@ -1,5 +1,6 @@
 using LogPort.Core.Models;
 using LogPort.Internal.Abstractions;
+using LogPort.Internal.Configuration;
 
 using Microsoft.Extensions.Logging;
 

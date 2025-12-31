@@ -2,6 +2,7 @@ using System.Collections.Frozen;
 
 using LogPort.Core.Models;
 using LogPort.Internal.Abstractions;
+using LogPort.Internal.Configuration;
 
 namespace LogPort.Internal.Services;
 
