@@ -62,7 +62,7 @@ public class LogPortConfig
     /// </remarks>
     public string ApiSecret { get; set; } = Guid.NewGuid().ToString("N");
 
-    
+
     /// <summary>
     /// Gets or sets log extraction rules used by modules that can only extract context from messages (e.g. Docker).
     /// </summary>

@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
+
 using LogPort.Core.Models;
 using LogPort.Internal.Abstractions;
 using LogPort.Internal.Configuration;

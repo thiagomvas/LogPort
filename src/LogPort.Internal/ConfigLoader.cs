@@ -36,7 +36,7 @@ public static class ConfigLoader
 
         return result;
     }
-    
+
     public static LogPortConfig LoadFromJson(string json)
     {
         var options = new JsonSerializerOptions
@@ -48,7 +48,7 @@ public static class ConfigLoader
                 new BaseLogEntryExtractorConfigJsonConverter()
             }
         };
-        
+
         var result = JsonSerializer.Deserialize<LogPortConfig>(json, options)
                      ?? new LogPortConfig();
 

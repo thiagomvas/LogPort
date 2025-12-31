@@ -110,7 +110,7 @@ public class DockerLogService : BackgroundService
                 Hostname = Environment.MachineName,
                 Environment = "docker"
             };
-            
+
             if (_extractionPipeline.TryExtract(containerName, message, out var result))
             {
                 logEntry.Message = SanitizeLogMessage(result.Message);
