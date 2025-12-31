@@ -4,39 +4,35 @@ using LogPort.Internal.Services;
 
 var json = """
            {
-             "Port": 8080,
+             "Port": 9000,
              "Mode": "Agent",
-
-             "Postgres": {
-               "Use": true
-             },
 
              "Extractors": [
                {
-                 "ServiceName": "example-service",
-                 "ExtractionMode": "Json",
+                 "ServiceName": "auth-service",
+                 "ExtractionMode": "Regex",
 
-                 "MessageProperty": "Message",
-                 "LevelProperty": "Level",
-                 "TimestampProperty": "Timestamp"
+                 "Pattern": "(?<ts>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z)\\s+\\[(?<lvl>\\w+)\\]\\s+(?<msg>.+)",
+                 "TimestampGroup": "ts",
+                 "LevelGroup": "lvl",
+                 "MessageGroup": "msg"
                }
              ]
            }
            """;
 
-// Load config from JSON
+
+
 var config = ConfigLoader.LoadFromJson(json);
 
-// Build extractor pipeline ONCE
 var pipeline = new LogEntryExtractionPipeline(config.Extractors);
 
-// Example log line
 var line = """
-           INFO something before {"Timestamp":"2025-01-01T12:00:00Z","Level":"warn","Message":"hello world 🚀"}
+           2024-12-31T23:59:59Z [error] invalid credentials
            """;
 
-// Service name MUST match config
-if (pipeline.TryExtract("example-service", line.AsSpan(), out var log))
+
+if (pipeline.TryExtract("auth-service", line.AsSpan(), out var log))
 {
     Console.WriteLine($"Timestamp: {log.Timestamp:o}");
     Console.WriteLine($"Level: {log.Level}");

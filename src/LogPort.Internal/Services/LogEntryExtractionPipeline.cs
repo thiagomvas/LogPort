@@ -48,6 +48,9 @@ public sealed class LogEntryExtractionPipeline
         {
             "json" => new JsonLogEntryExtractor(
                 (JsonLogEntryExtractorConfig)config),
+            
+            "regex" => new RegexLogEntryExtractor(
+                (RegexLogEntryExtractorConfig)config),
 
             _ => throw new InvalidOperationException(
                 $"Unknown extractor mode '{config.ExtractionMode}'")

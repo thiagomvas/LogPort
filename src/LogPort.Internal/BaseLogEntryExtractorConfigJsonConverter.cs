@@ -22,7 +22,7 @@ public sealed class BaseLogEntryExtractorConfigJsonConverter
         return mode?.ToLowerInvariant() switch
         {
             "json" => root.Deserialize<JsonLogEntryExtractorConfig>(options)!,
-            // "regex" => root.Deserialize<RegexLogEntryExtractorConfig>(options)!,
+            "regex" => root.Deserialize<RegexLogEntryExtractorConfig>(options)!,
 
             _ => throw new JsonException($"Unknown extractor mode '{mode}'")
         };
