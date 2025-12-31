@@ -20,8 +20,6 @@ public class DockerLogService : BackgroundService
     private readonly LogPortConfig _logPortConfig;
     private readonly LogEntryExtractionPipeline _extractionPipeline;
 
-    private readonly List<DockerExtractorConfig> _extractorConfigs = new();
-
     public DockerLogService(
         LogQueue logQueue,
         LogPortConfig config,
@@ -35,26 +33,6 @@ public class DockerLogService : BackgroundService
         _logPortConfig = config;
         _client = client;
         _extractionPipeline = pipeline;
-
-        if (!string.IsNullOrWhiteSpace(config.Docker.ExtractorConfigPath))
-        {
-            try
-            {
-                var json = File.ReadAllText(config.Docker.ExtractorConfigPath);
-                var configs = JsonSerializer.Deserialize<List<DockerExtractorConfig>>(json);
-                if (configs != null)
-                {
-                    _extractorConfigs = configs;
-                    _logger?.LogInformation("Loaded {Count} Docker extractor configurations from {Path}",
-                        _extractorConfigs.Count, config.Docker.ExtractorConfigPath);
-                }
-            }
-            catch
-            {
-                _logger?.LogError("Failed to load Docker extractor configurations from {Path}",
-                    config.Docker.ExtractorConfigPath);
-            }
-        }
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

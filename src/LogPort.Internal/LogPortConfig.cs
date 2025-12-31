@@ -72,43 +72,6 @@ public class LogPortConfig
     /// </summary>
     public LogMode Mode { get; set; } = LogMode.Agent;
 
-    public static LogPortConfig LoadFromEnvironment()
-    {
-        var config = new LogPortConfig();
-
-        config.Port = GetEnvUInt("LOGPORT_PORT", 8080);
-        config.UpstreamUrl = Environment.GetEnvironmentVariable("LOGPORT_UPSTREAM_URL")?.Trim('/');
-        config.BatchSize = GetEnvInt("LOGPORT_BATCH_SIZE", 100);
-        config.FlushIntervalMs = GetEnvInt("LOGPORT_FLUSH_INTERVAL_MS", 250);
-        var modeStr = Environment.GetEnvironmentVariable("LOGPORT_MODE") ?? "Agent";
-        config.Mode = Enum.TryParse<LogMode>(modeStr, true, out var mode) ? mode : LogMode.Agent;
-
-
-        // Postgres
-        config.Postgres.Use = GetEnvBool("LOGPORT_USE_POSTGRES");
-        config.Postgres.Host = Environment.GetEnvironmentVariable("LOGPORT_POSTGRES_HOST") ?? "localhost";
-        config.Postgres.Port = GetEnvInt("LOGPORT_POSTGRES_PORT", 5432);
-        config.Postgres.Database = Environment.GetEnvironmentVariable("LOGPORT_POSTGRES_DATABASE") ?? "logport";
-        config.Postgres.Username = Environment.GetEnvironmentVariable("LOGPORT_POSTGRES_USERNAME") ?? "postgres";
-        config.Postgres.Password = Environment.GetEnvironmentVariable("LOGPORT_POSTGRES_PASSWORD") ?? "postgres";
-        config.Postgres.PartitionLength = GetEnvInt("LOGPORT_POSTGRES_PARTITION_LENGTH", 1);
-
-        // Docker
-        config.Docker.Use = GetEnvBool("LOGPORT_USE_DOCKER");
-        config.Docker.SocketPath = Environment.GetEnvironmentVariable("LOGPORT_DOCKER_SOCKET_PATH") ?? "unix:///var/run/docker.sock";
-        config.Docker.ExtractorConfigPath = Environment.GetEnvironmentVariable("LOGPORT_DOCKER_EXTRACTOR_CONFIG_PATH");
-        config.Docker.WatchAllContainers = GetEnvBool("LOGPORT_DOCKER_WATCH_ALL");
-
-        // Cache
-        config.Cache.UseRedis = GetEnvBool("LOGPORT_CACHE_USE_REDIS");
-        config.Cache.RedisConnectionString = Environment.GetEnvironmentVariable("LOGPORT_CACHE_REDIS_CONNECTION_STRING");
-        config.Cache.DefaultExpiration =
-            TimeSpan.FromMilliseconds(GetEnvInt("LOGPORT_CACHE_DEFAULT_EXPIRATION_MS", 600000));
-        if (config.Mode is LogMode.Agent && !config.Postgres.Use)
-            throw new InvalidOperationException("At least one storage backend must be enabled.");
-        return config;
-    }
-
     private static bool GetEnvBool(string key, bool defaultValue = false)
     {
         return bool.TryParse(Environment.GetEnvironmentVariable(key), out var val) ? val : defaultValue;
@@ -177,10 +140,6 @@ public class LogPortConfig
         /// </summary>
         public string SocketPath { get; set; } = "unix:///var/run/docker.sock";
 
-        /// <summary>
-        /// Gets or sets the path of a file containing Docker log extraction rules for enriching logs processed by the Agent.
-        /// </summary>
-        public string? ExtractorConfigPath { get; set; }
         /// <summary>
         /// Gets or sets whether the agent should monitor <b>EVERY</b> container in the host.
         /// </summary>

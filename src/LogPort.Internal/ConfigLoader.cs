@@ -82,8 +82,6 @@ public static class ConfigLoader
 
         target.Docker.Use = GetEnvBool(EnvVars.UseDocker, target.Docker.Use);
         target.Docker.SocketPath = GetEnvString(EnvVars.DockerSocketPath, target.Docker.SocketPath);
-        target.Docker.ExtractorConfigPath =
-            GetEnvString(EnvVars.DockerExtractorConfigPath, target.Docker.ExtractorConfigPath);
         target.Docker.WatchAllContainers = GetEnvBool(EnvVars.DockerWatchAll, target.Docker.WatchAllContainers);
 
         target.Cache.UseRedis = GetEnvBool(EnvVars.UseRedis, target.Cache.UseRedis);
