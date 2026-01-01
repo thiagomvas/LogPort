@@ -1,6 +1,6 @@
 using LogPort.Core.Models;
 
-namespace LogPort.SDK.Tests.Fakes;
+namespace LogPort.SDK.UnitTests.Fakes;
 
 public class FakeServer
 {

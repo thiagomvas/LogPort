@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 using NSubstitute;
 
-namespace LogPort.Internal.Tests;
+namespace LogPort.Internal.UnitTests;
 
 [TestFixture]
 public class LogServiceTests

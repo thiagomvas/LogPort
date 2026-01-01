@@ -1,7 +1,7 @@
 using LogPort.Internal.Configuration;
 using LogPort.Internal.Services;
 
-namespace LogPort.Internal.Tests.Extractors;
+namespace LogPort.Internal.UnitTests.Extractors;
 
 [TestFixture]
 public sealed class JsonLogEntryExtractorTests
