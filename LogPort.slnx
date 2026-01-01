@@ -12,8 +12,8 @@
     <Project Path="src/WebApi/WebApi.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/Logport.Core.Tests/Logport.Core.Tests.csproj" />
     <Project Path="tests/LogPort.Internal.Tests/LogPort.Internal.Tests.csproj" />
     <Project Path="tests/LogPort.SDK.Tests/LogPort.SDK.Tests.csproj" />
+    <Project Path="tests\LogPort.Core.Tests\LogPort.Core.Tests.csproj" />
   </Folder>
 </Solution>

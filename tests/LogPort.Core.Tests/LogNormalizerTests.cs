@@ -4,7 +4,7 @@ using LogPort.Core;
 
 using NUnit.Framework;
 
-namespace Logport.Core.Tests;
+namespace LogPort.Core.Tests;
 
 [TestFixture]
 public sealed class LogNormalizerTests
