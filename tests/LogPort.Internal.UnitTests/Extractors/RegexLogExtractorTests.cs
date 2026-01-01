@@ -67,7 +67,10 @@ public sealed class RegexLogEntryExtractorTests
         var extractor = new RegexLogEntryExtractor(
             new RegexLogEntryExtractorConfig
             {
-                Pattern = @"(?<message>.+)", MessageGroup = "message", LevelGroup = "level", TimestampGroup = "ts"
+                Pattern = @"(?<message>.+)",
+                MessageGroup = "message",
+                LevelGroup = "level",
+                TimestampGroup = "ts"
             });
 
         var success = extractor.TryExtract("hello".AsSpan(), out var entry);
