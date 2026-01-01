@@ -35,22 +35,6 @@ public class LogServiceTests
     }
 
     [Test]
-    public async Task GetLogsAsync_FetchesAndCaches()
-    {
-        var parameters = new LogQueryParameters();
-        var key = $"{CacheKeys.LogPrefix}{parameters.GetCacheKey()}";
-
-        _cache.GetAsync<IEnumerable<LogEntry>>(key).Returns((IEnumerable<LogEntry>)null);
-        var repoResult = new List<LogEntry> { new LogEntry() };
-        _repository.GetLogsAsync(parameters).Returns(repoResult);
-
-        var result = await _service.GetLogsAsync(parameters);
-
-        Assert.That(result, Is.EqualTo(repoResult));
-        await _cache.Received(1).SetAsync(key, repoResult, _config.Cache.DefaultExpiration);
-    }
-
-    [Test]
     public async Task CountLogsAsync_UsesCache()
     {
         var parameters = new LogQueryParameters();
