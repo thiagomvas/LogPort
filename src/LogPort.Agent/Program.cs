@@ -13,7 +13,6 @@ using LogPort.Core.Models;
 using LogPort.Data.Postgres;
 using LogPort.Internal;
 using LogPort.Internal.Abstractions;
-using LogPort.Internal.Common.Services;
 using LogPort.Internal.Docker;
 using LogPort.Internal.Redis;
 
@@ -22,7 +21,7 @@ using Microsoft.AspNetCore.WebSockets;
 
 using StackExchange.Redis;
 
-using WebSocketManager = LogPort.Internal.Common.Services.WebSocketManager;
+using WebSocketManager = LogPort.Internal.Services.WebSocketManager;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();

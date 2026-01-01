@@ -1,8 +1,8 @@
 using LogPort.Core.Models;
 using LogPort.Internal.Abstractions;
-using LogPort.Internal.Common.Models;
+using LogPort.Internal.Models;
 
-namespace LogPort.Internal.Common.Services;
+namespace LogPort.Internal.Services;
 
 public class AnalyticsService
 {

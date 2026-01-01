@@ -4,7 +4,6 @@
     <Project Path="src/LogPort.Agent/LogPort.Agent.csproj" />
     <Project Path="src/LogPort.AspNetCore/LogPort.AspNetCore.csproj" />
     <Project Path="src/LogPort.Core/LogPort.Core.csproj" />
-    <Project Path="src/LogPort.Internal.Common/LogPort.Internal.Common.csproj" />
     <Project Path="src/LogPort.Internal.Docker/LogPort.Internal.Docker.csproj" />
     <Project Path="src/LogPort.Internal.Postgres/LogPort.Internal.Postgres.csproj" />
     <Project Path="src/LogPort.Internal.Redis/LogPort.Internal.Redis.csproj" />
@@ -13,8 +12,8 @@
     <Project Path="src/WebApi/WebApi.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/Logport.Core.Tests/Logport.Core.Tests.csproj" />
-    <Project Path="tests/LogPort.Internal.Tests/LogPort.Internal.Tests.csproj" />
-    <Project Path="tests/LogPort.SDK.Tests/LogPort.SDK.Tests.csproj" />
+    <Project Path="tests\LogPort.Core.UnitTests\LogPort.Core.UnitTests.csproj" />
+    <Project Path="tests\LogPort.Internal.UnitTests\LogPort.Internal.UnitTests.csproj" />
+    <Project Path="tests\LogPort.SDK.UnitTests\LogPort.SDK.UnitTests.csproj" />
   </Folder>
 </Solution>

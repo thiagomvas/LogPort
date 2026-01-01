@@ -5,6 +5,8 @@ using Docker.DotNet.Models;
 
 using LogPort.Core;
 using LogPort.Core.Models;
+using LogPort.Internal.Configuration;
+using LogPort.Internal.Services;
 
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -17,13 +19,13 @@ public class DockerLogService : BackgroundService
     private readonly LogQueue _logQueue;
     private readonly DockerClient _client;
     private readonly LogPortConfig _logPortConfig;
-
-    private readonly List<DockerExtractorConfig> _extractorConfigs = new();
+    private readonly LogEntryExtractionPipeline _extractionPipeline;
 
     public DockerLogService(
         LogQueue logQueue,
         LogPortConfig config,
         DockerClient client,
+        LogEntryExtractionPipeline pipeline,
         ILogger<DockerLogService>? logger = null)
 
     {
@@ -31,26 +33,7 @@ public class DockerLogService : BackgroundService
         _logQueue = logQueue;
         _logPortConfig = config;
         _client = client;
-
-        if (!string.IsNullOrWhiteSpace(config.Docker.ExtractorConfigPath))
-        {
-            try
-            {
-                var json = File.ReadAllText(config.Docker.ExtractorConfigPath);
-                var configs = JsonSerializer.Deserialize<List<DockerExtractorConfig>>(json);
-                if (configs != null)
-                {
-                    _extractorConfigs = configs;
-                    _logger?.LogInformation("Loaded {Count} Docker extractor configurations from {Path}",
-                        _extractorConfigs.Count, config.Docker.ExtractorConfigPath);
-                }
-            }
-            catch
-            {
-                _logger?.LogError("Failed to load Docker extractor configurations from {Path}",
-                    config.Docker.ExtractorConfigPath);
-            }
-        }
+        _extractionPipeline = pipeline;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -118,73 +101,6 @@ public class DockerLogService : BackgroundService
             string level = "INFO";
             DateTime timestamp = DateTime.UtcNow;
 
-            var config = _extractorConfigs.FirstOrDefault(c => c.ServiceName == containerName);
-            if (config != null)
-            {
-                if (config.ExtractionMode.Equals("regex", StringComparison.OrdinalIgnoreCase) &&
-                    !string.IsNullOrWhiteSpace(config.ExtractorRegex))
-                {
-                    var regex = new System.Text.RegularExpressions.Regex(config.ExtractorRegex);
-                    var match = regex.Match(line);
-                    if (match.Success)
-                    {
-                        if (!string.IsNullOrWhiteSpace(config.MessageKey) && match.Groups["message"].Success)
-                        {
-                            message = match.Groups[config.MessageKey].Value;
-                        }
-
-                        if (!string.IsNullOrWhiteSpace(config.LogLevelKey) && match.Groups["level"].Success)
-                        {
-                            level = match.Groups[config.LogLevelKey].Value.ToUpperInvariant();
-                        }
-                    }
-                }
-                else if (config.ExtractionMode.Equals("json", StringComparison.OrdinalIgnoreCase))
-                {
-                    try
-                    {
-                        var sanitizedLine = line.Replace("\0", string.Empty);
-
-                        var jsonStart = sanitizedLine.IndexOf('{');
-                        if (jsonStart >= 0)
-                        {
-                            var jsonPart = sanitizedLine.Substring(jsonStart);
-                            using var jsonDoc = JsonDocument.Parse(jsonPart);
-                            var root = jsonDoc.RootElement;
-
-                            if (!string.IsNullOrWhiteSpace(config.MessageKey) &&
-                                root.TryGetProperty(config.MessageKey, out var messageProp))
-                            {
-                                message = messageProp.GetString() ?? message;
-                            }
-
-                            if (!string.IsNullOrWhiteSpace(config.LogLevelKey) &&
-                                root.TryGetProperty(config.LogLevelKey, out var levelProp))
-                            {
-                                level = levelProp.GetString()?.ToUpperInvariant() ?? level;
-                            }
-
-                            if (!string.IsNullOrWhiteSpace(config.TimestampKey) &&
-                                root.TryGetProperty(config.TimestampKey, out var tsProp))
-                            {
-                                if (DateTime.TryParse(
-                                        tsProp.GetString(),
-                                        null,
-                                        System.Globalization.DateTimeStyles.AdjustToUniversal |
-                                        System.Globalization.DateTimeStyles.AssumeUniversal,
-                                        out var ts))
-                                {
-                                    timestamp = ts;
-                                }
-                            }
-                        }
-                    }
-                    catch (JsonException)
-                    {
-                    }
-                }
-            }
-
             var logEntry = new LogEntry
             {
                 Timestamp = timestamp,
@@ -194,6 +110,14 @@ public class DockerLogService : BackgroundService
                 Hostname = Environment.MachineName,
                 Environment = "docker"
             };
+
+            if (_extractionPipeline.TryExtract(containerName, message, out var result))
+            {
+                logEntry.Message = SanitizeLogMessage(result.Message);
+                logEntry.Level = result.Level;
+                logEntry.Timestamp = result.Timestamp;
+            }
+
             _logQueue.Enqueue(logEntry);
         }
     }
@@ -208,7 +132,7 @@ public class DockerLogService : BackgroundService
                 {
                     try
                     {
-                        var inspect = await client.Containers.InspectContainerAsync(message.ID, stoppingToken);
+                        var inspect = await client.Containers.InspectContainerAsync(message.Actor.ID, stoppingToken);
                         var shouldWatch = _logPortConfig.Docker.WatchAllContainers;
 
                         if (!shouldWatch)

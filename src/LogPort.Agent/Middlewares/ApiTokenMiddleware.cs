@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 
 using LogPort.Internal;
+using LogPort.Internal.Configuration;
 
 namespace LogPort.Agent.Middlewares;
 

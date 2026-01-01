@@ -1,4 +1,5 @@
 using LogPort.Core.Models;
+using LogPort.Internal.Services;
 
 namespace LogPort.Agent.Endpoints;
 

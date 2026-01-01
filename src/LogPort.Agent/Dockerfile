@@ -16,7 +16,6 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["src/LogPort.Agent/LogPort.Agent.csproj", "src/LogPort.Agent/"]
 COPY ["src/LogPort.Core/LogPort.Core.csproj", "src/LogPort.Core/"]
-COPY ["src/LogPort.Internal.Common/LogPort.Internal.Common.csproj", "src/LogPort.Internal.Common/"]
 COPY ["src/LogPort.Internal.Postgres/LogPort.Internal.Postgres.csproj", "src/LogPort.Internal.Postgres/"]
 RUN dotnet restore "src/LogPort.Agent/LogPort.Agent.csproj"
 COPY . .

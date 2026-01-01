@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 using NUnit.Framework;
 
-namespace LogPort.SDK.Tests;
+namespace LogPort.SDK.UnitTests;
 
 public class LogPortClientTests
 {

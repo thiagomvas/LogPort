@@ -2,8 +2,9 @@ using LogPort.Core;
 using LogPort.Core.Models;
 using LogPort.Internal;
 using LogPort.Internal.Abstractions;
+using LogPort.Internal.Configuration;
 
-using WebSocketManager = LogPort.Internal.Common.Services.WebSocketManager;
+using WebSocketManager = LogPort.Internal.Services.WebSocketManager;
 
 namespace LogPort.Agent.Services;
 

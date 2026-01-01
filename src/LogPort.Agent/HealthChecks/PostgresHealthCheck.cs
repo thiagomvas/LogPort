@@ -1,5 +1,6 @@
 using LogPort.Core.Models;
 using LogPort.Internal;
+using LogPort.Internal.Configuration;
 
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 

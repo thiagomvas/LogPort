@@ -1,8 +1,10 @@
 using LogPort.Core.Models;
-using LogPort.Internal;
 using LogPort.Internal.Abstractions;
+using LogPort.Internal.Configuration;
 
 using Microsoft.Extensions.Logging;
+
+namespace LogPort.Internal.Services;
 
 public class LogService
 {
@@ -26,18 +28,7 @@ public class LogService
 
     public async Task<IEnumerable<LogEntry>> GetLogsAsync(LogQueryParameters parameters)
     {
-        var key = $"{CacheKeys.LogPrefix}{parameters.GetCacheKey()}";
-
-        var cachedLogs = await _cache.GetAsync<IEnumerable<LogEntry>>(key);
-        if (cachedLogs is not null)
-        {
-            _logger?.LogDebug("Getting logs from cache with key: {CacheKey}", key);
-            return cachedLogs;
-        }
-
         var result = await _repository.GetLogsAsync(parameters);
-
-        await _cache.SetAsync(key, result, _config.Cache.DefaultExpiration);
 
         return result;
     }

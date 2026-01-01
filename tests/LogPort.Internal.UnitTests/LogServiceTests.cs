@@ -1,11 +1,13 @@
 using LogPort.Core.Models;
 using LogPort.Internal.Abstractions;
+using LogPort.Internal.Configuration;
+using LogPort.Internal.Services;
 
 using Microsoft.Extensions.Logging;
 
 using NSubstitute;
 
-namespace LogPort.Internal.Tests;
+namespace LogPort.Internal.UnitTests;
 
 [TestFixture]
 public class LogServiceTests
@@ -30,37 +32,6 @@ public class LogServiceTests
         };
         _logger = Substitute.For<ILogger<LogService>>();
         _service = new LogService(_repository, _cache, _config, _logger);
-    }
-
-    [Test]
-    public async Task GetLogsAsync_UsesCache()
-    {
-        var parameters = new LogQueryParameters();
-        var key = $"{CacheKeys.LogPrefix}{parameters.GetCacheKey()}";
-        var expected = new List<LogEntry> { new LogEntry() };
-
-        _cache.GetAsync<IEnumerable<LogEntry>>(key).Returns(expected);
-
-        var result = await _service.GetLogsAsync(parameters);
-
-        Assert.That(result, Is.EqualTo(expected));
-        await _repository.DidNotReceive().GetLogsAsync(parameters);
-    }
-
-    [Test]
-    public async Task GetLogsAsync_FetchesAndCaches()
-    {
-        var parameters = new LogQueryParameters();
-        var key = $"{CacheKeys.LogPrefix}{parameters.GetCacheKey()}";
-
-        _cache.GetAsync<IEnumerable<LogEntry>>(key).Returns((IEnumerable<LogEntry>)null);
-        var repoResult = new List<LogEntry> { new LogEntry() };
-        _repository.GetLogsAsync(parameters).Returns(repoResult);
-
-        var result = await _service.GetLogsAsync(parameters);
-
-        Assert.That(result, Is.EqualTo(repoResult));
-        await _cache.Received(1).SetAsync(key, repoResult, _config.Cache.DefaultExpiration);
     }
 
     [Test]

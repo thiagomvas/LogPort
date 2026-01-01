@@ -1,4 +1,5 @@
 using LogPort.Internal;
+using LogPort.Internal.Configuration;
 
 namespace LogPort.Agent.HealthChecks;
 

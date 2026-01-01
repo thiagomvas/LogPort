@@ -4,7 +4,7 @@ using LogPort.Core.Models;
 
 using Microsoft.Extensions.Logging;
 
-namespace LogPort.Internal.Common.Services;
+namespace LogPort.Internal.Services;
 
 public class WebSocketManager
 {
