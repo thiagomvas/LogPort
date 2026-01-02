@@ -8,7 +8,8 @@
       "applicationUrl": "http://localhost:5093",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "LOGPORT_CONFIG_PATH": "config.json"
+        "LOGPORT_CONFIG_PATH": "config.json",
+        "Logging__LogLevel__Default": "Debug"
       }
     },
     "https": {

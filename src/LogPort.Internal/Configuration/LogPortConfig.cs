@@ -67,6 +67,12 @@ public class LogPortConfig
     /// Gets or sets log extraction rules used by modules that can only extract context from messages (e.g. Docker).
     /// </summary>
     public List<BaseLogEntryExtractorConfig> Extractors { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets a list of files that are tailed for log messages.
+    /// </summary>
+    public List<FileTailingConfiguration> FileTails { get; set; } = new();
+
     /// <summary>
     /// Gets or sets the mode of the agent.
     /// </summary>
