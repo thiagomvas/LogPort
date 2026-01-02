@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace LogPort.AspNetCore;
 
-public class LogPortLoggerProvider : ILoggerProvider
+internal class LogPortLoggerProvider : ILoggerProvider
 {
     private readonly IServiceProvider _sp;
     private readonly LogPortClientConfig _config;

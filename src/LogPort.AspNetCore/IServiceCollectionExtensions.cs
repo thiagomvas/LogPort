@@ -51,6 +51,16 @@ public static class IServiceCollectionExtensions
         return builder;
     }
 
+    /// <summary>
+    /// Initializes LogPort and starts the background connection asynchronously.
+    /// </summary>
+    /// <param name="app">The application builder.</param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
+    /// <returns>The same application builder for chaining.</returns>
+    /// <remarks>
+    /// This method starts the LogPort client in a non-blocking manner, registers
+    /// HTTP request logging middleware, and ensures logs are flushed on shutdown.
+    /// </remarks>
     public static async Task<IApplicationBuilder> UseLogPortAsync(this IApplicationBuilder app, CancellationToken cancellationToken = default)
     {
         var client = app.ApplicationServices.GetRequiredService<LogPortClient>();
@@ -68,8 +78,16 @@ public static class IServiceCollectionExtensions
         return app;
     }
 
+    /// <summary>
+    /// Initializes LogPort and starts the background connection synchronously.
+    /// </summary>
+    /// <param name="app">The application builder.</param>
+    /// <returns>The same application builder for chaining.</returns>
+    /// <remarks>
+    /// This is a synchronous wrapper around <see cref="UseLogPortAsync"/> and is not recommended.
+    /// </remarks>
     public static IApplicationBuilder UseLogPort(this IApplicationBuilder app)
     {
-        return UseLogPortAsync(app).GetAwaiter().GetResult();
+        return app.UseLogPortAsync().GetAwaiter().GetResult();
     }
 }

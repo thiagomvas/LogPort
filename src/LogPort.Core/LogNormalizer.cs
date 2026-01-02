@@ -15,6 +15,7 @@ public sealed partial class LogNormalizer
     public const string FatalLevel = "Fatal";
     public const string DebugLevel = "Debug";
     public const string TraceLevel = "Trace";
+    public const string NoneLevel = "None";
 
     private readonly ConcurrentDictionary<string, string> _levelMapping = new(StringComparer.OrdinalIgnoreCase)
     {

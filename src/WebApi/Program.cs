@@ -1,4 +1,5 @@
 using LogPort.AspNetCore;
+using LogPort.SDK;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,7 +41,7 @@ var summaries = new[]
 
 app.MapGet("/weatherforecast", (ILogger<Program> logger) =>
     {
-        logger.LogInformation("Generating weather forecast");
+        logger.LogError("Generating weather forecast");
         var forecast = Enumerable.Range(1, 5).Select(index =>
                 new WeatherForecast
                 (
@@ -49,7 +50,7 @@ app.MapGet("/weatherforecast", (ILogger<Program> logger) =>
                     summaries[Random.Shared.Next(summaries.Length)]
                 ))
             .ToArray();
-        logger.LogInformation("Generated forecast: {@Forecast}", forecast);
+        logger.LogWarning("Generated forecast: {@Forecast}", forecast);
         return forecast;
     })
     .WithName("GetWeatherForecast");

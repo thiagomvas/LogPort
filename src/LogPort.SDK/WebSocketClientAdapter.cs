@@ -2,7 +2,7 @@ using System.Net.WebSockets;
 
 namespace LogPort.SDK;
 
-public sealed class WebSocketClientAdapter : IWebSocketClient
+internal sealed class WebSocketClientAdapter : IWebSocketClient
 {
     private readonly ClientWebSocket _socket = new();
     private readonly string? _apiToken;

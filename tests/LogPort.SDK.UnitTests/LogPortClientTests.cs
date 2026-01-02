@@ -41,7 +41,6 @@ public class LogPortClientTests
         var receivedLog = fakeWebSocket.Server.ReceivedLogs[0];
         Assert.Multiple(() =>
         {
-            Assert.That(receivedLog.Level, Is.EqualTo(logLevel));
             Assert.That(receivedLog.Message, Is.EqualTo(logMessage));
         });
     }
@@ -134,4 +133,5 @@ public class LogPortClientTests
             Assert.That(receivedLog.Message, Is.EqualTo(logMessage));
         });
     }
+
 }

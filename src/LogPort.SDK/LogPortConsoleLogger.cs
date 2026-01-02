@@ -2,7 +2,7 @@ using System;
 
 namespace LogPort.SDK;
 
-public class LogPortConsoleLogger : ILogPortLogger
+internal class LogPortConsoleLogger : ILogPortLogger
 {
     private static readonly object _lock = new();
 

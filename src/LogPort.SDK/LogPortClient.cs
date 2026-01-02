@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 using LogPort.Core;
 using LogPort.Core.Models;
+using LogPort.SDK.Filters;
 
 namespace LogPort.SDK;
 
@@ -31,12 +32,22 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     private readonly TimeSpan _heartbeatTimeout;
     private readonly TimeSpan _heartbeatInterval;
     private readonly ILogPortLogger? _logger;
+    private readonly IEnumerable<ILogLevelFilter>? _filters;
 
     private readonly LogNormalizer _normalizer;
 
     private const int SendDelayMs = 50;
     bool _isAlive = false;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LogPortClient"/> class using the provided configuration.
+    /// </summary>
+    /// <param name="config">Client configuration containing connection and filtering settings.</param>
+    /// <param name="normalizer">Optional log level normalizer.</param>
+    /// <param name="socketFactory">Optional factory for creating WebSocket clients.</param>
+    /// <param name="logger">Optional internal logger for diagnostics.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="config"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when the agent URL is missing.</exception>
     public LogPortClient(
         LogPortClientConfig config,
         LogNormalizer? normalizer = null,
@@ -53,7 +64,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
         _webSocket = _socketFactory();
         _messageQueue = new ConcurrentQueue<LogEntry>();
         _cts = new CancellationTokenSource();
-
+        _filters = config.Filters;
         _maxReconnectDelay = config.ClientMaxReconnectDelay;
         _heartbeatInterval = config.ClientHeartbeatInterval;
         _heartbeatTimeout = config.ClientHeartbeatTimeout;
@@ -131,6 +142,13 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     {
         if (entry is null) throw new ArgumentNullException(nameof(entry));
 
+        entry.Level = _normalizer.NormalizeLevel(entry.Level);
+
+        if (_filters != null && _filters.Any(filter => !filter.ShouldSend(entry)))
+        {
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(entry.TraceId))
             entry.TraceId = TraceContext.TraceId;
 
@@ -197,8 +215,6 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
                     {
                         string json = JsonSerializer.Serialize(entry);
                         var bytes = Encoding.UTF8.GetBytes(json);
-
-                        entry.Level = _normalizer.NormalizeLevel(entry.Level);
 
                         await _webSocket.SendAsync(
                             new ArraySegment<byte>(bytes),
@@ -349,6 +365,10 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     }
 
 
+    /// <summary>
+    /// Asynchronously disposes the client and releases all resources.
+    /// </summary>
+    /// <returns>A task representing the asynchronous dispose operation.</returns>
     public async ValueTask DisposeAsync()
     {
         await _webSocket.CloseConnectionAsync(WebSocketCloseStatus.NormalClosure, "Client disposed",
