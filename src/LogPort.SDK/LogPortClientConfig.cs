@@ -7,6 +7,7 @@ public sealed class LogPortClientConfig
     public string? Environment { get; set; }
     public string? Hostname { get; set; }
     public string ApiSecret { get; set; }
+    public List<ILogLevelFilter>? Filters { get; set; }
     public TimeSpan ClientMaxReconnectDelay { get; set; } = TimeSpan.FromSeconds(30);
 
     public TimeSpan ClientHeartbeatInterval { get; set; } = TimeSpan.FromSeconds(10);

@@ -31,6 +31,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     private readonly TimeSpan _heartbeatTimeout;
     private readonly TimeSpan _heartbeatInterval;
     private readonly ILogPortLogger? _logger;
+    private readonly IEnumerable<ILogLevelFilter>? _filters;
 
     private readonly LogNormalizer _normalizer;
 
@@ -53,7 +54,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
         _webSocket = _socketFactory();
         _messageQueue = new ConcurrentQueue<LogEntry>();
         _cts = new CancellationTokenSource();
-
+        _filters = config.Filters;
         _maxReconnectDelay = config.ClientMaxReconnectDelay;
         _heartbeatInterval = config.ClientHeartbeatInterval;
         _heartbeatTimeout = config.ClientHeartbeatTimeout;
@@ -130,7 +131,14 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     public void Log(LogEntry entry)
     {
         if (entry is null) throw new ArgumentNullException(nameof(entry));
+        
+        entry.Level = _normalizer.NormalizeLevel(entry.Level);
 
+        if (_filters != null && _filters.Any(filter => !filter.ShouldSend(entry)))
+        {
+            return;
+        }
+        
         if (string.IsNullOrWhiteSpace(entry.TraceId))
             entry.TraceId = TraceContext.TraceId;
 
@@ -197,9 +205,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
                     {
                         string json = JsonSerializer.Serialize(entry);
                         var bytes = Encoding.UTF8.GetBytes(json);
-
-                        entry.Level = _normalizer.NormalizeLevel(entry.Level);
-
+                        
                         await _webSocket.SendAsync(
                             new ArraySegment<byte>(bytes),
                             WebSocketMessageType.Text,
