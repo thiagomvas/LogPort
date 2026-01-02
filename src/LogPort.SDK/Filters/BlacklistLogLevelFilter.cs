@@ -6,7 +6,7 @@ public sealed class BlacklistLogLevelFilter : ILogLevelFilter
 {
     private readonly HashSet<string> _blocked;
 
-    public BlacklistLogLevelFilter(IEnumerable<string> levels)
+    public BlacklistLogLevelFilter(params IEnumerable<string> levels)
     {
         _blocked = new HashSet<string>(levels, StringComparer.OrdinalIgnoreCase);
     }

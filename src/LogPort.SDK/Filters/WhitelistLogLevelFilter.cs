@@ -6,7 +6,7 @@ public sealed class WhitelistLogLevelFilter : ILogLevelFilter
 {
     private readonly HashSet<string> _allowed;
 
-    public WhitelistLogLevelFilter(IEnumerable<string> levels)
+    public WhitelistLogLevelFilter(params IEnumerable<string> levels)
     {
         _allowed = new HashSet<string>(levels, StringComparer.OrdinalIgnoreCase);
     }
