@@ -70,7 +70,7 @@ public sealed class FileTailService : BackgroundService
 
                 using var reader = new StreamReader(stream, Encoding.UTF8);
                 string? line;
-                while ((line = await reader.ReadLineAsync()) != null)
+                while (!ct.IsCancellationRequested && (line = await reader.ReadLineAsync()) != null)
                 {
                     var log = new LogEntry() { ServiceName = serviceName, Level = "Info", Message = line, Timestamp = DateTime.UtcNow};
                     if (_extractionPipeline.TryExtract(serviceName, line, out var result))
