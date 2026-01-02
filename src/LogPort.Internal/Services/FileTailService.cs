@@ -105,6 +105,10 @@ public sealed class FileTailService : BackgroundService
             {
                 _logger.LogError(ex, "Error reading file {Path}", path);
             }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            {
+                // expected on shutdown
+            }
 
             await Task.Delay(200, ct);
         }
