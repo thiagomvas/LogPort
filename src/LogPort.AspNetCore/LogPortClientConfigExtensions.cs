@@ -32,4 +32,11 @@ public static class LogPortClientConfigExtensions
     {
         return config.UseLevelWhitelist(allowedLevels.Select(l => l.ToString()).ToArray());
     }
+    
+    public static LogPortClientConfig UseLevelBlacklist(
+        this LogPortClientConfig config,
+        params LogLevel[] blacklistedLevels)
+    {
+        return config.UseLevelBlacklist(blacklistedLevels.Select(l => l.ToString()).ToArray());
+    }
 }

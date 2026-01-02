@@ -28,6 +28,18 @@ public static class LogPortClientConfigExtensions
         config.Filters.Add(new WhitelistLogLevelFilter(allowedLevels));
         return config;
     }
+    
+    public static LogPortClientConfig UseLevelBlacklist(
+        this LogPortClientConfig config,
+        params string[] blacklistedLevels)
+    {
+        ArgumentNullException.ThrowIfNull(config);
+
+        config.Filters ??= [];
+        
+        config.Filters.Add(new BlacklistLogLevelFilter(blacklistedLevels));
+        return config;
+    }
 
     public static LogPortClientConfig DisableAllLogs(this LogPortClientConfig config)
     {
