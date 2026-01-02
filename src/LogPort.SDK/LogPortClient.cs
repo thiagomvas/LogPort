@@ -39,6 +39,15 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     private const int SendDelayMs = 50;
     bool _isAlive = false;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LogPortClient"/> class using the provided configuration.
+    /// </summary>
+    /// <param name="config">Client configuration containing connection and filtering settings.</param>
+    /// <param name="normalizer">Optional log level normalizer.</param>
+    /// <param name="socketFactory">Optional factory for creating WebSocket clients.</param>
+    /// <param name="logger">Optional internal logger for diagnostics.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="config"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when the agent URL is missing.</exception>
     public LogPortClient(
         LogPortClientConfig config,
         LogNormalizer? normalizer = null,
@@ -356,6 +365,10 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     }
 
 
+    /// <summary>
+    /// Asynchronously disposes the client and releases all resources.
+    /// </summary>
+    /// <returns>A task representing the asynchronous dispose operation.</returns>
     public async ValueTask DisposeAsync()
     {
         await _webSocket.CloseConnectionAsync(WebSocketCloseStatus.NormalClosure, "Client disposed",
