@@ -53,8 +53,6 @@ public static class LogPortClientConfigExtensions
             throw new ArgumentOutOfRangeException(nameof(rate));
 
         config.Filters ??= [];
-
-        // 🔑 reuse existing sampling filter if present
         var sampler = config.Filters
             .OfType<SamplingLogLevelFilter>()
             .FirstOrDefault();
@@ -68,6 +66,34 @@ public static class LogPortClientConfigExtensions
         sampler.SetRate(level, rate);
         return config;
     }
+    
+    public static LogPortClientConfig UseGlobalSampling(
+        this LogPortClientConfig config,
+        double rate,
+        bool deterministic = true)
+    {
+        ArgumentNullException.ThrowIfNull(config);
+
+        if (rate is < 0 or > 1)
+            throw new ArgumentOutOfRangeException(nameof(rate));
+
+        config.Filters ??= [];
+
+        var sampler = config.Filters
+            .OfType<SamplingLogLevelFilter>()
+            .FirstOrDefault();
+
+        if (sampler == null)
+        {
+            sampler = new SamplingLogLevelFilter(deterministic);
+            config.Filters.Add(sampler);
+        }
+
+        sampler.SetDefaultRate(rate);
+        return config;
+    }
+
+    
 
     public static LogPortClientConfig DisableAllLogs(this LogPortClientConfig config)
     {

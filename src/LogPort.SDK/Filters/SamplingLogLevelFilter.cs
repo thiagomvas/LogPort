@@ -9,14 +9,14 @@ public sealed class SamplingLogLevelFilter : ILogLevelFilter
 {
     private readonly Dictionary<string, double> _rates;
     private readonly bool _deterministic;
+
     private readonly Random _random = new Random();
 
-    public SamplingLogLevelFilter(
-        bool deterministic = true)
-    {
-        _rates = new Dictionary<string, double>(
-            StringComparer.OrdinalIgnoreCase);
+    private double? _defaultRate;
 
+    public SamplingLogLevelFilter(bool deterministic = true)
+    {
+        _rates = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
         _deterministic = deterministic;
     }
 
@@ -25,11 +25,24 @@ public sealed class SamplingLogLevelFilter : ILogLevelFilter
         _rates[level] = rate;
     }
 
+    public void SetDefaultRate(double rate)
+    {
+        _defaultRate = rate;
+    }
+
     public bool ShouldSend(LogEntry entry)
     {
-        if (!_rates.TryGetValue(entry.Level, out var rate))
-            return true;
+        if (_rates.TryGetValue(entry.Level, out var rate))
+            return Evaluate(entry, rate);
 
+        if (_defaultRate.HasValue)
+            return Evaluate(entry, _defaultRate.Value);
+
+        return true;
+    }
+
+    private bool Evaluate(LogEntry entry, double rate)
+    {
         if (rate >= 1.0)
             return true;
 
