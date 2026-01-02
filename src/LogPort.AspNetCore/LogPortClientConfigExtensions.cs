@@ -22,6 +22,7 @@ public static class LogPortClientConfigExtensions
         this LogPortClientConfig config,
         LogLevel minimumLevel)
     {
+        if (minimumLevel == LogLevel.None) return config.DisableAllLogs();
         return config.UseMimimumLevel(AspNetToLogPortMap[minimumLevel]);
     }
 

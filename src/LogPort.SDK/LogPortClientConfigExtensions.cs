@@ -1,3 +1,5 @@
+using LogPort.Core;
+
 namespace LogPort.SDK;
 
 public static class LogPortClientConfigExtensions
@@ -23,6 +25,16 @@ public static class LogPortClientConfigExtensions
         config.Filters ??= [];
         
         config.Filters.Add(new WhitelistLogLevelFilter(allowedLevels));
+        return config;
+    }
+
+    public static LogPortClientConfig DisableAllLogs(this LogPortClientConfig config)
+    {
+        ArgumentNullException.ThrowIfNull(config);
+
+        config.Filters ??= [];
+        
+        config.Filters.Add(new DisableAllLogsFilter());
         return config;
     }
 }
