@@ -30,13 +30,22 @@ public static class LogPortClientConfigExtensions
         this LogPortClientConfig config,
         params LogLevel[] allowedLevels)
     {
-        return config.UseLevelWhitelist(allowedLevels.Select(l => l.ToString()).ToArray());
+        return config.UseLevelWhitelist(allowedLevels.Select(l => AspNetToLogPortMap[l]).ToArray());
     }
     
     public static LogPortClientConfig UseLevelBlacklist(
         this LogPortClientConfig config,
         params LogLevel[] blacklistedLevels)
     {
-        return config.UseLevelBlacklist(blacklistedLevels.Select(l => l.ToString()).ToArray());
+        return config.UseLevelBlacklist(blacklistedLevels.Select(l => AspNetToLogPortMap[l]).ToArray());
+    }
+
+    public static LogPortClientConfig UseSampling(
+        this LogPortClientConfig config,
+        LogLevel level,
+        double rate,
+        bool deterministic = true)
+    {
+        return config.UseSampling(AspNetToLogPortMap[level], rate, deterministic);
     }
 }

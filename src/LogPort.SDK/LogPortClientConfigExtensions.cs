@@ -40,6 +40,34 @@ public static class LogPortClientConfigExtensions
         config.Filters.Add(new BlacklistLogLevelFilter(blacklistedLevels));
         return config;
     }
+    
+    public static LogPortClientConfig UseSampling(
+        this LogPortClientConfig config,
+        string level,
+        double rate,
+        bool deterministic = true)
+    {
+        ArgumentNullException.ThrowIfNull(config);
+
+        if (rate is < 0 or > 1)
+            throw new ArgumentOutOfRangeException(nameof(rate));
+
+        config.Filters ??= [];
+
+        // 🔑 reuse existing sampling filter if present
+        var sampler = config.Filters
+            .OfType<SamplingLogLevelFilter>()
+            .FirstOrDefault();
+
+        if (sampler == null)
+        {
+            sampler = new SamplingLogLevelFilter(deterministic);
+            config.Filters.Add(sampler);
+        }
+
+        sampler.SetRate(level, rate);
+        return config;
+    }
 
     public static LogPortClientConfig DisableAllLogs(this LogPortClientConfig config)
     {
