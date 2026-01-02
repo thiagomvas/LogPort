@@ -21,15 +21,15 @@ public sealed class FileTailService : BackgroundService
 
     private readonly ILogger<FileTailService>? _logger;
 
-    
 
-    public FileTailService(LogPortConfig config, LogQueue queue, LogEntryExtractionPipeline extractionPipeline, ILogger<FileTailService>? logger = null)
+    public FileTailService(LogPortConfig config, LogQueue queue, LogEntryExtractionPipeline extractionPipeline,
+        ILogger<FileTailService>? logger = null)
     {
         _logger = logger;
         _queue = queue;
         _extractionPipeline = extractionPipeline;
         _fileToService = config.FileTails
-            .Where(f => File.Exists(f.Path))            
+            .Where(f => File.Exists(f.Path))
             .ToFrozenDictionary(c => c.ServiceName, c => c.Path);
         if (_fileToService.Count > 0)
         {
@@ -70,21 +70,32 @@ public sealed class FileTailService : BackgroundService
                 {
                     lastPosition = 0;
                 }
-                
-                using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+
+                using var stream = new FileStream(
+                    path,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.ReadWrite,
+                    4096,
+                    FileOptions.SequentialScan);
+
                 stream.Seek(lastPosition, SeekOrigin.Begin);
 
                 using var reader = new StreamReader(stream, Encoding.UTF8);
                 string? line;
                 while (!ct.IsCancellationRequested && (line = await reader.ReadLineAsync()) != null)
                 {
-                    var log = new LogEntry() { ServiceName = serviceName, Level = "Info", Message = line, Timestamp = DateTime.UtcNow};
+                    var log = new LogEntry()
+                    {
+                        ServiceName = serviceName, Level = "Info", Message = line, Timestamp = DateTime.UtcNow
+                    };
                     if (_extractionPipeline.TryExtract(serviceName, line, out var result))
                     {
                         log.Level = result.Level;
                         log.Message = result.Message;
                         log.Timestamp = result.Timestamp;
                     }
+
                     _queue.Enqueue(log);
                 }
 
