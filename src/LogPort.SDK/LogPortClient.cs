@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 using LogPort.Core;
 using LogPort.Core.Models;
+using LogPort.SDK.Filters;
 
 namespace LogPort.SDK;
 

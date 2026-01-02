@@ -1,3 +1,5 @@
+using LogPort.SDK.Filters;
+
 namespace LogPort.SDK;
 
 public sealed class LogPortClientConfig

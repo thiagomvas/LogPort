@@ -1,7 +1,6 @@
-using LogPort.Core;
 using LogPort.Core.Models;
 
-namespace LogPort.SDK;
+namespace LogPort.SDK.Filters;
 
 public sealed class MinimumLogLevelFilter : ILogLevelFilter
 {

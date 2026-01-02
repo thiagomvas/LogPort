@@ -1,4 +1,5 @@
 using LogPort.Core.Models;
+using LogPort.SDK.Filters;
 
 namespace LogPort.SDK;
 
