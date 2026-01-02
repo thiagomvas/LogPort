@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace LogPort.AspNetCore;
 
-public sealed class MicrosoftLoggerAdapter<T> : ILogPortLogger
+internal sealed class MicrosoftLoggerAdapter<T> : ILogPortLogger
 {
     private readonly ILogger<T> _logger;
 
