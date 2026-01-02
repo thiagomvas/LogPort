@@ -35,6 +35,11 @@ public sealed class FileTailService : BackgroundService
         {
             _logger?.LogInformation("File tail service started. Tailing {FileCount} files", _fileToService.Count);
         }
+
+        foreach (var missing in config.FileTails.Where(f => !File.Exists(f.Path)))
+        {
+            _logger?.LogWarning("File tail service skipped missing file: {Missing}", missing);
+        }
     }
 
     public Task RunAsync(CancellationToken ct = default)
