@@ -72,7 +72,7 @@ public class LogPortConfig
     /// Gets or sets a list of files that are tailed for log messages.
     /// </summary>
     public List<FileTailingConfiguration> FileTails { get; set; } = new();
-    
+
     /// <summary>
     /// Gets or sets the mode of the agent.
     /// </summary>

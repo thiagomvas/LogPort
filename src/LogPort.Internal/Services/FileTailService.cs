@@ -92,7 +92,10 @@ public sealed class FileTailService : BackgroundService
                 {
                     var log = new LogEntry()
                     {
-                        ServiceName = serviceName, Level = "Info", Message = line, Timestamp = DateTime.UtcNow
+                        ServiceName = serviceName,
+                        Level = "Info",
+                        Message = line,
+                        Timestamp = DateTime.UtcNow
                     };
                     if (_extractionPipeline.TryExtract(serviceName, line, out var result))
                     {
