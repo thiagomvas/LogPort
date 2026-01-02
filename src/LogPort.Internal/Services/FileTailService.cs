@@ -17,14 +17,17 @@ public sealed class FileTailService : BackgroundService
 {
     private readonly FrozenDictionary<string, string> _fileToService;
     private readonly LogQueue _queue;
+    private readonly LogEntryExtractionPipeline _extractionPipeline;
+
     private readonly ILogger<FileTailService>? _logger;
 
     
 
-    public FileTailService(LogPortConfig config, LogQueue queue, ILogger<FileTailService>? logger = null)
+    public FileTailService(LogPortConfig config, LogQueue queue, LogEntryExtractionPipeline extractionPipeline, ILogger<FileTailService>? logger = null)
     {
         _logger = logger;
         _queue = queue;
+        _extractionPipeline = extractionPipeline;
         _fileToService = config.FileTails
             .Where(f => File.Exists(f.Path))            
             .ToFrozenDictionary(c => c.ServiceName, c => c.Path);
@@ -70,6 +73,12 @@ public sealed class FileTailService : BackgroundService
                 while ((line = await reader.ReadLineAsync()) != null)
                 {
                     var log = new LogEntry() { ServiceName = serviceName, Level = "Info", Message = line, Timestamp = DateTime.UtcNow};
+                    if (_extractionPipeline.TryExtract(serviceName, line, out var result))
+                    {
+                        log.Level = result.Level;
+                        log.Message = result.Message;
+                        log.Timestamp = result.Timestamp;
+                    }
                     _queue.Enqueue(log);
                 }
 
