@@ -44,6 +44,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ILogBatchHandler, AgentLogBatchHandler>();
 
         services.AddSingleton<LogEntryExtractionPipeline>();
+        services.AddHostedService<FileTailService>();
     }
 
     public static void AddLogPortRelay(this IServiceCollection services, LogPortConfig config, WebApplicationBuilder builder)

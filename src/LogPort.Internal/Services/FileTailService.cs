@@ -3,24 +3,48 @@ using System.IO;
 using System.Text;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+
+using LogPort.Core;
+using LogPort.Core.Models;
 using LogPort.Internal.Configuration;
+
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace LogPort.Internal.Services;
 
-public class FileTailService
+public sealed class FileTailService : BackgroundService
 {
     private readonly FrozenDictionary<string, string> _fileToService;
+    private readonly LogQueue _queue;
+    private readonly ILogger<FileTailService>? _logger;
 
-    public readonly Channel<(string Service, string Line)> LinesChannel = Channel.CreateUnbounded<(string, string)>();
+    
 
-    public FileTailService(LogPortConfig config)
+    public FileTailService(LogPortConfig config, LogQueue queue, ILogger<FileTailService>? logger = null)
     {
-        _fileToService = config.FileTails.ToFrozenDictionary(c => c.ServiceName, c => c.Path);
+        _logger = logger;
+        _queue = queue;
+        _fileToService = config.FileTails
+            .Where(f => File.Exists(f.Path))            
+            .ToFrozenDictionary(c => c.ServiceName, c => c.Path);
+        if (_fileToService.Count > 0)
+        {
+            _logger?.LogInformation("File tail service started. Tailing {FileCount} files", _fileToService.Count);
+        }
     }
 
-    public async Task StartAsync(CancellationToken cancellationToken = default)
+    public Task RunAsync(CancellationToken ct = default)
+        => RunInternalAsync(ct);
+
+    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        => RunInternalAsync(stoppingToken);
+
+    private async Task RunInternalAsync(CancellationToken ct)
     {
-        var tasks = _fileToService.Select(kvp => TailFileAsync(kvp.Key, kvp.Value, cancellationToken));
+        var tasks = _fileToService
+            .Select(kvp => TailFileAsync(kvp.Key, kvp.Value, ct));
+
         await Task.WhenAll(tasks);
     }
 
@@ -45,13 +69,15 @@ public class FileTailService
                 string? line;
                 while ((line = await reader.ReadLineAsync()) != null)
                 {
-                    await LinesChannel.Writer.WriteAsync((serviceName, line), ct);
+                    var log = new LogEntry() { ServiceName = serviceName, Level = "Info", Message = line, Timestamp = DateTime.UtcNow};
+                    _queue.Enqueue(log);
                 }
 
                 lastPosition = stream.Position;
             }
-            catch (IOException)
+            catch (IOException ex)
             {
+                _logger.LogError(ex, "Error reading file {Path}", path);
             }
 
             await Task.Delay(200, ct);
