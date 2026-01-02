@@ -18,37 +18,17 @@ public static class LogPortClientConfigExtensions
             { LogLevel.Critical, LogNormalizer.FatalLevel }
         };
 
-    public static LogPortClientConfig UseMinimumLevel(
+    public static LogPortClientConfig UseMimimumLevel(
         this LogPortClientConfig config,
         LogLevel minimumLevel)
     {
-        ArgumentNullException.ThrowIfNull(config);
-
-        config.Filters ??= [];
-
-        config.Filters.Add(
-            new MinimumLogLevelFilter(AspNetToLogPortMap[minimumLevel])
-        );
-
-        return config;
+        return config.UseMimimumLevel(AspNetToLogPortMap[minimumLevel]);
     }
 
     public static LogPortClientConfig UseLevelWhitelist(
         this LogPortClientConfig config,
         params LogLevel[] allowedLevels)
     {
-        ArgumentNullException.ThrowIfNull(config);
-
-        config.Filters ??= [];
-
-        var mappedLevels = allowedLevels
-            .Select(level => AspNetToLogPortMap[level])
-            .ToArray();
-
-        config.Filters.Add(
-            new WhitelistLogLevelFilter(mappedLevels)
-        );
-
-        return config;
+        return config.UseLevelWhitelist(allowedLevels.Select(l => l.ToString()).ToArray());
     }
 }
