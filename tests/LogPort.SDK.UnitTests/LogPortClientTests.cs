@@ -133,5 +133,5 @@ public class LogPortClientTests
             Assert.That(receivedLog.Message, Is.EqualTo(logMessage));
         });
     }
-    
+
 }

@@ -18,7 +18,7 @@ public static class LogPortClientConfigExtensions
             { LogLevel.Critical, LogNormalizer.FatalLevel }
         };
 
-/// <summary>
+    /// <summary>
     /// Sets the minimum log level using ASP.NET Core <see cref="LogLevel"/> values.
     /// </summary>
     /// <param name="config">The client configuration.</param>

@@ -141,14 +141,14 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     public void Log(LogEntry entry)
     {
         if (entry is null) throw new ArgumentNullException(nameof(entry));
-        
+
         entry.Level = _normalizer.NormalizeLevel(entry.Level);
 
         if (_filters != null && _filters.Any(filter => !filter.ShouldSend(entry)))
         {
             return;
         }
-        
+
         if (string.IsNullOrWhiteSpace(entry.TraceId))
             entry.TraceId = TraceContext.TraceId;
 
@@ -215,7 +215,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
                     {
                         string json = JsonSerializer.Serialize(entry);
                         var bytes = Encoding.UTF8.GetBytes(json);
-                        
+
                         await _webSocket.SendAsync(
                             new ArraySegment<byte>(bytes),
                             WebSocketMessageType.Text,
