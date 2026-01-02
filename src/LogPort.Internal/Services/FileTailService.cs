@@ -65,6 +65,12 @@ public sealed class FileTailService : BackgroundService
                     continue;
                 }
 
+                var info = new FileInfo(path);
+                if (info.Length < lastPosition)
+                {
+                    lastPosition = 0;
+                }
+                
                 using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 stream.Seek(lastPosition, SeekOrigin.Begin);
 
