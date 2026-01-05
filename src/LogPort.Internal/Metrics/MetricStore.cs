@@ -34,4 +34,25 @@ public sealed class MetricStore
 
     public ulong QueryCount(string name, TimeSpan window)
         => GetOrRegisterCounter(name).Query(window);
+
+    public MetricsSnapshot Snapshot()
+    {
+        var now = DateTime.UtcNow;
+
+        var counters = new Dictionary<string, CounterSnapshot>(
+            _counters.Count,
+            StringComparer.OrdinalIgnoreCase);
+
+        foreach (var kvp in _counters)
+        {
+            var metric = kvp.Value;
+
+            counters[kvp.Key] = new CounterSnapshot(
+                last1s:  metric.Query(TimeSpan.FromSeconds(1)),
+                last10s: metric.Query(TimeSpan.FromSeconds(10)),
+                last1m:  metric.Query(TimeSpan.FromMinutes(1)));
+        }
+
+        return new MetricsSnapshot(now, counters);
+    }
 }

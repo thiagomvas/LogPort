@@ -17,15 +17,15 @@ for (int i = 0; i < 30; i++)
     Thread.Sleep(Random.Shared.Next(100, 1500));
 }
 
-var now = DateTime.UtcNow;
+var dump = store.Snapshot();
 
-var last5s = store.QueryCount(
-    "logs.processed",
-    TimeSpan.FromSeconds(5));
+Console.WriteLine($"Metrics dump at {dump.TimestampUtc:O}");
 
-var last30s = store.QueryCount(
-    "logs.processed",
-    TimeSpan.FromSeconds(30));
-
-Console.WriteLine($"[{now:HH:mm:ss}]Logs in last 5s: {last5s}");
-Console.WriteLine($"[{now:HH:mm:ss}]Logs in last 30s: {last30s}");
+foreach (var (name, counter) in dump.Counters)
+{
+    Console.WriteLine(
+        $"{name} | " +
+        $"1s={counter.Last1s}, " +
+        $"10s={counter.Last10s}, " +
+        $"1m={counter.Last1m}");
+}
