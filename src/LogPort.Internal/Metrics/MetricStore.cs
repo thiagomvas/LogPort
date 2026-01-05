@@ -1,5 +1,7 @@
 using System.Collections.Concurrent;
 
+using LogPort.Internal.Configuration;
+
 namespace LogPort.Internal.Metrics;
 
 public sealed class MetricStore
@@ -14,6 +16,12 @@ public sealed class MetricStore
     {
         _bucketDuration = bucketDuration;
         _maxWindow = maxWindow;
+    }
+
+    public MetricStore(LogPortConfig config) 
+        : this(config.Metrics.BucketDuration, config.Metrics.MaxWindow)
+    {
+        
     }
 
     public CounterMetric GetOrRegisterCounter(string name)
