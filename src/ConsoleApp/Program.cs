@@ -4,18 +4,28 @@ using LogPort.Internal.Configuration;
 using LogPort.Internal.Metrics;
 using LogPort.Internal.Services;
 
-var processed = new Metric(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(30));
+var store = new MetricStore(TimeSpan.FromSeconds(1),TimeSpan.FromMinutes(1));
 
-Parallel.For(0, 500, i =>
+store.GetOrRegisterCounter("logs.processed");
+
+for (int i = 0; i < 30; i++)
 {
-    Thread.Sleep(Random.Shared.Next(100, 500));
-    processed.Increment();
-});
+    store.Increment("logs.processed");
 
-Console.WriteLine(
-    $"Logs processed in last 5s: " +
-    processed.QueryCount(TimeSpan.FromSeconds(5)));
+    Console.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] processed log");
 
-Console.WriteLine(
-    $"Logs processed in last 15s: " +
-    processed.QueryCount(TimeSpan.FromSeconds(15)));
+    Thread.Sleep(Random.Shared.Next(100, 1500));
+}
+
+var now = DateTime.UtcNow;
+
+var last5s = store.QueryCount(
+    "logs.processed",
+    TimeSpan.FromSeconds(5));
+
+var last30s = store.QueryCount(
+    "logs.processed",
+    TimeSpan.FromSeconds(30));
+
+Console.WriteLine($"[{now:HH:mm:ss}]Logs in last 5s: {last5s}");
+Console.WriteLine($"[{now:HH:mm:ss}]Logs in last 30s: {last30s}");
