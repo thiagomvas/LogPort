@@ -38,6 +38,9 @@ public class LogBatchProcessor : BackgroundService
         var config = services.GetRequiredService<LogPortConfig>();
         _batchSize = config.BatchSize > 0 ? config.BatchSize : _batchSize;
         _flushInterval = config.FlushIntervalMs > 0 ? TimeSpan.FromMilliseconds(config.FlushIntervalMs) : _flushInterval;
+
+        var boundaries = GenerateBatchBuckets(_batchSize);
+        _metrics.GetOrRegisterHistogram(Constants.Metrics.BatchSize, boundaries);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -64,5 +67,17 @@ public class LogBatchProcessor : BackgroundService
                 _logger.LogError(ex, "Error inserting batch logs");
             }
         }
+    }
+    private static double[] GenerateBatchBuckets(int maxBatchSize, double factor = 2)
+    {
+        var buckets = new List<double>();
+        double val = 1;
+        while (val < maxBatchSize)
+        {
+            buckets.Add(Math.Ceiling(val));
+            val *= factor;
+        }
+        buckets.Add(maxBatchSize); 
+        return buckets.ToArray();
     }
 }
