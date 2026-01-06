@@ -8,9 +8,14 @@ public sealed class MetricStore
 {
     private readonly ConcurrentDictionary<string, CounterMetric> _counters =
         new(StringComparer.OrdinalIgnoreCase);
+    
+    private readonly ConcurrentDictionary<string, HistogramMetric> _histograms =
+        new(StringComparer.OrdinalIgnoreCase);
 
     private readonly TimeSpan _bucketDuration;
     private readonly TimeSpan _maxWindow;
+    private readonly double[] _defaultHistogramBoundaries = new double[]
+        { 1, 5, 10, 25, 50, 100, 250, 500, 1000 };
 
     public MetricStore(TimeSpan bucketDuration, TimeSpan maxWindow)
     {
@@ -35,6 +40,19 @@ public sealed class MetricStore
     public ulong QueryCount(string name, TimeSpan window)
         => GetOrRegisterCounter(name).Query(window);
 
+    public HistogramMetric GetOrRegisterHistogram(string name, double[]? boundaries = null)
+        => _histograms.GetOrAdd(name,
+            _ => new HistogramMetric(
+                _bucketDuration, 
+                _maxWindow, 
+                boundaries ?? _defaultHistogramBoundaries));
+
+    public void Observe(string name, double value, double[]? boundaries = null)
+        => GetOrRegisterHistogram(name, boundaries).Observe(value);
+
+    public long[] QueryHistogram(string name, TimeSpan window)
+        => GetOrRegisterHistogram(name).Query(window);
+    
     public MetricsSnapshot Snapshot()
     {
         var now = DateTime.UtcNow;
@@ -52,7 +70,19 @@ public sealed class MetricStore
                 last10s: metric.Query(TimeSpan.FromSeconds(10)),
                 last1m:  metric.Query(TimeSpan.FromMinutes(1)));
         }
+        var histograms = new Dictionary<string, HistogramSnapshot>(
+            _histograms.Count,
+            StringComparer.OrdinalIgnoreCase);
+        foreach (var kvp in _histograms)
+        {
+            var metric = kvp.Value;
 
-        return new MetricsSnapshot(now, counters);
+            histograms[kvp.Key] = new HistogramSnapshot(
+                counts: metric.Query(TimeSpan.FromMinutes(1)), // adjust window as needed
+                boundaries: metric.Boundaries);
+        }
+
+
+        return new MetricsSnapshot(now, counters , histograms);
     }
 }
