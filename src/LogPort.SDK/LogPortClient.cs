@@ -39,6 +39,8 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     private const int SendDelayMs = 50;
     bool _isAlive = false;
 
+    internal Uri ServerUri => _serverUri;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="LogPortClient"/> class using the provided configuration.
     /// </summary>
@@ -50,7 +52,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     /// <exception cref="ArgumentException">Thrown when the agent URL is missing.</exception>
     public LogPortClient(
         LogPortClientConfig config,
-        LogNormalizer? normalizer = null,
+        LogNormalizer? normalizer,
         Func<IWebSocketClient>? socketFactory = null,
         ILogPortLogger? logger = null)
 
@@ -59,6 +61,21 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
         ArgumentException.ThrowIfNullOrEmpty(config.AgentUrl);
 
         var baseUrl = config.AgentUrl.Trim('/');
+
+        // Remove http or https and convert to ws or wss
+        if (baseUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+        {
+            baseUrl = "ws://" + baseUrl.Substring("http://".Length);
+        }
+        else if (baseUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            baseUrl = "wss://" + baseUrl.Substring("https://".Length);
+        }
+        else if (!baseUrl.StartsWith("ws://", StringComparison.OrdinalIgnoreCase) &&
+                 !baseUrl.StartsWith("wss://", StringComparison.OrdinalIgnoreCase))
+        {
+            baseUrl = "ws://" + baseUrl;
+        }
         _serverUri = new Uri($"{baseUrl}/agent/stream");
         _socketFactory = socketFactory ?? (() => new WebSocketClientAdapter(config.ApiSecret));
         _webSocket = _socketFactory();
