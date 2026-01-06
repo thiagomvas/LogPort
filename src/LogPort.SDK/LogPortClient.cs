@@ -50,7 +50,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     /// <exception cref="ArgumentException">Thrown when the agent URL is missing.</exception>
     public LogPortClient(
         LogPortClientConfig config,
-        LogNormalizer? normalizer = null,
+        LogNormalizer? normalizer,
         Func<IWebSocketClient>? socketFactory = null,
         ILogPortLogger? logger = null)
 
