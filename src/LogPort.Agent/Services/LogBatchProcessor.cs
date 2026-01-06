@@ -47,7 +47,7 @@ public class LogBatchProcessor : BackgroundService
             await Task.Delay(_flushInterval, stoppingToken);
             var batch = _queue.DequeueBatch(_batchSize).ToList();
             if (batch.Count == 0) continue;
-
+            
             try
             {
                 await _socketManager.BroadcastBatchAsync(batch);
@@ -57,6 +57,7 @@ public class LogBatchProcessor : BackgroundService
                 await handler.HandleBatchAsync(batch, stoppingToken);
                 
                 _metrics.Increment(Constants.Metrics.LogsProcessed);
+                _metrics.Observe(Constants.Metrics.BatchSize, batch.Count);
             }
             catch (Exception ex)
             {
