@@ -38,7 +38,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
 
     private const int SendDelayMs = 50;
     bool _isAlive = false;
-    
+
     internal Uri ServerUri => _serverUri;
 
     /// <summary>
