@@ -38,6 +38,8 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
 
     private const int SendDelayMs = 50;
     bool _isAlive = false;
+    
+    internal Uri ServerUri => _serverUri;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LogPortClient"/> class using the provided configuration.
