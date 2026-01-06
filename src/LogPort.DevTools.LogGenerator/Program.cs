@@ -3,7 +3,7 @@
 string agentUrl = args.Length > 0 ? args[0] : "localhost:8080";
 string defaultService = args.Length > 1 ? args[1] : "dev-service";
 
-var config = new LogPortClientConfig { AgentUrl = agentUrl, ServiceName =  defaultService };
+var config = new LogPortClientConfig { AgentUrl = agentUrl, ServiceName = defaultService };
 
 var client = new LogPortClient(config, null, null, new LogPortConsoleLogger());
 await client.EnsureConnectedAsync();
