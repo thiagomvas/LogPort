@@ -133,5 +133,23 @@ public class LogPortClientTests
             Assert.That(receivedLog.Message, Is.EqualTo(logMessage));
         });
     }
+    
+    [TestCase("http://localhost:8080", "ws://localhost:8080/agent/stream")]
+    [TestCase("https://example.com:5000", "wss://example.com:5000/agent/stream")]
+    [TestCase("localhost:8080", "ws://localhost:8080/agent/stream")]
+    [TestCase("ws://localhost:8080", "ws://localhost:8080/agent/stream")]
+    [TestCase("wss://secure.com", "wss://secure.com/agent/stream")]
+    public void LogPortClient_UrlValidation_ShouldCorrectlyTransformUrls(string inputUrl, string expectedUrl)
+    {
+        var config = new LogPortClientConfig
+        {
+            AgentUrl = inputUrl
+        };
+
+        var fakeWebSocket = new Fakes.FakeWebSocketClient();
+        var client = new LogPortClient(config, () => fakeWebSocket);
+
+        Assert.That(client.ServerUri.ToString(), Is.EqualTo(expectedUrl));
+    }
 
 }
