@@ -40,6 +40,15 @@ from lightweight services to enterprise-scale applications and brings them toget
   - File tailing
 - Self-hosted and fully open-source
 
+
+![Log Explorer](./assets/log-explorer.png)
+*Log Explorer view. Logs are randomly generated.*
+
+![Live Tail](./assets/live-tail.png)
+*Live Tail page getting logs in real time. Logs are randomly generated.*
+
+
+
 ## Development
 
 Logport is designed to ship as a **single container**, bundling both the backend agent and the UI. During development, this introduces a few important details to be aware of, especially when working on the frontend.
