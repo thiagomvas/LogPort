@@ -85,7 +85,7 @@ function DashboardPage() {
               last10s={metric.last10s}
               last1m={metric.last1m}
               sparkline={metric.buckets || []}
-              timeRange={range?.to && range?.from && range?.to.getTime() - range?.from.getTime() > 86400000 ? '24h' : '1m'} // Dynamically select time range
+              timeRange={name.endsWith('1h') ? '1m' : '24h'}
             />
           ))}
         </div>
