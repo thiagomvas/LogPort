@@ -43,7 +43,7 @@ function DashboardPage() {
   if (!meta || !liveMetrics) return <div>Loading dashboard…</div>;
 
   const total = meta.logCount;
-  const errors = meta.logCountByLevel?.error ?? 0;
+  const errors = meta.logCountByLevel?.Error ?? 0;
   const topService = topEntry(meta.logCountByService);
   const topEnv = topEntry(meta.logCountByEnvironment);
   const topHost = topEntry(meta.logCountByHostname);
