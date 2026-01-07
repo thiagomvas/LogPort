@@ -1,0 +1,56 @@
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.metric-card-dd {
+  background: var(--color-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: var(--shadow-small);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.metric-card-dd:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
+}
+
+.metric-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.metric-sparkline {
+  display: flex;
+  align-items: flex-end;
+  height: 24px;
+  gap: 1px;
+  margin-bottom: 6px;
+}
+
+.sparkline-bar-dd {
+  width: 2px;
+  background: var(--color-primary);
+  transition: height 0.3s ease;
+  border-radius: 1px;
+}
+
+.metric-values-dd {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--text-main);
+}
