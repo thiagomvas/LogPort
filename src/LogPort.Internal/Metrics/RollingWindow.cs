@@ -7,12 +7,15 @@ internal sealed class RollingWindow<TBucket>
     where TBucket : IRollingBucket
 {
     private readonly TimeSpan _bucketDuration;
+    private readonly TimeSpan _maxWindow;
     private readonly int _bucketCount;
 
     private readonly TBucket[] _buckets;
     private readonly long[] _bucketKeys;
 
     public TimeSpan BucketDuration => _bucketDuration;
+
+    public TimeSpan MaxWindow => _maxWindow;
 
     public RollingWindow(
         TimeSpan bucketDuration,
@@ -26,6 +29,7 @@ internal sealed class RollingWindow<TBucket>
             throw new ArgumentOutOfRangeException(nameof(maxWindow));
 
         _bucketDuration = bucketDuration;
+        _maxWindow = maxWindow;
         _bucketCount = (int)(maxWindow.Ticks / bucketDuration.Ticks);
 
         if (_bucketCount <= 0)

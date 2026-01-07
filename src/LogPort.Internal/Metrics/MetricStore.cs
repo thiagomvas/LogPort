@@ -96,7 +96,7 @@ public sealed class MetricStore
             var metric = kvp.Value;
 
             histograms[kvp.Key] = new HistogramSnapshot(
-                counts: metric.Query(TimeSpan.FromMinutes(1)), // adjust window as needed
+                counts: metric.Query(),
                 boundaries: metric.Boundaries);
         }
 

@@ -19,7 +19,7 @@ public sealed class HistogramMetric
         _window.GetCurrentBucket().Observe(value);
     }
 
-    // Merge counts across the rolling window
+    public long[] Query() => Query(_window.MaxWindow);
     public long[] Query(TimeSpan window)
     {
         var merged = new long[_boundaries.Length + 1];
