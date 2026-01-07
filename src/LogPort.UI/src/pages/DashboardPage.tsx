@@ -3,13 +3,13 @@ import '../styles/dashboardPage.css';
 import { getMetadata } from '../lib/services/logs.service';
 import type { LogMetadata } from '../lib/types/log';
 import type { TimeRange } from '../lib/types/timeRange';
-import type { MetricSnapshot, MetricHistogram } from '../lib/types/metrics';
+import type { MetricSnapshot } from '../lib/types/metrics';
 import { fetchLiveMetrics } from '../lib/services/metrics.service';
 import TimeRangeDropdown from '../components/timeRangeDropdown';
 import MetricCard from '../components/metricCard';
 
 function DashboardPage() {
-  const [meta, setMeta] = useState<LogMetadata | null>();
+  const [meta, setMeta] = useState<LogMetadata | null>(null);
   const [range, setRange] = useState<TimeRange | null>(null);
   const [liveMetrics, setLiveMetrics] = useState<MetricSnapshot | null>(null);
 
@@ -85,12 +85,11 @@ function DashboardPage() {
               last10s={metric.last10s}
               last1m={metric.last1m}
               sparkline={metric.buckets || []}
+              timeRange={range?.to && range?.from && range?.to.getTime() - range?.from.getTime() > 86400000 ? '24h' : '1m'} // Dynamically select time range
             />
           ))}
         </div>
       </section>
-
-
 
       {/* --- Actions --- */}
       <div className="dashboard-actions">
@@ -133,6 +132,5 @@ function KeyValueBars({ data, limit = 10 }: { data: Record<string, number>; limi
 // ---------------- HELPERS ----------------
 const topEntry = (map: Record<string, number>) => Object.entries(map).sort((a, b) => b[1] - a[1])[0];
 const percentage = (part: number, total: number) => (total === 0 ? 0 : Math.round((part / total) * 100));
-
 
 export default DashboardPage;
