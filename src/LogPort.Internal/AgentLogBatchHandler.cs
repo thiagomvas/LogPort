@@ -21,6 +21,13 @@ public class AgentLogBatchHandler : ILogBatchHandler
         _services = services;
         _logger = logger;
         _metrics = metrics;
+        
+        _metrics.GetOrRegisterCounter("logs.processed.1h", 
+            bucketDuration: TimeSpan.FromMinutes(1), 
+            maxWindow: TimeSpan.FromMinutes(60));
+        _metrics.GetOrRegisterCounter("logs.processed.24h",
+            bucketDuration: TimeSpan.FromHours(1),
+            maxWindow: TimeSpan.FromHours(24));
     }
 
     public async Task HandleBatchAsync(IEnumerable<LogEntry> batch, CancellationToken ct)
@@ -45,6 +52,8 @@ public class AgentLogBatchHandler : ILogBatchHandler
         }
         
         _metrics.Increment(Constants.Metrics.LogsProcessed, totalCount);
+        _metrics.Increment("logs.processed.1h", totalCount);
+        _metrics.Increment("logs.processed.24h", totalCount);
 
         foreach (var kvp in levelCounts)
         {

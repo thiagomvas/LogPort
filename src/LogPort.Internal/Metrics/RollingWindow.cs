@@ -12,6 +12,8 @@ internal sealed class RollingWindow<TBucket>
     private readonly TBucket[] _buckets;
     private readonly long[] _bucketKeys;
 
+    public TimeSpan BucketDuration => _bucketDuration;
+
     public RollingWindow(
         TimeSpan bucketDuration,
         TimeSpan maxWindow,
@@ -60,14 +62,26 @@ internal sealed class RollingWindow<TBucket>
         TimeSpan window,
         Action<TBucket> action)
     {
+        if (action == null) throw new ArgumentNullException(nameof(action));
+        ForEachBucketInWindow(window, (bucket, _) => action(bucket));
+    }
+    
+    public void ForEachBucketInWindow(
+        TimeSpan window,
+        Action<TBucket, long> action)
+    {
+        if (action == null) throw new ArgumentNullException(nameof(action));
+
         var cutoff = GetBucketKey(DateTime.UtcNow - window);
 
         for (int i = 0; i < _bucketCount; i++)
         {
-            if (Volatile.Read(ref _bucketKeys[i]) >= cutoff)
-                action(_buckets[i]);
+            long key = Volatile.Read(ref _bucketKeys[i]);
+            if (key >= cutoff)
+                action(_buckets[i], key);
         }
     }
+
 
     private long GetBucketKey(DateTime utcTime)
         => utcTime.Ticks / _bucketDuration.Ticks;

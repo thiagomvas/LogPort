@@ -70,10 +70,22 @@ public sealed class MetricStore
         {
             var metric = kvp.Value;
 
-            counters[kvp.Key] = new CounterSnapshot(
-                last1s: metric.Query(TimeSpan.FromSeconds(1)),
-                last10s: metric.Query(TimeSpan.FromSeconds(10)),
-                last1m: metric.Query(TimeSpan.FromMinutes(1)));
+            if (kvp.Key.EndsWith(".24h", StringComparison.OrdinalIgnoreCase))
+            {
+                counters[kvp.Key] = new CounterSnapshot(metric.QueryBuckets(24));
+            }
+            else if (kvp.Key.EndsWith(".1h", StringComparison.OrdinalIgnoreCase))
+            {
+                counters[kvp.Key] = new CounterSnapshot(metric.QueryBuckets(60));
+            }
+            else
+            {
+                counters[kvp.Key] = new CounterSnapshot(
+                    last1s: metric.Query(TimeSpan.FromSeconds(1)),
+                    last10s: metric.Query(TimeSpan.FromSeconds(10)),
+                    last1m: metric.Query(TimeSpan.FromMinutes(1))
+                );
+            }
         }
 
         var histograms = new Dictionary<string, HistogramSnapshot>(

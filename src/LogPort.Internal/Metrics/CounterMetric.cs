@@ -28,4 +28,24 @@ public sealed class CounterMetric
 
         return total;
     }
+    
+    public ulong[] QueryBuckets(int count)
+    {
+        if (count <= 0)
+            throw new ArgumentOutOfRangeException(nameof(count));
+
+        var buckets = new ulong[count];
+        var nowKey = DateTime.UtcNow.Ticks / _window.BucketDuration.Ticks;
+
+        _window.ForEachBucketInWindow(_window.BucketDuration * count, (bucket, key) =>
+        {
+            int index = (int)(key - (nowKey - count + 1)); 
+            if (index >= 0 && index < count)
+                buckets[index] = Volatile.Read(ref bucket.Value);
+        });
+
+        return buckets;
+    }
+
+
 }
