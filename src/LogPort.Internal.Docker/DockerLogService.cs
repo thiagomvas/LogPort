@@ -41,7 +41,8 @@ public class DockerLogService : BackgroundService
         if (_logPortConfig.Docker.WatchAllContainers)
             _logger?.LogInformation("Initializing Docker log service, watching all containers.");
         else
-            _logger?.LogInformation("Initializing Docker log service, watching containers with label com.logport.monitor=true.");
+            _logger?.LogInformation(
+                "Initializing Docker log service, watching containers with label com.logport.monitor=true.");
 
         var containers = await _client.Containers.ListContainersAsync(new ContainersListParameters
         {
@@ -85,15 +86,19 @@ public class DockerLogService : BackgroundService
             Tail = "0"
         };
 
-        // Get container name, default to id if not found
         var inspect = await client.Containers.InspectContainerAsync(containerId, stoppingToken);
+        
+        inspect.Config.Labels.TryGetValue("com.logport.environment", out var environment);
+        environment ??= "Unknown";
         var containerName = inspect.Name?.TrimStart('/') ?? containerId;
+        
         using var logStream = await client.Containers.GetContainerLogsAsync(containerId, parameters, stoppingToken);
         using var reader = new StreamReader(logStream);
 
+
         while (!stoppingToken.IsCancellationRequested)
         {
-            var line = await reader.ReadLineAsync();
+            var line = await reader.ReadLineAsync(stoppingToken);
             if (line == null)
                 break;
 
@@ -108,7 +113,7 @@ public class DockerLogService : BackgroundService
                 ServiceName = containerName,
                 Level = level,
                 Hostname = Environment.MachineName,
-                Environment = "docker"
+                Environment = environment
             };
 
             if (_extractionPipeline.TryExtract(containerName, message, out var result))
@@ -137,15 +142,17 @@ public class DockerLogService : BackgroundService
 
                         if (!shouldWatch)
                         {
-                            shouldWatch = inspect.Config?.Labels?.TryGetValue("com.logport.monitor", out var val) == true &&
-                                          val == "true";
+                            shouldWatch =
+                                inspect.Config?.Labels?.TryGetValue("com.logport.monitor", out var val) == true &&
+                                val == "true";
                         }
 
                         if (shouldWatch)
                         {
                             _logger?.LogInformation("New container detected: {ContainerId} ({Name})",
                                 inspect.ID, inspect.Name);
-                            _ = Task.Run(() => StreamContainerLogsAsync(client, inspect.ID, stoppingToken), stoppingToken);
+                            _ = Task.Run(() => StreamContainerLogsAsync(client, inspect.ID, stoppingToken),
+                                stoppingToken);
                         }
                     }
                     catch (Exception ex)
@@ -153,7 +160,6 @@ public class DockerLogService : BackgroundService
                         _logger?.LogError(ex, "Error inspecting container {ContainerId}", message.ID);
                     }
                 }
-
             }),
             stoppingToken
         );
