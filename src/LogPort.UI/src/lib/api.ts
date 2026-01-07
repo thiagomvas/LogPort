@@ -4,16 +4,30 @@ const API_BASE_URL = agentUrl
   ? `${useSsl ? 'https' : 'http'}://${agentUrl}`
   : `${window.location.origin}`;
 
-export async function baseFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+const DEV_USER = import.meta.env.LOGPORT_USER || 'admin';
+const DEV_PASS = import.meta.env.LOGPORT_PASS || 'changeme';
+
+export async function baseFetch<T>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
 
-  const response = await fetch(url, options);
-  if (!response.ok) {
-    return response.text().then((text) => {
-      throw new Error(`API request failed: ${response.status} ${response.statusText} - ${text}`);
-    });
+  const headers = new Headers(options.headers);
+
+  if (!headers.has('Authorization') && DEV_USER && DEV_PASS) {
+    const encoded = btoa(`${DEV_USER}:${DEV_PASS}`);
+    headers.set('Authorization', `Basic ${encoded}`);
   }
-  return await (response.json() as Promise<T>);
+
+  const response = await fetch(url, { ...options, headers });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(
+      `API request failed: ${response.status} ${response.statusText} - ${text}`
+    );
+  }
+
+  return (await response.json()) as T;
 }
-
-
