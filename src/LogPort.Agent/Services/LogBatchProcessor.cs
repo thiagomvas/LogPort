@@ -3,6 +3,7 @@ using LogPort.Core.Models;
 using LogPort.Internal;
 using LogPort.Internal.Abstractions;
 using LogPort.Internal.Configuration;
+using LogPort.Internal.Metrics;
 
 using WebSocketManager = LogPort.Internal.Services.WebSocketManager;
 
@@ -14,20 +15,32 @@ public class LogBatchProcessor : BackgroundService
     private readonly ILogger<LogBatchProcessor> _logger;
     private readonly LogQueue _queue;
     private readonly WebSocketManager _socketManager;
+    private readonly MetricStore _metrics;
 
     private readonly int _batchSize = 100;
     private readonly TimeSpan _flushInterval = TimeSpan.FromSeconds(1);
 
-    public LogBatchProcessor(IServiceProvider services, LogQueue queue, WebSocketManager socketManager, ILogger<LogBatchProcessor> logger)
+    public LogBatchProcessor(
+        IServiceProvider services,
+        LogQueue queue,
+        WebSocketManager socketManager,
+        MetricStore metrics,
+        ILogger<LogBatchProcessor> logger)
+
     {
         _services = services;
         _queue = queue;
         _logger = logger;
         _socketManager = socketManager;
+        _metrics = metrics;
+
 
         var config = services.GetRequiredService<LogPortConfig>();
         _batchSize = config.BatchSize > 0 ? config.BatchSize : _batchSize;
         _flushInterval = config.FlushIntervalMs > 0 ? TimeSpan.FromMilliseconds(config.FlushIntervalMs) : _flushInterval;
+
+        var boundaries = GenerateBatchBuckets(_batchSize);
+        _metrics.GetOrRegisterHistogram(Constants.Metrics.BatchSize, boundaries);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -45,11 +58,26 @@ public class LogBatchProcessor : BackgroundService
                 using var scope = _services.CreateScope();
                 var handler = scope.ServiceProvider.GetRequiredService<ILogBatchHandler>();
                 await handler.HandleBatchAsync(batch, stoppingToken);
+
+                _metrics.Increment(Constants.Metrics.LogsProcessed);
+                _metrics.Observe(Constants.Metrics.BatchSize, batch.Count);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error inserting batch logs");
             }
         }
+    }
+    private static double[] GenerateBatchBuckets(int maxBatchSize, double factor = 2)
+    {
+        var buckets = new List<double>();
+        double val = 1;
+        while (val < maxBatchSize)
+        {
+            buckets.Add(Math.Ceiling(val));
+            val *= factor;
+        }
+        buckets.Add(maxBatchSize);
+        return buckets.ToArray();
     }
 }

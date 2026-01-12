@@ -25,7 +25,7 @@ public class LogServiceTests
         _cache = Substitute.For<ICache>();
         _config = new LogPortConfig
         {
-            Cache = new LogPortConfig.CacheConfig
+            Cache = new CacheConfig
             {
                 DefaultExpiration = TimeSpan.FromMinutes(5)
             }

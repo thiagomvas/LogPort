@@ -1,0 +1,65 @@
+.metric-card-dd {
+  background: var(--color-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: var(--shadow-small);
+  max-width: 250px; /* Adjust for card width */
+}
+
+.metric-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;        
+  overflow: hidden;           
+  text-overflow: ellipsis;    
+  max-width: 100%;            
+}
+
+
+.metric-sparkline {
+  display: flex;
+  gap: 2px;
+  height: 40px;
+  align-items: flex-end; 
+}
+
+.sparkline-bar-dd {
+  width: 100%;
+  height: 20px;
+  border-radius: 3px;
+  background-color: #5bc0de;
+  transition: height 0.2s ease-in-out;
+}
+
+.metric-value-emphasis {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.metric-values-dd {
+  display: flex;
+  justify-content: space-between;
+}
+
+.metric-value {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+}
+
+.metric-time-range {
+  font-size: 0.9rem;
+  color: var(--text-tertiary);
+}
+
+.time-label {
+  display: inline-block;
+  margin-top: 8px;
+  color: var(--text-tertiary);
+}

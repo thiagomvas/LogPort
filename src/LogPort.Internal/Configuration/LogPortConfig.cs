@@ -1,5 +1,3 @@
-using System.Text.Json.Serialization;
-
 namespace LogPort.Internal.Configuration;
 
 public class LogPortConfig
@@ -16,6 +14,11 @@ public class LogPortConfig
     /// Gets or sets the configuration for the caching module in the agent.
     /// </summary>
     public CacheConfig Cache { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the configuration for the metrics module in the agent.
+    /// </summary>
+    public MetricsConfig Metrics { get; set; } = new();
 
     /// <summary>
     /// Gets or sets the port that the agent will listen on.
@@ -92,86 +95,4 @@ public class LogPortConfig
     {
         return uint.TryParse(Environment.GetEnvironmentVariable(key), out var val) ? val : defaultValue;
     }
-
-    public class PostgresConfig
-    {
-        /// <summary>
-        /// Gets or sets whether or not it should use postgres.
-        /// </summary>
-        /// <remarks>
-        /// Currently it is the only data store provider supported, has to be true.
-        /// </remarks>
-        public bool Use { get; set; } = true;
-        /// <summary>
-        /// Gets or sets the host of the PostgreSQL database
-        /// </summary>
-        public string Host { get; set; } = "localhost";
-        /// <summary>
-        /// Gets or sets the port of the PostgreSQL database
-        /// </summary>
-        public int Port { get; set; } = 5432;
-        /// <summary>
-        /// Gets or sets the PostgreSQL database
-        /// </summary>
-        public string Database { get; set; } = "logport";
-
-        /// <summary>
-        /// Gets or sets the user of the PostgreSQL database
-        /// </summary>
-        public string Username { get; set; } = "postgres";
-
-        /// <summary>
-        /// Gets or sets the password of the PostgreSQL database
-        /// </summary>
-        public string Password { get; set; } = "postgres";
-
-        [JsonIgnore]
-        public string ConnectionString =>
-            $"Host={Host};Port={Port};Database={Database};Username={Username};Password={Password};";
-
-        /// <summary>
-        /// Gets or sets the partition length in days of the logs table
-        /// </summary>
-        public int PartitionLength { get; set; } = 1;
-    }
-
-    public class DockerConfig
-    {
-        /// <summary>
-        /// Gets or sets whether to enable the Docker module.
-        /// </summary>
-        public bool Use { get; set; } = false;
-        /// <summary>
-        /// Gets or sets the Docker socket path.
-        /// </summary>
-        public string SocketPath { get; set; } = "unix:///var/run/docker.sock";
-
-        /// <summary>
-        /// Gets or sets whether the agent should monitor <b>EVERY</b> container in the host.
-        /// </summary>
-        /// <remarks>
-        /// Depending on the environment, this can lead to excessive log throughput.
-        /// It is recommended to use labels to mark which containers should be monitored
-        /// </remarks>
-        public bool WatchAllContainers { get; set; } = false;
-    }
-
-    public class CacheConfig
-    {
-        /// <summary>
-        /// Gets or sets whether the cache should use redis or not.
-        /// </summary>
-        public bool UseRedis { get; set; } = false;
-        /// <summary>
-        /// Gets or sets the connection string for the redis cache.
-        /// </summary>
-        public string? RedisConnectionString { get; set; }
-        /// <summary>
-        /// Gets or sets the default expiration of cached data.
-        /// </summary>
-        public TimeSpan DefaultExpiration { get; set; } = TimeSpan.FromMinutes(10);
-
-
-    }
-
 }

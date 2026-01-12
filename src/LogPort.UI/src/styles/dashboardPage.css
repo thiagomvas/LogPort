@@ -117,7 +117,6 @@
   background: var(--bg-hover);
 }
 
-/* Emphasis buttons */
 .dashboard-actions .btn-primary {
   background: var(--color-primary);
   border-color: var(--color-primary-dark);
@@ -146,4 +145,11 @@
   .stat-card .stat-value {
     font-size: 1.4rem;
   }
+}
+
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Increase min width */
+  gap: 16px;
 }

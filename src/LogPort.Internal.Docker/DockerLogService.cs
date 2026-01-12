@@ -6,6 +6,7 @@ using Docker.DotNet.Models;
 using LogPort.Core;
 using LogPort.Core.Models;
 using LogPort.Internal.Configuration;
+using LogPort.Internal.Metrics;
 using LogPort.Internal.Services;
 
 using Microsoft.Extensions.Hosting;
@@ -20,12 +21,14 @@ public class DockerLogService : BackgroundService
     private readonly DockerClient _client;
     private readonly LogPortConfig _logPortConfig;
     private readonly LogEntryExtractionPipeline _extractionPipeline;
+    private readonly MetricStore _metrics;
 
     public DockerLogService(
         LogQueue logQueue,
         LogPortConfig config,
         DockerClient client,
         LogEntryExtractionPipeline pipeline,
+        MetricStore metrics,
         ILogger<DockerLogService>? logger = null)
 
     {
@@ -34,6 +37,7 @@ public class DockerLogService : BackgroundService
         _logPortConfig = config;
         _client = client;
         _extractionPipeline = pipeline;
+        _metrics = metrics;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -124,6 +128,8 @@ public class DockerLogService : BackgroundService
             }
 
             _logQueue.Enqueue(logEntry);
+            _metrics.Increment(Constants.Metrics.DockerLogsRead);
+            _metrics.Increment(Constants.Metrics.BuildDockerLogsReadKeyForContainer(containerName));
         }
     }
 

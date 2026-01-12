@@ -9,17 +9,13 @@ using LogPort.Agent.Middlewares;
 using LogPort.Agent.Services;
 using LogPort.AspNetCore;
 using LogPort.Core;
-using LogPort.Core.Models;
-using LogPort.Data.Postgres;
 using LogPort.Internal;
-using LogPort.Internal.Abstractions;
+using LogPort.Internal.Configuration;
 using LogPort.Internal.Docker;
-using LogPort.Internal.Redis;
+using LogPort.Internal.Metrics;
 
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.WebSockets;
-
-using StackExchange.Redis;
 
 using WebSocketManager = LogPort.Internal.Services.WebSocketManager;
 
@@ -35,7 +31,6 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader();
     });
 });
-builder.Configuration.AddEnvironmentVariables(prefix: "LOGPORT_");
 var logPortConfig = ConfigLoader.Load();
 builder.Services.AddSingleton(logPortConfig);
 builder.Services.AddHttpClient();
@@ -60,6 +55,8 @@ if (logPortConfig.Docker.Use)
 builder.Services.AddSingleton<LogQueue>();
 builder.Services.AddHostedService<LogBatchProcessor>();
 builder.Services.AddSingleton<WebSocketManager>();
+builder.Services.AddSingleton<MetricStore>(
+    sp => new MetricStore(sp.GetRequiredService<LogPortConfig>()));
 
 builder.Services.AddWebSockets(options => { options.KeepAliveInterval = TimeSpan.FromSeconds(30); });
 
@@ -96,7 +93,6 @@ else
 }
 
 
-
 if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 
@@ -128,10 +124,8 @@ app.MapHealthChecks("/health", new HealthCheckOptions
             })
         };
 
-        await context.Response.WriteAsync(JsonSerializer.Serialize(response, new JsonSerializerOptions
-        {
-            WriteIndented = true
-        }));
+        await context.Response.WriteAsync(JsonSerializer.Serialize(response,
+            new JsonSerializerOptions { WriteIndented = true }));
     }
 });
 
