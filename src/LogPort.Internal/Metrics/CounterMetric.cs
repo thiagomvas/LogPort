@@ -28,7 +28,7 @@ public sealed class CounterMetric
 
         return total;
     }
-    
+
     public ulong[] QueryBuckets(int count)
     {
         if (count <= 0)
@@ -39,7 +39,7 @@ public sealed class CounterMetric
 
         _window.ForEachBucketInWindow(_window.BucketDuration * count, (bucket, key) =>
         {
-            int index = (int)(key - (nowKey - count + 1)); 
+            int index = (int)(key - (nowKey - count + 1));
             if (index >= 0 && index < count)
                 buckets[index] = Volatile.Read(ref bucket.Value);
         });

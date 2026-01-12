@@ -50,7 +50,7 @@ public class LogBatchProcessor : BackgroundService
             await Task.Delay(_flushInterval, stoppingToken);
             var batch = _queue.DequeueBatch(_batchSize).ToList();
             if (batch.Count == 0) continue;
-            
+
             try
             {
                 await _socketManager.BroadcastBatchAsync(batch);
@@ -58,7 +58,7 @@ public class LogBatchProcessor : BackgroundService
                 using var scope = _services.CreateScope();
                 var handler = scope.ServiceProvider.GetRequiredService<ILogBatchHandler>();
                 await handler.HandleBatchAsync(batch, stoppingToken);
-                
+
                 _metrics.Increment(Constants.Metrics.LogsProcessed);
                 _metrics.Observe(Constants.Metrics.BatchSize, batch.Count);
             }
@@ -77,7 +77,7 @@ public class LogBatchProcessor : BackgroundService
             buckets.Add(Math.Ceiling(val));
             val *= factor;
         }
-        buckets.Add(maxBatchSize); 
+        buckets.Add(maxBatchSize);
         return buckets.ToArray();
     }
 }

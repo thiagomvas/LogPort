@@ -14,7 +14,7 @@ public class LogPortConfig
     /// Gets or sets the configuration for the caching module in the agent.
     /// </summary>
     public CacheConfig Cache { get; set; } = new();
-    
+
     /// <summary>
     /// Gets or sets the configuration for the metrics module in the agent.
     /// </summary>

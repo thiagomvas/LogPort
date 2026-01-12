@@ -70,7 +70,7 @@ internal sealed class RollingWindow<TBucket>
         ArgumentNullException.ThrowIfNull(action);
         ForEachBucketInWindow(window, (bucket, _) => action(bucket));
     }
-    
+
     public void ForEachBucketInWindow(
         TimeSpan window,
         Action<TBucket, long> action)

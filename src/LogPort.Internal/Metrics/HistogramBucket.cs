@@ -10,13 +10,13 @@ internal sealed class HistogramBucket : IRollingBucket
     public HistogramBucket(double[] boundaries)
     {
         _boundaries = boundaries;
-        _counts = new long[boundaries.Length + 1]; 
+        _counts = new long[boundaries.Length + 1];
     }
 
     public void Observe(double value)
     {
         int index = Array.FindIndex(_boundaries, b => value <= b);
-        if (index == -1) index = _counts.Length - 1; 
+        if (index == -1) index = _counts.Length - 1;
         Interlocked.Increment(ref _counts[index]);
     }
 

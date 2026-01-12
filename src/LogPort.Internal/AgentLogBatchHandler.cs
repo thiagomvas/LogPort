@@ -14,16 +14,16 @@ public class AgentLogBatchHandler : ILogBatchHandler
     private readonly MetricStore _metrics;
 
     public AgentLogBatchHandler(
-        IServiceProvider services, 
+        IServiceProvider services,
         ILogger<AgentLogBatchHandler> logger,
         MetricStore metrics)
     {
         _services = services;
         _logger = logger;
         _metrics = metrics;
-        
-        _metrics.GetOrRegisterCounter("logs.processed.1h", 
-            bucketDuration: TimeSpan.FromMinutes(1), 
+
+        _metrics.GetOrRegisterCounter("logs.processed.1h",
+            bucketDuration: TimeSpan.FromMinutes(1),
             maxWindow: TimeSpan.FromMinutes(60));
         _metrics.GetOrRegisterCounter("logs.processed.24h",
             bucketDuration: TimeSpan.FromHours(1),
@@ -38,7 +38,7 @@ public class AgentLogBatchHandler : ILogBatchHandler
         using var scope = _services.CreateScope();
         var repo = scope.ServiceProvider.GetRequiredService<ILogRepository>();
         var logEntries = batch.ToList();
-        await repo.AddLogsAsync(logEntries); 
+        await repo.AddLogsAsync(logEntries);
 
 
         foreach (var log in logEntries)
@@ -50,7 +50,7 @@ public class AgentLogBatchHandler : ILogBatchHandler
                 current = 0;
             levelCounts[level] = current + 1;
         }
-        
+
         _metrics.Increment(Constants.Metrics.LogsProcessed, totalCount);
         _metrics.Increment("logs.processed.1h", totalCount);
         _metrics.Increment("logs.processed.24h", totalCount);
@@ -60,7 +60,7 @@ public class AgentLogBatchHandler : ILogBatchHandler
             var key = $"logs.processed.{kvp.Key}";
             _metrics.Increment(key, kvp.Value);
         }
-        
+
         _logger.LogDebug("Inserted {Count} logs", totalCount);
     }
 }
