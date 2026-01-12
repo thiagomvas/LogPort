@@ -19,7 +19,7 @@ export default function MetricCard({
 }: MetricCardProps) {
   const max = Math.max(...sparkline, last1s, last10s, last1m, 1);
   const min = Math.min(...sparkline, last1s, last10s, last1m, 0);
-  const timeLabel = timeRange === '1m' ? 'm' : 'h'
+  const timeLabel = timeRange === '1m' ? 'm' : 'h';
 
   const formatTimeLabel = (value: number, range: '1m' | '24h') => {
     if (range === '1m') {

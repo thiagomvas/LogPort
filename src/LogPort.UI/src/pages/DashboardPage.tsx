@@ -33,14 +33,14 @@ function DashboardPage() {
     const interval = setInterval(() => {
       fetchLiveMetrics()
         .then(metrics => {
-          if (metrics) setLiveMetrics(metrics);
+          if (metrics) {setLiveMetrics(metrics);}
         })
         .catch(err => console.error('Failed to fetch live metrics', err));
     }, 1000);
     return () => clearInterval(interval);
   }, []);
 
-  if (!meta || !liveMetrics) return <div>Loading dashboard…</div>;
+  if (!meta || !liveMetrics) {return <div>Loading dashboard…</div>;}
 
   const total = meta.logCount;
   const errors = meta.logCountByLevel?.Error ?? 0;
