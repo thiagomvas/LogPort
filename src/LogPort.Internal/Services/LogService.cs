@@ -11,7 +11,7 @@ public class LogService
     private readonly ILogRepository _repository;
     private readonly ICache _cache;
     private readonly LogPortConfig _config;
-    private readonly ILogger<LogService> _logger;
+    private readonly ILogger<LogService>? _logger;
 
     public LogService(ILogRepository repository, ICache cache, LogPortConfig config, ILogger<LogService>? logger = null)
     {

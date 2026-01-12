@@ -20,7 +20,7 @@ internal class LogPortLogger : ILogger
         _config = config;
     }
 
-    public IDisposable BeginScope<TState>(TState state) => default!;
+    public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
     public bool IsEnabled(LogLevel logLevel) => true;
 
     public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception,

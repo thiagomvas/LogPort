@@ -76,7 +76,7 @@ RETURNING id;", conn, tx);
                 patternCmd.Parameters.AddWithValue("msg", normalized);
                 patternCmd.Parameters.AddWithValue("hash", (long)hash);
 
-                patternId = (long)await patternCmd.ExecuteScalarAsync();
+                patternId = (long)await patternCmd.ExecuteScalarAsync()!;
                 patternCache[hash] = patternId;
             }
 
@@ -189,7 +189,7 @@ VALUES {string.Join(", ", values)};";
         await using var cmd = new NpgsqlCommand(sql.ToString(), conn);
         cmd.Parameters.AddRange(sqlParams.ToArray());
 
-        return (long)await cmd.ExecuteScalarAsync();
+        return (long)(await cmd.ExecuteScalarAsync() ?? 0);
     }
 
     public async Task<LogMetadata> GetLogMetadataAsync(
@@ -342,7 +342,7 @@ RETURNING id;
         cmd.Parameters.AddWithValue("hash", patternHash);
         cmd.Parameters.AddWithValue("lvl", level);
 
-        return (long)await cmd.ExecuteScalarAsync();
+        return (long)(await cmd.ExecuteScalarAsync() ?? 0);
     }
 
     public async Task<long> GetOrCreatePatternAsync(
@@ -370,7 +370,7 @@ RETURNING id;
         cmd.Parameters.AddWithValue("ts", timestamp);
         cmd.Parameters.AddWithValue("lvl", level);
 
-        return (long)await cmd.ExecuteScalarAsync();
+        return (long)(await cmd.ExecuteScalarAsync() ?? 0);
     }
 
     public async Task UpdatePatternMessageAsync(long patternId, string normalizedMessage)
@@ -563,7 +563,7 @@ RETURNING id;
         cmd.Parameters.AddWithValue("normalized", normalizedMessage);
         cmd.Parameters.AddWithValue("hash", (long)patternHash); // stored as BIGINT
 
-        return (long)await cmd.ExecuteScalarAsync();
+        return (long)(await cmd.ExecuteScalarAsync() ?? 0);
     }
 
     private LogEntry MapReader(NpgsqlDataReader reader) =>

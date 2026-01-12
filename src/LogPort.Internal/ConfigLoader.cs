@@ -96,8 +96,8 @@ public static class ConfigLoader
     }
 
 
-    private static string GetEnvString(string key, string defaultValue = "")
-        => Environment.GetEnvironmentVariable(key) ?? defaultValue;
+    private static string GetEnvString(string key, string? defaultValue = "")
+        => Environment.GetEnvironmentVariable(key) ?? defaultValue ?? string.Empty;
 
     private static bool GetEnvBool(string key, bool defaultValue = false)
         => bool.TryParse(Environment.GetEnvironmentVariable(key), out var val) ? val : defaultValue;

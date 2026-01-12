@@ -22,7 +22,7 @@ public sealed class JsonLogEntryExtractor : BaseLogEntryExtractor
     }
     public override bool TryExtract(ReadOnlySpan<char> input, out LogEntry result)
     {
-        result = default;
+        result = null!;
 
         var jsonStart = input.IndexOf('{');
         if (jsonStart < 0)

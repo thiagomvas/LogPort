@@ -111,7 +111,7 @@ public sealed class FileTailService : BackgroundService
             }
             catch (IOException ex)
             {
-                _logger.LogError(ex, "Error reading file {Path}", path);
+                _logger?.LogError(ex, "Error reading file {Path}", path);
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested)
             {
