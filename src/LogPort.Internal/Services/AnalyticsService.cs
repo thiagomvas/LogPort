@@ -39,6 +39,11 @@ public class AnalyticsService
                     log.Timestamp > (parameters.To ?? DateTime.MaxValue))
                     continue;
 
+                if (parameters.From == null)
+                {
+                    continue;
+                }
+
                 var bucketStart = AlignToStep(log.Timestamp, parameters.From.Value, stepDuration.Value);
                 if (buckets.ContainsKey(bucketStart))
                     buckets[bucketStart]++;

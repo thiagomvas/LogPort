@@ -82,7 +82,7 @@ public class LogServiceTests
     {
         var key = CacheKeys.BuildLogMetadataCacheKey();
 
-        _cache.GetAsync<LogMetadata>(key).Returns((LogMetadata)null);
+        _cache.GetAsync<LogMetadata>(key).Returns((LogMetadata)null!);
         var repoResult = new LogMetadata();
         _repository.GetLogMetadataAsync().Returns(repoResult);
 

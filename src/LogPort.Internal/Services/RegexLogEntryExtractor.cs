@@ -27,7 +27,7 @@ public sealed class RegexLogEntryExtractor : BaseLogEntryExtractor
 
     public override bool TryExtract(ReadOnlySpan<char> input, out LogEntry result)
     {
-        result = default;
+        result = null!;
 
         var match = _regex.Match(input.ToString());
         if (!match.Success)

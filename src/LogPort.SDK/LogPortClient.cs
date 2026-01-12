@@ -241,7 +241,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
                         ).ConfigureAwait(false);
                         _messageQueue.TryDequeue(out _);
                     }
-                    catch (Exception ex)
+                    catch 
                     {
                         _webSocket.Abort();
                         _webSocket.Dispose();
@@ -343,6 +343,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
             }
             catch
             {
+                // ignored
             }
 
             try
@@ -351,6 +352,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
             }
             catch
             {
+                // ignored
             }
 
             var delay = TimeSpan.FromSeconds(1);
@@ -360,7 +362,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
             {
                 if (token.IsCancellationRequested)
                     return;
-                _webSocket = _socketFactory?.Invoke();
+                _webSocket = _socketFactory?.Invoke() ?? throw new InvalidOperationException();
                 try
                 {
                     _logger?.Debug("Attempting WebSocket connection...");
