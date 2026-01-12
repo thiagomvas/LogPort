@@ -91,11 +91,11 @@ public class DockerLogService : BackgroundService
         };
 
         var inspect = await client.Containers.InspectContainerAsync(containerId, stoppingToken);
-        
+
         inspect.Config.Labels.TryGetValue("com.logport.environment", out var environment);
         environment ??= "Unknown";
         var containerName = inspect.Name?.TrimStart('/') ?? containerId;
-        
+
         using var logStream = await client.Containers.GetContainerLogsAsync(containerId, parameters, stoppingToken);
         using var reader = new StreamReader(logStream);
 
