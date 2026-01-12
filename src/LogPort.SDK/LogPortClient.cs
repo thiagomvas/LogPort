@@ -241,7 +241,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
                         ).ConfigureAwait(false);
                         _messageQueue.TryDequeue(out _);
                     }
-                    catch 
+                    catch
                     {
                         _webSocket.Abort();
                         _webSocket.Dispose();
