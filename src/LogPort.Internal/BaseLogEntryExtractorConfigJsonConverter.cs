@@ -21,13 +21,13 @@ public sealed class BaseLogEntryExtractorConfigJsonConverter
 
         var mode = modeProp.GetString();
 
-        return mode?.ToLowerInvariant() switch
+        return (mode?.ToLowerInvariant() switch
         {
             "json" => root.Deserialize<JsonLogEntryExtractorConfig>(options)!,
             "regex" => root.Deserialize<RegexLogEntryExtractorConfig>(options)!,
 
-            _ => throw new JsonException($"Unknown extractor mode '{mode}'")
-        };
+            _ => root.Deserialize<BaseLogEntryExtractorConfig>(options)
+        })!;
     }
 
     public override void Write(

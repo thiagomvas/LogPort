@@ -3,18 +3,20 @@ using LogPort.Internal;
 using LogPort.Internal.Configuration;
 using LogPort.Internal.Metrics;
 using LogPort.Internal.Services;
-var store = new MetricStore(TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1));
 
-store.Observe("latency", 120);
-store.Observe("latency", 75);
-
-var snapshot = store.Snapshot();
-
-var latency = snapshot.Histograms["latency"];
-for (int i = 0; i < latency.Counts.Length; i++)
+var pipeline = new LogEntryExtractionPipeline(new LogPortConfig()
 {
-    if (i < latency.Boundaries.Length)
-        Console.WriteLine($"<= {latency.Boundaries[i]}: {latency.Counts[i]}");
-    else
-        Console.WriteLine($"> {latency.Boundaries[^1]}: {latency.Counts[i]}");
+    Extractors =
+    [
+        new BaseLogEntryExtractorConfig() { ServiceName = "foo", TemplateKey = "test" }
+    ]
+});
+
+var json = """{ "message": "Hello world", "timestamp": "2026-01-13 17:05:39.436", "level":"Warn" }""";
+
+if (pipeline.TryExtract("foo", json, out var entry))
+{
+    Console.WriteLine(entry.Message);
+    Console.WriteLine(entry.Level);
+    Console.WriteLine(entry.Timestamp);
 }

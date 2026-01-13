@@ -8,4 +8,5 @@ public class BaseLogEntryExtractorConfig
 {
     public string ServiceName { get; init; } = string.Empty;
     public string ExtractionMode { get; init; } = string.Empty;
+    public string? TemplateKey { get; init; } = null;
 }

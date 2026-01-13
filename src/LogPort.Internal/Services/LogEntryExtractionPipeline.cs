@@ -10,6 +10,7 @@ namespace LogPort.Internal.Services;
 public sealed class LogEntryExtractionPipeline
 {
     private readonly FrozenDictionary<string, BaseLogEntryExtractor> _byService;
+    private static readonly ExtractorTemplates _templates = new();
 
     public LogEntryExtractionPipeline(LogPortConfig config)
     {
@@ -45,6 +46,12 @@ public sealed class LogEntryExtractionPipeline
     private static BaseLogEntryExtractor CreateExtractor(
         BaseLogEntryExtractorConfig config)
     {
+        if (!string.IsNullOrWhiteSpace(config.TemplateKey) &&
+            _templates.Templates.TryGetValue(config.TemplateKey, out var extractor))
+        {
+            config = extractor;
+        };
+        
         return config.ExtractionMode.ToLowerInvariant() switch
         {
             "json" => new JsonLogEntryExtractor(
