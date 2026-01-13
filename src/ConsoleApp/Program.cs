@@ -8,11 +8,11 @@ var pipeline = new LogEntryExtractionPipeline(new LogPortConfig()
 {
     Extractors =
     [
-        new BaseLogEntryExtractorConfig() { ServiceName = "foo", TemplateKey = "test" }
+        new BaseLogEntryExtractorConfig() { ServiceName = "foo", TemplateKey = "postgres" }
     ]
 });
 
-var json = """{ "message": "Hello world", "timestamp": "2026-01-13 17:05:39.436", "level":"Warn" }""";
+var json = """2026-01-13 17:00:39.366 UTC [1] LOG: database system is ready to accept connections""";
 
 if (pipeline.TryExtract("foo", json, out var entry))
 {

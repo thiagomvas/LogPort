@@ -40,27 +40,26 @@ public sealed class RegexLogEntryExtractor : BaseLogEntryExtractor
         var level = "INFO";
         var timestamp = DateTime.UtcNow;
 
-        var levelGroup = match.Groups[_levelGroup];
-        if (levelGroup.Success)
-            level = levelGroup.Value.ToUpperInvariant();
-
-        var tsGroup = match.Groups[_timestampGroup];
-        if (tsGroup.Success &&
-            DateTime.TryParse(
-                tsGroup.Value,
-                CultureInfo.InvariantCulture,
-                DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
-                out var ts))
+        if (!string.IsNullOrWhiteSpace(_levelGroup))
         {
-            timestamp = ts;
+            var levelGroup = match.Groups[_levelGroup];
+            if (levelGroup.Success)
+                level = levelGroup.Value.ToUpperInvariant();
         }
-
-        result = new LogEntry
+        if (!string.IsNullOrWhiteSpace(_timestampGroup))
         {
-            Timestamp = timestamp,
-            Level = level,
-            Message = messageGroup.Value
-        };
+            var tsGroup = match.Groups[_timestampGroup];
+            if (tsGroup.Success &&
+                DateTime.TryParse(
+                    tsGroup.Value,
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
+                    out var ts))
+            {
+                timestamp = ts;
+            }
+        }
+        result = new LogEntry { Timestamp = timestamp, Level = level, Message = messageGroup.Value };
 
         return true;
     }

@@ -11,22 +11,22 @@ internal sealed class ExtractorTemplates
     {
         Templates = LoadConfiguration();
     }
-    
+
     private FrozenDictionary<string, BaseLogEntryExtractorConfig> LoadConfiguration()
     {
         var configs = this.GetType()
             .GetFields(BindingFlags.Static | BindingFlags.NonPublic)
             .Where(f => f.FieldType.IsAssignableTo(typeof(BaseLogEntryExtractorConfig)))
             .ToDictionary(f => f.Name.ToLowerInvariant(), f => (BaseLogEntryExtractorConfig)f.GetValue(null)!);
-        
+
         return configs.ToFrozenDictionary();
     }
-    
-    private static readonly RegexLogEntryExtractorConfig Postgres = new() { Pattern = "", MessageGroup = "" };
 
-    private static readonly JsonLogEntryExtractorConfig Test = new()
+    private static readonly RegexLogEntryExtractorConfig Postgres = new()
     {
-        LevelProperty = "level", MessageProperty = "message", TimestampProperty = "timestamp"
+        Pattern =
+            ".*LOG:\\s+(?<message>.+)$",
+        MessageGroup = "message",
+        TimestampGroup = "timestamp",
     };
-
 }
