@@ -76,7 +76,7 @@ RETURNING id;", conn, tx);
                 patternCmd.Parameters.AddWithValue("msg", normalized);
                 patternCmd.Parameters.AddWithValue("hash", (long)hash);
 
-                patternId = (long)await patternCmd.ExecuteScalarAsync()!;
+                patternId = (long)(await patternCmd.ExecuteScalarAsync())!;
                 patternCache[hash] = patternId;
             }
 

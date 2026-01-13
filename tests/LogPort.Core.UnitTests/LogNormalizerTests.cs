@@ -44,7 +44,7 @@ public sealed class LogNormalizerTests
     [TestCase(null)]
     public void NormalizeLevel_UnknownOrEmpty_ReturnsDefaultLevel(string? input)
     {
-        Assert.That(_normalizer.NormalizeLevel(input), Is.EqualTo(LogNormalizer.DefaultLevel));
+        Assert.That(_normalizer.NormalizeLevel(input!), Is.EqualTo(LogNormalizer.DefaultLevel));
     }
 
 

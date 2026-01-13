@@ -6,7 +6,7 @@ public class LogEntry
     public DateTime Timestamp { get; set; }
     public string Level { get; set; } = "Info";
     public string? ServiceName { get; set; }
-    public Dictionary<string, object> Metadata { get; set; }
+    public Dictionary<string, object> Metadata { get; set; } = [];
 
     public string? TraceId { get; set; }
     public string? SpanId { get; set; }

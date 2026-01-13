@@ -31,9 +31,9 @@ public class FakeWebSocketClient : IWebSocketClient
         }
         SendCalled = true;
         SentMessagesCount++;
-        var message = System.Text.Encoding.UTF8.GetString(buffer.Array, buffer.Offset, buffer.Count);
+        var message = System.Text.Encoding.UTF8.GetString(buffer.Array ?? [], buffer.Offset, buffer.Count);
         var entry = System.Text.Json.JsonSerializer.Deserialize<LogEntry>(message);
-        Server.ReceiveLog(entry);
+        Server.ReceiveLog(entry!);
         return Task.CompletedTask;
     }
 
