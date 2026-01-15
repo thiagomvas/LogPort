@@ -15,3 +15,12 @@ var parser = new Parser(tokens);
 var expr = parser.Parse();
 
 Console.WriteLine(expr);
+
+var sqlBuilder = new SqlWhereBuilder();
+var (whereClause, parameters) = sqlBuilder.Build(expr);
+
+Console.WriteLine();
+Console.WriteLine("WHERE " + whereClause);
+
+foreach (var p in parameters)
+    Console.WriteLine($"{p.Key} = {p.Value}");
