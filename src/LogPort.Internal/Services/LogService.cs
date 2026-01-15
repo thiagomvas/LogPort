@@ -97,5 +97,30 @@ public class LogService
         return result;
     }
 
+    public async Task<IEnumerable<LogEntry>> QueryLogsAsync(
+        string query,
+        DateTimeOffset? from = null,
+        DateTimeOffset? to = null,
+        int page = 1,
+        int pageSize = 100,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+            return Array.Empty<LogEntry>();
+
+        DateTime? fromUtc = from?.UtcDateTime;
+        DateTime? toUtc = to?.UtcDateTime;
+
+        return await _repository.QueryLogsAsync(
+            query,
+            fromUtc,
+            toUtc,
+            page,
+            pageSize,
+            cancellationToken
+        );
+    }
+
+
 
 }

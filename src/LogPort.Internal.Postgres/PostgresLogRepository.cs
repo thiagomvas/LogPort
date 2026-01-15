@@ -8,6 +8,7 @@ using LogPort.Core.Models;
 using LogPort.Internal;
 using LogPort.Internal.Abstractions;
 using LogPort.Internal.Configuration;
+using LogPort.Internal.DSL;
 
 using Npgsql;
 
@@ -22,6 +23,8 @@ public class PostgresLogRepository : ILogRepository
     private readonly JsonSerializerOptions _jsonOptions;
     private readonly int _partitionLengthInDays;
     private readonly LogNormalizer _normalizer;
+    private readonly QueryCompiler _queryCompiler = new();
+
 
     public PostgresLogRepository(LogPortConfig config, LogNormalizer normalizer,
         JsonSerializerOptions? jsonOptions = null)
@@ -141,6 +144,75 @@ VALUES {string.Join(", ", values)};";
 
         return results;
     }
+
+    public async Task<IEnumerable<LogEntry>> QueryLogsAsync(
+        string query,
+        DateTime? from = null,
+        DateTime? to = null,
+        int page = 1,
+        int pageSize = 100,
+        CancellationToken cancellationToken = default)
+    {
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 100;
+
+        var offset = (page - 1) * pageSize;
+
+        var sql = new StringBuilder(
+            "SELECT timestamp, service_name, level, message, metadata, trace_id, span_id, hostname, environment " +
+            "FROM logs WHERE 1=1");
+
+        var parameters = new List<NpgsqlParameter>(8);
+
+        if (from.HasValue)
+        {
+            sql.Append(" AND timestamp >= @from");
+            parameters.Add(new NpgsqlParameter("from", from.Value));
+        }
+
+        if (to.HasValue)
+        {
+            sql.Append(" AND timestamp <= @to");
+            parameters.Add(new NpgsqlParameter("to", to.Value));
+        }
+
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            var (whereClause, dslParams) = _queryCompiler.Compile(query);
+
+            sql.Append(" AND ");
+            sql.Append(whereClause);
+
+            foreach (var kv in dslParams)
+                parameters.Add(
+                    new NpgsqlParameter(kv.Key.TrimStart('@'), kv.Value)
+                );
+        }
+
+        sql.Append(" ORDER BY timestamp DESC");
+        sql.Append(" LIMIT @limit OFFSET @offset");
+
+        parameters.Add(new NpgsqlParameter("limit", pageSize));
+        parameters.Add(new NpgsqlParameter("offset", offset));
+
+        var results = new List<LogEntry>(pageSize);
+
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync(cancellationToken);
+
+        await using var cmd = new NpgsqlCommand(sql.ToString(), conn);
+        cmd.Parameters.AddRange(parameters.ToArray());
+
+        Console.WriteLine($"Executing SQL {sql.ToString()}");
+        
+        await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+            results.Add(MapReader(reader));
+
+        return results;
+    }
+
+
 
     public async IAsyncEnumerable<IReadOnlyList<LogEntry>> GetBatchesAsync(
         LogQueryParameters parameters,

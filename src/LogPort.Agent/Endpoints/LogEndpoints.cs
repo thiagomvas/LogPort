@@ -22,6 +22,7 @@ public static class LogEndpoints
         app.MapGet("api/logs", GetLogsAsync);
         app.MapGet("api/logs/count", CountLogsAsync);
         app.MapGet("api/logs/metadata", GetLogMetadataAsync);
+        app.MapGet("api/logs/query", QueryLogsAsync);
     }
 
     private static async Task<IResult> AddLogAsync(LogService logRepository, LogEntry log)
@@ -59,6 +60,28 @@ public static class LogEndpoints
 
         var metadata = await repository.GetLogMetadataAsync(from, to);
         return Results.Ok(metadata);
+    }
+
+    private static async Task<IResult> QueryLogsAsync(
+        LogService logService,
+        string? query,
+        DateTimeOffset? from,
+        DateTimeOffset? to,
+        int page = 1,
+        int pageSize = 100)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+            return Results.BadRequest("Query string is required.");
+
+        var result = await logService.QueryLogsAsync(
+            query,
+            from,
+            to,
+            page,
+            pageSize
+        );
+
+        return Results.Ok(result);
     }
 
 }

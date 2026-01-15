@@ -6,3 +6,5 @@ var (where, parameters) =
     compiler.Compile("level >= 3 and message contains \"timeout\"");
 
 Console.WriteLine(where);
+foreach (var parameter in parameters)
+    Console.WriteLine(parameter);

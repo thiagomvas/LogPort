@@ -37,10 +37,19 @@ public sealed class Parser
         var left = ParsePrimary();
 
         if (Match(TokenType.Operator))
-            return new BinaryExpr(left, Previous().Lexeme, ParsePrimary());
+        {
+            var op = Previous().Lexeme;
+            var right = ParsePrimary();
+
+            if (right is ValueExpr v)
+                right = new ValueExpr(v.Value, op);
+
+            return new BinaryExpr(left, op, right);
+        }
 
         return left;
     }
+
 
     private Expr ParsePrimary()
     {

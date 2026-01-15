@@ -1,3 +1,3 @@
 namespace LogPort.Internal.DSL;
 
-public sealed record ValueExpr(string Value) : Expr;
+public sealed record ValueExpr(string Value, string? ContextOperator = null) : Expr;

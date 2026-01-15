@@ -7,6 +7,7 @@ public interface ILogRepository
     Task AddLogAsync(LogEntry log);
     Task AddLogsAsync(IEnumerable<LogEntry> logs);
     Task<IEnumerable<LogEntry>> GetLogsAsync(LogQueryParameters parameters);
+    Task<IEnumerable<LogEntry>> QueryLogsAsync(string query, DateTime? from = null, DateTime? to = null, int page = 1, int pageSize = 100, CancellationToken cancellationToken = default);
     IAsyncEnumerable<IReadOnlyList<LogEntry>> GetBatchesAsync(LogQueryParameters parameters, int batchSize);
     Task<long> CountLogsAsync(LogQueryParameters parameters);
 
