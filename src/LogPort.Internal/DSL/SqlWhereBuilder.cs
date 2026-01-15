@@ -5,10 +5,13 @@ public sealed class SqlWhereBuilder
     private int _paramIndex;
     private readonly Dictionary<string, object> _parameters = new();
 
-    public (string sql, IReadOnlyDictionary<string, object> parameters) Build(Expr expr)
+    public (string where, IReadOnlyDictionary<string, object> parameters)
+        Build(Expr expr)
     {
-        var sql = Visit(expr);
-        return (sql, _parameters);
+        _paramIndex = 0;
+        _parameters.Clear();
+
+        return (Visit(expr), _parameters);
     }
 
     private string Visit(Expr expr) =>
@@ -30,20 +33,14 @@ public sealed class SqlWhereBuilder
             "and" => $"({left} AND {right})",
             "or" => $"({left} OR {right})",
             "contains" => $"{left} LIKE {right}",
-            "=" or "!=" or ">" or "<" or ">=" or "<=" =>
-                $"{left} {b.Operator} {right}",
-            _ => throw new NotSupportedException($"Operator {b.Operator}")
+            _ => $"{left} {b.Operator} {right}"
         };
     }
 
-    private string AddParam(object value)
+    private string AddParam(string value)
     {
         var name = $"@p{_paramIndex++}";
-
-        if (value is string s)
-            value = $"%{s}%";
-
-        _parameters[name] = value;
+        _parameters[name] = $"%{value}%";
         return name;
     }
 }

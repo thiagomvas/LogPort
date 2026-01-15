@@ -1,5 +1,4 @@
 using LogPort.Core.Models;
-using System.Globalization;
 using System.Text;
 
 namespace LogPort.Internal.DSL;
@@ -10,7 +9,8 @@ public sealed class Tokenizer
         new(StringComparer.OrdinalIgnoreCase) { "and", "or", "not" };
 
     private static readonly HashSet<string> Operators =
-        new() { "=", "!=", ">", "<", ">=", "<=", "contains" };
+        new(StringComparer.OrdinalIgnoreCase)
+        { "=", "!=", ">", "<", ">=", "<=", "contains" };
 
     private readonly HashSet<string> _properties;
 
@@ -22,9 +22,8 @@ public sealed class Tokenizer
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
     }
 
-    public IEnumerable<Token> Tokenize(string query)
+    public void TokenizeInto(string query, List<Token> destination)
     {
-        var tokens = new List<Token>();
         var i = 0;
 
         while (i < query.Length)
@@ -35,6 +34,7 @@ public sealed class Tokenizer
                 continue;
             }
 
+            // quoted value
             if (query[i] == '"')
             {
                 i++;
@@ -43,39 +43,31 @@ public sealed class Tokenizer
                 while (i < query.Length && query[i] != '"')
                     sb.Append(query[i++]);
 
-                i++; 
-                tokens.Add(new Token(TokenType.Value, sb.ToString()));
+                i++; // closing "
+                destination.Add(new(TokenType.Value, sb.ToString()));
                 continue;
             }
 
+            // symbolic operator
             var op = TryReadOperator(query, ref i);
             if (op != null)
             {
-                tokens.Add(new Token(TokenType.Operator, op));
+                destination.Add(new(TokenType.Operator, op));
                 continue;
             }
 
+            // word
             var word = ReadWord(query, ref i);
 
             if (Conditionals.Contains(word))
-            {
-                tokens.Add(new Token(TokenType.Conditional, word));
-            }
+                destination.Add(new(TokenType.Conditional, word));
             else if (Operators.Contains(word))
-            {
-                tokens.Add(new Token(TokenType.Operator, word));
-            }
+                destination.Add(new(TokenType.Operator, word));
             else if (_properties.Contains(word))
-            {
-                tokens.Add(new Token(TokenType.Property, word));
-            }
+                destination.Add(new(TokenType.Property, word));
             else
-            {
-                tokens.Add(new Token(TokenType.Value, word));
-            }
+                destination.Add(new(TokenType.Value, word));
         }
-
-        return tokens;
     }
 
     private static string ReadWord(string input, ref int i)
@@ -89,11 +81,11 @@ public sealed class Tokenizer
 
     private static string? TryReadOperator(string input, ref int i)
     {
-        var remaining = input[i..];
+        var span = input.AsSpan(i);
 
         foreach (var op in new[] { ">=", "<=", "!=", "=", ">", "<" })
         {
-            if (remaining.StartsWith(op))
+            if (span.StartsWith(op))
             {
                 i += op.Length;
                 return op;

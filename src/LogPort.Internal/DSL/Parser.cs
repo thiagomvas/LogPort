@@ -5,24 +5,19 @@ public sealed class Parser
     private readonly List<Token> _tokens;
     private int _pos;
 
-    public Parser(IEnumerable<Token> tokens)
+    public Parser(List<Token> tokens)
     {
-        _tokens = tokens.ToList();
+        _tokens = tokens;
     }
 
-    public Expr Parse()
-        => ParseOr();
+    public Expr Parse() => ParseOr();
 
     private Expr ParseOr()
     {
         var expr = ParseAnd();
 
         while (Match(TokenType.Conditional, "or"))
-        {
-            var op = Previous().Lexeme;
-            var right = ParseAnd();
-            expr = new BinaryExpr(expr, op, right);
-        }
+            expr = new BinaryExpr(expr, "or", ParseAnd());
 
         return expr;
     }
@@ -32,11 +27,7 @@ public sealed class Parser
         var expr = ParseComparison();
 
         while (Match(TokenType.Conditional, "and"))
-        {
-            var op = Previous().Lexeme;
-            var right = ParseComparison();
-            expr = new BinaryExpr(expr, op, right);
-        }
+            expr = new BinaryExpr(expr, "and", ParseComparison());
 
         return expr;
     }
@@ -46,11 +37,7 @@ public sealed class Parser
         var left = ParsePrimary();
 
         if (Match(TokenType.Operator))
-        {
-            var op = Previous().Lexeme;
-            var right = ParsePrimary();
-            return new BinaryExpr(left, op, right);
-        }
+            return new BinaryExpr(left, Previous().Lexeme, ParsePrimary());
 
         return left;
     }
@@ -70,9 +57,10 @@ public sealed class Parser
     {
         if (IsAtEnd()) return false;
 
-        var token = _tokens[_pos];
-        if (token.Type != type) return false;
-        if (lexeme != null && !token.Lexeme.Equals(lexeme, StringComparison.OrdinalIgnoreCase))
+        var t = _tokens[_pos];
+        if (t.Type != type) return false;
+        if (lexeme != null &&
+            !t.Lexeme.Equals(lexeme, StringComparison.OrdinalIgnoreCase))
             return false;
 
         _pos++;
