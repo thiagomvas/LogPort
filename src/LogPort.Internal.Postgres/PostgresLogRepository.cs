@@ -203,8 +203,6 @@ VALUES {string.Join(", ", values)};";
         await using var cmd = new NpgsqlCommand(sql.ToString(), conn);
         cmd.Parameters.AddRange(parameters.ToArray());
 
-        Console.WriteLine($"Executing SQL {sql.ToString()}");
-        
         await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
         while (await reader.ReadAsync(cancellationToken))
             results.Add(MapReader(reader));
