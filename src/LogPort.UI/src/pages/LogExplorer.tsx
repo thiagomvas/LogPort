@@ -12,8 +12,8 @@ import { paramsToQueryString, queryStringToParams } from '../lib/utils/query';
 const toInputValue = (d?: Date) =>
   d
     ? new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-      .toISOString()
-      .slice(0, 16)
+        .toISOString()
+        .slice(0, 16)
     : '';
 
 function LogExplorer() {
@@ -34,7 +34,6 @@ function LogExplorer() {
     const initialTo = new Date();
     const initialFrom = new Date(initialTo);
     initialFrom.setHours(initialTo.getHours() - 24);
-
     return {
       from: initialFrom,
       to: initialTo,
@@ -54,16 +53,20 @@ function LogExplorer() {
   const loadingRef = useRef(false);
   const pageRef = useRef(1);
 
-  // Refs for active filters used in fetching (to ensure infinite scroll uses correct query)
   const activeQueryParamsRef = useRef<LogQueryParameters>(queryParams);
   const activeAdvancedQueryRef = useRef<string>(advancedQuery);
+  const advancedRef = useRef<boolean>(advanced);
+
+  // Keep refs in sync with state
+  useEffect(() => { activeQueryParamsRef.current = queryParams; }, [queryParams]);
+  useEffect(() => { activeAdvancedQueryRef.current = advancedQuery; }, [advancedQuery]);
+  useEffect(() => { advancedRef.current = advanced; }, [advanced]);
+  useEffect(() => { pageRef.current = page; }, [page]);
 
   useEffect(() => {
     fetchLatestLogs();
     getMetadata().then(setMetadata).catch(console.error);
-    return () => {
-      wsRef.current?.close();
-    };
+    return () => { wsRef.current?.close(); };
   }, []);
 
   useEffect(() => {
@@ -83,10 +86,9 @@ function LogExplorer() {
   useEffect(() => {
     const handleScroll = () => {
       if (loadingRef.current || !hasMore) return;
-      const nearBottom =
-        window.innerHeight + window.scrollY >=
-        document.body.offsetHeight - 300;
-      if (nearBottom) fetchLogsPage();
+      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
+        fetchLogsPage();
+      }
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -99,21 +101,21 @@ function LogExplorer() {
 
     try {
       const pageNum = pageRef.current;
+      const params = { ...activeQueryParamsRef.current, page: pageNum };
       let newLogs: LogEntry[];
-      const activeParams = { ...activeQueryParamsRef.current, page: pageNum };
 
-      if (advanced && activeAdvancedQueryRef.current) {
+      if (advancedRef.current && activeAdvancedQueryRef.current) {
         console.log('Fetching advanced logs');
         newLogs = await queryLogs(
           activeAdvancedQueryRef.current,
-          activeParams.from,
-          activeParams.to,
+          params.from,
+          params.to,
           pageNum,
-          activeParams.pageSize
+          params.pageSize
         );
       } else {
-        console.log('Fetching logs');
-        newLogs = await getLogs(activeParams);
+        console.log('Fetching normal logs');
+        newLogs = await getLogs(params);
       }
 
       if (!newLogs || newLogs.length === 0) {
@@ -129,14 +131,10 @@ function LogExplorer() {
         const ts = log.timestamp ? new Date(log.timestamp) : new Date(0);
         return ts > max ? ts : max;
       }, lastUpdatedRef.current ?? new Date(0));
-
       lastUpdatedRef.current = latest;
 
       if (pageNum === 1 || pageNum % 3 === 0) {
-        const histogramData = await getHistogramData({
-          from: activeParams.from,
-          to: activeParams.to,
-        });
+        const histogramData = await getHistogramData({ from: params.from, to: params.to });
         setHistogram(histogramData);
       }
     } catch (err) {
@@ -156,7 +154,7 @@ function LogExplorer() {
       const params = { ...activeQueryParamsRef.current, page: 1 };
       let newLogs: LogEntry[];
 
-      if (advanced && activeAdvancedQueryRef.current) {
+      if (advancedRef.current && activeAdvancedQueryRef.current) {
         newLogs = await queryLogs(
           activeAdvancedQueryRef.current,
           params.from,
@@ -179,10 +177,7 @@ function LogExplorer() {
       }, lastUpdatedRef.current ?? new Date(0));
       lastUpdatedRef.current = latest;
 
-      const histogramData = await getHistogramData({
-        from: params.from,
-        to: params.to,
-      });
+      const histogramData = await getHistogramData({ from: params.from, to: params.to });
       setHistogram(histogramData);
     } catch (err) {
       console.error(err);
@@ -198,9 +193,9 @@ function LogExplorer() {
     setPage(1);
     pageRef.current = 1;
 
-    // commit current query/filter values to active refs
     activeQueryParamsRef.current = { ...queryParams };
     activeAdvancedQueryRef.current = advancedQuery;
+    advancedRef.current = advanced;
 
     fetchLatestLogs();
   };
