@@ -130,7 +130,7 @@ function LogTailPage() {
 
       ws.onerror = err => console.error('WebSocket error', err);
       ws.onclose = () =>
-        console.log('Live log tailing disconnected');
+        console.warn('Live log tailing disconnected');
     };
 
     loadRecentLogsAndTail();

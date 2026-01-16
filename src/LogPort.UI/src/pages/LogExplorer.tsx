@@ -4,7 +4,7 @@ import '../styles/logsPage.css';
 import { HistogramChart } from '../components/histogram';
 import { LogViewer } from '../components/logViewer';
 import { getHistogramData } from '../lib/services/analytics.service';
-import { getMetadata, getLogs } from '../lib/services/logs.service';
+import { getMetadata, getLogs, queryLogs } from '../lib/services/logs.service';
 import type { LogBucket } from '../lib/types/analytics';
 import type { LogEntry, LogMetadata, LogQueryParameters } from '../lib/types/log';
 import { paramsToQueryString, queryStringToParams } from '../lib/utils/query';
@@ -27,12 +27,13 @@ function LogExplorer() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [metadata, setMetadata] = useState<LogMetadata | null>(null);
+  const [advanced, setAdvanced] = useState(false);
+  const [advancedQuery, setAdvancedQuery] = useState('');
 
   const [queryParams, setQueryParams] = useState<LogQueryParameters>(() => {
     const initialTo = new Date();
     const initialFrom = new Date(initialTo);
     initialFrom.setHours(initialTo.getHours() - 24);
-
     return {
       from: initialFrom,
       to: initialTo,
@@ -47,27 +48,25 @@ function LogExplorer() {
     };
   });
 
-
   const lastUpdatedRef = useRef<Date | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const loadingRef = useRef(false);
   const pageRef = useRef(1);
-  const queryParamsRef = useRef(queryParams);
 
-  useEffect(() => {
-    queryParamsRef.current = queryParams;
-  }, [queryParams]);
+  const activeQueryParamsRef = useRef<LogQueryParameters>(queryParams);
+  const activeAdvancedQueryRef = useRef<string>(advancedQuery);
+  const advancedRef = useRef<boolean>(advanced);
+  const activeQueryModeRef = useRef<boolean>(advanced);
 
-  useEffect(() => {
-    pageRef.current = page;
-  }, [page]);
+  useEffect(() => { activeQueryParamsRef.current = queryParams; }, [queryParams]);
+  useEffect(() => { activeAdvancedQueryRef.current = advancedQuery; }, [advancedQuery]);
+  useEffect(() => { advancedRef.current = advanced; }, [advanced]);
+  useEffect(() => { pageRef.current = page; }, [page]);
 
   useEffect(() => {
     fetchLatestLogs();
     getMetadata().then(setMetadata).catch(console.error);
-    return () => {
-      wsRef.current?.close();
-    };
+    return () => { wsRef.current?.close(); };
   }, []);
 
   useEffect(() => {
@@ -84,22 +83,12 @@ function LogExplorer() {
     queryParams.environment,
   ]);
 
-
-  useEffect(() => {
-    setLogs([]);
-    setHasMore(true);
-    setPage(1);
-    pageRef.current = 1;
-    fetchLatestLogs();
-  }, [queryParams.from, queryParams.to]);
-
   useEffect(() => {
     const handleScroll = () => {
       if (loadingRef.current || !hasMore) {return;}
-      const nearBottom =
-        window.innerHeight + window.scrollY >=
-        document.body.offsetHeight - 300;
-      if (nearBottom) {fetchLogsPage();}
+      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
+        fetchLogsPage();
+      }
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -111,12 +100,22 @@ function LogExplorer() {
     setLoading(true);
 
     try {
-      const params: LogQueryParameters = {
-        ...queryParamsRef.current,
-        page: pageRef.current,
-      };
+      const pageNum = pageRef.current;
+      const params = { ...activeQueryParamsRef.current, page: pageNum };
+      let newLogs: LogEntry[];
 
-      const newLogs = await getLogs(params);
+      if (activeQueryModeRef.current && activeAdvancedQueryRef.current) {
+        newLogs = await queryLogs(
+          activeAdvancedQueryRef.current,
+          params.from,
+          params.to,
+          pageNum,
+          params.pageSize
+        );
+      } else {
+        newLogs = await getLogs(params);
+      }
+
       if (!newLogs || newLogs.length === 0) {
         setHasMore(false);
         return;
@@ -124,19 +123,16 @@ function LogExplorer() {
 
       setLogs(prev => [...prev, ...newLogs]);
       setPage(prev => prev + 1);
+      pageRef.current = pageNum + 1;
 
       const latest = newLogs.reduce((max, log) => {
         const ts = log.timestamp ? new Date(log.timestamp) : new Date(0);
         return ts > max ? ts : max;
       }, lastUpdatedRef.current ?? new Date(0));
-
       lastUpdatedRef.current = latest;
 
-      if (pageRef.current === 1 || pageRef.current % 3 === 0) {
-        const histogramData = await getHistogramData({
-          from: queryParamsRef.current.from,
-          to: queryParamsRef.current.to,
-        });
+      if (pageNum === 1 || pageNum % 3 === 0) {
+        const histogramData = await getHistogramData({ from: params.from, to: params.to });
         setHistogram(histogramData);
       }
     } catch (err) {
@@ -153,12 +149,21 @@ function LogExplorer() {
     setLoading(true);
 
     try {
-      const params: LogQueryParameters = {
-        ...queryParamsRef.current,
-        page: 1,
-      };
+      const params = { ...activeQueryParamsRef.current, page: 1 };
+      let newLogs: LogEntry[];
 
-      const newLogs = await getLogs(params);
+      if (activeQueryModeRef.current && activeAdvancedQueryRef.current) {
+        newLogs = await queryLogs(
+          activeAdvancedQueryRef.current,
+          params.from,
+          params.to,
+          1,
+          params.pageSize
+        );
+      } else {
+        newLogs = await getLogs(params);
+      }
+
       setLogs(newLogs);
       setPage(2);
       pageRef.current = 2;
@@ -168,13 +173,9 @@ function LogExplorer() {
         const ts = log.timestamp ? new Date(log.timestamp) : new Date(0);
         return ts > max ? ts : max;
       }, lastUpdatedRef.current ?? new Date(0));
-
       lastUpdatedRef.current = latest;
 
-      const histogramData = await getHistogramData({
-        from: queryParamsRef.current.from,
-        to: queryParamsRef.current.to,
-      });
+      const histogramData = await getHistogramData({ from: params.from, to: params.to });
       setHistogram(histogramData);
     } catch (err) {
       console.error(err);
@@ -189,12 +190,101 @@ function LogExplorer() {
     setHasMore(true);
     setPage(1);
     pageRef.current = 1;
+
+    activeQueryParamsRef.current = { ...queryParams };
+    activeAdvancedQueryRef.current = advancedQuery;
+    advancedRef.current = advanced;
+    activeQueryModeRef.current = advanced;
+
     fetchLatestLogs();
   };
 
   return (
     <div className="logs-page">
       <div className="filter-bar">
+        {!advanced && (
+          <>
+            <input
+              type="text"
+              placeholder="Search logs..."
+              value={queryParams.search || ''}
+              onChange={e =>
+                setQueryParams(p => ({ ...p, search: e.target.value }))
+              }
+            />
+
+            <select
+              value={queryParams.level || ''}
+              onChange={e =>
+                setQueryParams(p => ({ ...p, level: e.target.value }))
+              }
+            >
+              <option value="">All Levels</option>
+              {metadata?.logLevels?.map((lvl, i) => (
+                <option key={i} value={lvl ?? ''}>
+                  {lvl ?? '(null)'}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={queryParams.serviceName || ''}
+              onChange={e =>
+                setQueryParams(p => ({ ...p, serviceName: e.target.value }))
+              }
+            >
+              <option value="">All Services</option>
+              {metadata?.services?.map((s, i) => (
+                <option key={i} value={s ?? ''}>
+                  {s ?? '(null)'}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={queryParams.hostname || ''}
+              onChange={e =>
+                setQueryParams(p => ({ ...p, hostname: e.target.value }))
+              }
+            >
+              <option value="">All Hosts</option>
+              {metadata?.hostnames?.map((h, i) => (
+                <option key={i} value={h ?? ''}>
+                  {h ?? '(null)'}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={queryParams.environment || ''}
+              onChange={e =>
+                setQueryParams(p => ({ ...p, environment: e.target.value }))
+              }
+            >
+              <option value="">All Environments</option>
+              {metadata?.environments?.map((env, i) => (
+                <option key={i} value={env ?? ''}>
+                  {env ?? '(null)'}
+                </option>
+              ))}
+            </select>
+          </>
+        )}
+
+        {advanced && (
+          <>
+            <input
+              placeholder="Enter advanced query..."
+              value={advancedQuery}
+              onChange={e => setAdvancedQuery(e.target.value)}
+              style={{ width: '100%', marginBottom: 8 }}
+              onKeyDown={e => {
+                if (e.key === 'Enter') {applyFilters();}
+              }}
+            />
+          </>
+        )}
+
         <input
           type="datetime-local"
           value={toInputValue(queryParams.from)}
@@ -205,7 +295,6 @@ function LogExplorer() {
             }))
           }
         />
-
         <input
           type="datetime-local"
           value={toInputValue(queryParams.to)}
@@ -217,72 +306,7 @@ function LogExplorer() {
           }
         />
 
-        <input
-          type="text"
-          placeholder="Search logs..."
-          value={queryParams.search || ''}
-          onChange={e =>
-            setQueryParams(p => ({ ...p, search: e.target.value }))
-          }
-        />
-
-        <select
-          value={queryParams.level || ''}
-          onChange={e =>
-            setQueryParams(p => ({ ...p, level: e.target.value }))
-          }
-        >
-          <option value="">All Levels</option>
-          {metadata?.logLevels?.map((lvl, i) => (
-            <option key={i} value={lvl ?? ''}>
-              {lvl ?? '(null)'}
-            </option>
-          ))}
-        </select>
-
-        <select
-          value={queryParams.serviceName || ''}
-          onChange={e =>
-            setQueryParams(p => ({ ...p, serviceName: e.target.value }))
-          }
-        >
-          <option value="">All Services</option>
-          {metadata?.services?.map((s, i) => (
-            <option key={i} value={s ?? ''}>
-              {s ?? '(null)'}
-            </option>
-          ))}
-        </select>
-
-        <select
-          value={queryParams.hostname || ''}
-          onChange={e =>
-            setQueryParams(p => ({ ...p, hostname: e.target.value }))
-          }
-        >
-          <option value="">All Hosts</option>
-          {metadata?.hostnames?.map((h, i) => (
-            <option key={i} value={h ?? ''}>
-              {h ?? '(null)'}
-            </option>
-          ))}
-        </select>
-
-        <select
-          value={queryParams.environment || ''}
-          onChange={e =>
-            setQueryParams(p => ({ ...p, environment: e.target.value }))
-          }
-        >
-          <option value="">All Environments</option>
-          {metadata?.environments?.map((env, i) => (
-            <option key={i} value={env ?? ''}>
-              {env ?? '(null)'}
-            </option>
-          ))}
-        </select>
-
-        <button onClick={applyFilters} disabled={loading}>
+        <button onClick={applyFilters} disabled={loading} >
           Apply Filters
         </button>
       </div>
@@ -294,6 +318,12 @@ function LogExplorer() {
           disabled={loading}
         >
           {loading ? 'Refreshing...' : '↻ Fetch Latest Logs'}
+        </button>
+        <button
+          className="btn btn-secondary"
+          onClick={() => setAdvanced(prev => !prev)}
+        >
+          {advanced ? 'Switch to Basic' : 'Switch to Advanced'}
         </button>
       </div>
 

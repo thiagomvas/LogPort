@@ -7,6 +7,24 @@ export async function getLogs(params: LogQueryParameters): Promise<LogEntry[]> {
   
   return result.map(normalizeLog);
 }
+
+export async function queryLogs(query: string, from?: Date, to?: Date, page: number = 1, pageSize: number = 100): Promise<LogEntry[]> {
+  const qs = new URLSearchParams();
+  qs.set('query', query);
+  qs.set('page', page.toString());
+  qs.set('pageSize', pageSize.toString());
+  
+  if (from) {
+    qs.set('from', from.toISOString());
+  }
+
+  if (to) {
+    qs.set('to', to.toISOString());
+  }
+  
+  const result = await baseFetch<any[]>(`/api/logs/query?${qs.toString()}`);
+  return result.map(normalizeLog);
+}
   
 export function normalizeLog(log: Record<string, any>): LogEntry {
   return {
