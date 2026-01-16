@@ -12,8 +12,8 @@ import { paramsToQueryString, queryStringToParams } from '../lib/utils/query';
 const toInputValue = (d?: Date) =>
   d
     ? new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-        .toISOString()
-        .slice(0, 16)
+      .toISOString()
+      .slice(0, 16)
     : '';
 
 function LogExplorer() {
@@ -284,6 +284,9 @@ function LogExplorer() {
               value={advancedQuery}
               onChange={e => setAdvancedQuery(e.target.value)}
               style={{ width: '100%', marginBottom: 8 }}
+              onKeyDown={e => {
+                if (e.key === 'Enter') applyFilters();
+              }}
             />
           </>
         )}
@@ -309,7 +312,7 @@ function LogExplorer() {
           }
         />
 
-        <button onClick={applyFilters} disabled={loading}>
+        <button onClick={applyFilters} disabled={loading} >
           Apply Filters
         </button>
       </div>
