@@ -45,7 +45,6 @@ function DashboardPage() {
   const errors = meta.logCountByLevel?.Error ?? 0;
   const topService = topEntry(meta.logCountByService);
   const topEnv = topEntry(meta.logCountByEnvironment);
-  const topHost = topEntry(meta.logCountByHostname);
 
   return (
     <div className="dashboard-page">

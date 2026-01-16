@@ -1,5 +1,6 @@
-using LogPort.Core.Models;
 using System.Text;
+
+using LogPort.Core.Models;
 
 namespace LogPort.Internal.DSL;
 

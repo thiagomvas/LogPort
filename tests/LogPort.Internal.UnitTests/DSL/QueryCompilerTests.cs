@@ -1,5 +1,6 @@
-using NUnit.Framework;
 using LogPort.Internal.DSL;
+
+using NUnit.Framework;
 
 namespace LogPort.Internal.UnitTests.DSL;
 

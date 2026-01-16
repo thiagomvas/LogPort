@@ -46,7 +46,7 @@ public sealed class SqlWhereBuilder
             "and" => $"({left} AND {right})",
             "or" => $"({left} OR {right})",
             "contains" => $"{left} LIKE {right}",
-            _ => $"{left} {b.Operator} {right}" 
+            _ => $"{left} {b.Operator} {right}"
         };
     }
 
@@ -58,7 +58,7 @@ public sealed class SqlWhereBuilder
         if (string.Equals(op, "contains", StringComparison.OrdinalIgnoreCase) && value is string s)
             _parameters[name] = $"%{s}%";
         else
-            _parameters[name] = value!; 
+            _parameters[name] = value!;
 
         return name;
     }

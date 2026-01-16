@@ -12,8 +12,8 @@ import { paramsToQueryString, queryStringToParams } from '../lib/utils/query';
 const toInputValue = (d?: Date) =>
   d
     ? new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-        .toISOString()
-        .slice(0, 16)
+      .toISOString()
+      .slice(0, 16)
     : '';
 
 function LogExplorer() {
@@ -85,7 +85,7 @@ function LogExplorer() {
 
   useEffect(() => {
     const handleScroll = () => {
-      if (loadingRef.current || !hasMore) return;
+      if (loadingRef.current || !hasMore) {return;}
       if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
         fetchLogsPage();
       }
@@ -95,7 +95,7 @@ function LogExplorer() {
   }, [hasMore]);
 
   const fetchLogsPage = async () => {
-    if (loadingRef.current) return;
+    if (loadingRef.current) {return;}
     loadingRef.current = true;
     setLoading(true);
 
@@ -105,7 +105,6 @@ function LogExplorer() {
       let newLogs: LogEntry[];
 
       if (activeQueryModeRef.current && activeAdvancedQueryRef.current) {
-        console.log('Fetching advanced logs');
         newLogs = await queryLogs(
           activeAdvancedQueryRef.current,
           params.from,
@@ -114,7 +113,6 @@ function LogExplorer() {
           params.pageSize
         );
       } else {
-        console.log('Fetching normal logs');
         newLogs = await getLogs(params);
       }
 
@@ -146,7 +144,7 @@ function LogExplorer() {
   };
 
   const fetchLatestLogs = async () => {
-    if (loadingRef.current) return;
+    if (loadingRef.current) {return;}
     loadingRef.current = true;
     setLoading(true);
 
@@ -281,7 +279,7 @@ function LogExplorer() {
               onChange={e => setAdvancedQuery(e.target.value)}
               style={{ width: '100%', marginBottom: 8 }}
               onKeyDown={e => {
-                if (e.key === 'Enter') applyFilters();
+                if (e.key === 'Enter') {applyFilters();}
               }}
             />
           </>

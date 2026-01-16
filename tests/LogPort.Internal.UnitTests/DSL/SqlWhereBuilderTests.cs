@@ -1,6 +1,8 @@
-using NUnit.Framework;
 using LogPort.Internal.DSL;
-namespace  LogPort.Internal.UnitTests.DSL;
+
+using NUnit.Framework;
+namespace LogPort.Internal.UnitTests.DSL;
+
 [TestFixture]
 public sealed class SqlWhereBuilderTests
 {
