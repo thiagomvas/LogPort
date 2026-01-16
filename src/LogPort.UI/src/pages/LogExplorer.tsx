@@ -56,8 +56,8 @@ function LogExplorer() {
   const activeQueryParamsRef = useRef<LogQueryParameters>(queryParams);
   const activeAdvancedQueryRef = useRef<string>(advancedQuery);
   const advancedRef = useRef<boolean>(advanced);
+  const activeQueryModeRef = useRef<boolean>(advanced);
 
-  // Keep refs in sync with state
   useEffect(() => { activeQueryParamsRef.current = queryParams; }, [queryParams]);
   useEffect(() => { activeAdvancedQueryRef.current = advancedQuery; }, [advancedQuery]);
   useEffect(() => { advancedRef.current = advanced; }, [advanced]);
@@ -104,7 +104,7 @@ function LogExplorer() {
       const params = { ...activeQueryParamsRef.current, page: pageNum };
       let newLogs: LogEntry[];
 
-      if (advancedRef.current && activeAdvancedQueryRef.current) {
+      if (activeQueryModeRef.current && activeAdvancedQueryRef.current) {
         console.log('Fetching advanced logs');
         newLogs = await queryLogs(
           activeAdvancedQueryRef.current,
@@ -154,7 +154,7 @@ function LogExplorer() {
       const params = { ...activeQueryParamsRef.current, page: 1 };
       let newLogs: LogEntry[];
 
-      if (advancedRef.current && activeAdvancedQueryRef.current) {
+      if (activeQueryModeRef.current && activeAdvancedQueryRef.current) {
         newLogs = await queryLogs(
           activeAdvancedQueryRef.current,
           params.from,
@@ -196,6 +196,7 @@ function LogExplorer() {
     activeQueryParamsRef.current = { ...queryParams };
     activeAdvancedQueryRef.current = advancedQuery;
     advancedRef.current = advanced;
+    activeQueryModeRef.current = advanced;
 
     fetchLatestLogs();
   };
