@@ -13,7 +13,6 @@ function DashboardPage() {
   const [range, setRange] = useState<TimeRange | null>(null);
   const [liveMetrics, setLiveMetrics] = useState<MetricSnapshot | null>(null);
 
-  // --- Fetch log metadata ---
   useEffect(() => {
     const to = range?.to ?? new Date();
     const from =
@@ -91,7 +90,6 @@ function DashboardPage() {
         </div>
       </section>
 
-      {/* --- Actions --- */}
       <div className="dashboard-actions">
         <a href="/logs/tail" className="btn btn-primary">Live Tail</a>
         <a href="/logs" className="btn">Explore Logs</a>
@@ -101,7 +99,6 @@ function DashboardPage() {
   );
 }
 
-// ---------------- COMPONENTS ----------------
 function Stat({ title, value, intent }: any) {
   return (
     <div className={`stat-card ${intent ?? ''}`}>
@@ -129,7 +126,6 @@ function KeyValueBars({ data, limit = 10 }: { data: Record<string, number>; limi
   );
 }
 
-// ---------------- HELPERS ----------------
 const topEntry = (map: Record<string, number>) => Object.entries(map).sort((a, b) => b[1] - a[1])[0];
 const percentage = (part: number, total: number) => (total === 0 ? 0 : Math.round((part / total) * 100));
 
