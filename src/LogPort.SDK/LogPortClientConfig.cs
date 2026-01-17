@@ -60,7 +60,6 @@ public sealed class LogPortClientConfig
         }
 
         config.ApiSecret = System.Environment.GetEnvironmentVariable("LOGPORT_SECRET") ?? string.Empty;
-        ArgumentException.ThrowIfNullOrWhiteSpace(config.ApiSecret, nameof(config.ApiSecret));
 
         config.ServiceName = System.Environment.GetEnvironmentVariable("LOGPORT_SERVICE_NAME");
 

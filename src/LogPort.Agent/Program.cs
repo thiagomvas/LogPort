@@ -97,6 +97,15 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 
 app.UseWebSockets();
+app.Use(async (context, next) =>
+{
+    if (context.WebSockets.IsWebSocketRequest)
+    {
+        context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+    }
+    await next();
+});
+
 
 if (isAgent)
     app.MapAgentEndpoints();
