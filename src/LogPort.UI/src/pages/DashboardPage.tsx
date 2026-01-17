@@ -8,6 +8,8 @@ import { fetchLiveMetrics } from '../lib/services/metrics.service';
 import TimeRangeDropdown from '../components/timeRangeDropdown';
 import MetricCard from '../components/metricCard';
 import { formatDateTime, timeAgo } from '../lib/utils/date';
+import Stat from '../components/stat';
+import KeyValueBars from '../components/keyValueBars';
 
 function DashboardPage() {
   const [meta, setMeta] = useState<LogMetadata | null>(null);
@@ -149,35 +151,6 @@ function DashboardPage() {
   );
 }
 
-
-function Stat({ title, value, intent, subtitle }: any) {
-  return (
-    <div className={`stat-card ${intent ?? ''}`}>
-      <span className="stat-title">{title}</span>
-      <span className="stat-value">{value}</span>
-      <span className="stat-subtitle">{subtitle}</span>
-    </div>
-  );
-}
-
-function KeyValueBars({ data, limit = 10 }: { data: Record<string, number>; limit?: number }) {
-  const entries = Object.entries(data).sort((a, b) => b[1] - a[1]).slice(0, limit);
-  const max = Math.max(...entries.map(e => e[1]), 1);
-  const sum = entries.reduce((acc, [, v]) => acc + v, 0);
-  return (
-    <div className="kv-bars">
-      {entries.map(([key, value]) => (
-        <div key={key} className="kv-row">
-          <span>{key || '(null)'}</span>
-          <div className="bar">
-            <div className="fill" style={{ width: `${(value / sum) * 100}%` }} />
-          </div>
-          <span>{value}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 const topEntry = (map: Record<string, number>) => Object.entries(map).sort((a, b) => b[1] - a[1])[0];
 const percentage = (part: number, total: number) => (total === 0 ? 0 : Math.round((part / total) * 100));
