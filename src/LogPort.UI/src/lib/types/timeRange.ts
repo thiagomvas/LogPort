@@ -3,7 +3,6 @@ export type TimeRange = {
     to: Date;
 }
 
-
 export type PresetValue =
   | "5m"
   | "15m"

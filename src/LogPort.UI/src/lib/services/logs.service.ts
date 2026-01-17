@@ -79,3 +79,14 @@ export function getMetadata(
 
   return baseFetch<LogMetadata>(url);
 }
+
+
+export async function getErrorLogs(from: Date, to: Date): Promise<LogEntry[]> {
+  const queryParams: LogQueryParameters = {
+    from,
+    to,
+    level: 'Error',
+    pageSize: 100,
+  };
+  return getLogs(queryParams);
+};
