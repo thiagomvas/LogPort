@@ -10,6 +10,7 @@ import MetricCard from '../components/metricCard';
 import { formatDateTime, timeAgo } from '../lib/utils/date';
 import Stat from '../components/stat';
 import KeyValueBars from '../components/keyValueBars';
+import { LineGraph } from '../components/graphs/line';
 
 function DashboardPage() {
   const [meta, setMeta] = useState<LogMetadata | null>(null);
@@ -87,38 +88,36 @@ function DashboardPage() {
           <KeyValueBars data={meta.logCountByService} limit={5} />
         </section>
       </div>
-<section>
-  <h3>Recent Errors</h3>
+      <section>
+        <h3>Recent Errors</h3>
 
-  <div className="error-feed">
-    {recentErrors.length === 0 ? (
-      <div className="empty-state">No errors in selected time range</div>
-    ) : (
-      recentErrors.slice(0, 20).map((err, idx) => (
-        <div key={idx} className="error-card">
-          <div className="error-card-header">
-            <span className="error-level">{err.level ?? 'Error'}</span>
-            <span className="error-time">
-              {err.timestamp ? timeAgo(err.timestamp) : ''}
-            </span>
-          </div>
+        <div className="error-feed">
+          {recentErrors.length === 0 ? (
+            <div className="empty-state">No errors in selected time range</div>
+          ) : (
+            recentErrors.slice(0, 20).map((err, idx) => (
+              <div key={idx} className="error-card">
+                <div className="error-card-header">
+                  <span className="error-level">{err.level ?? 'Error'}</span>
+                  <span className="error-time">
+                    {err.timestamp ? timeAgo(err.timestamp) : ''}
+                  </span>
+                </div>
 
-          <div className="error-message">
-            {err.message ?? '(no message)'}
-          </div>
+                <div className="error-message">
+                  {err.message ?? '(no message)'}
+                </div>
 
-          <div className="error-meta">
-            <span>{err.serviceName ?? 'unknown service'}</span>
-            <span>{err.hostname ?? 'unknown host'}</span>
-            <span>{err.environment ?? 'unknown env'}</span>
-          </div>
+                <div className="error-meta">
+                  <span>{err.serviceName ?? 'unknown service'}</span>
+                  <span>{err.hostname ?? 'unknown host'}</span>
+                  <span>{err.environment ?? 'unknown env'}</span>
+                </div>
+              </div>
+            ))
+          )}
         </div>
-      ))
-    )}
-  </div>
-</section>
-
-
+      </section>
 
       <section>
         <h3>Top Hosts</h3>
