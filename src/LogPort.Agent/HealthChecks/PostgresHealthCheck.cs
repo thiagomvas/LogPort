@@ -26,7 +26,6 @@ public class PostgresHealthCheck : IHealthCheck
             await using var conn = new NpgsqlConnection(_connectionString);
             await conn.OpenAsync(cancellationToken);
 
-            // Lightweight query to ensure DB is responsive
             await using var cmd = new NpgsqlCommand("SELECT 1", conn);
             await cmd.ExecuteScalarAsync(cancellationToken);
 

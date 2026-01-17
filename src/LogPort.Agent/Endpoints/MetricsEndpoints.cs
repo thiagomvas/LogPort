@@ -9,9 +9,9 @@ public static class MetricsEndpoints
         app.MapGet("api/metrics", GetMetricsSnapshotAsync);
     }
 
-    private static async Task<IResult> GetMetricsSnapshotAsync(MetricStore metrics)
+    private static Task<IResult> GetMetricsSnapshotAsync(MetricStore metrics)
     {
         var snapshot = metrics.Snapshot();
-        return Results.Ok(snapshot);
+        return Task.FromResult(Results.Ok(snapshot));
     }
 }

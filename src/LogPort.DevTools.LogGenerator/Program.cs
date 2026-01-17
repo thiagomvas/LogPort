@@ -63,12 +63,10 @@ while (true)
     }
     else if (!string.IsNullOrWhiteSpace(line))
     {
-        // Manual log
         client.Log("INFO", line);
     }
     else
     {
-        // Generate a single random log
         var level = levels[random.Next(levels.Length)];
         var service = services[random.Next(services.Length)];
         var message = predefinedMessages[random.Next(predefinedMessages.Length)];

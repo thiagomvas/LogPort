@@ -90,12 +90,12 @@ public static class SocketEndpoints
             while (!context.RequestAborted.IsCancellationRequested && socket.State == System.Net.WebSockets.WebSocketState.Open)
             {
                 var result = await socket.ReceiveAsync(buffer, context.RequestAborted);
-                if (result.MessageType == System.Net.WebSockets.WebSocketMessageType.Close)
-                {
-                    await socket.CloseAsync(System.Net.WebSockets.WebSocketCloseStatus.NormalClosure, "Closing",
-                        context.RequestAborted);
-                    break;
-                }
+                if (result.MessageType != System.Net.WebSockets.WebSocketMessageType.Close)
+                    continue;
+
+                await socket.CloseAsync(System.Net.WebSockets.WebSocketCloseStatus.NormalClosure, "Closing",
+                    context.RequestAborted);
+                break;
             }
 
             manager.RemoveSocket(socket);
