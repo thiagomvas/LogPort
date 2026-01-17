@@ -5,6 +5,10 @@ using LogPort.Core.Models;
 
 namespace LogPort.SDK.Filters;
 
+/// <summary>
+/// Log level filter that performs probabilistic sampling of log entries.
+/// Sampling rates can be configured per log level, with optional deterministic behavior.
+/// </summary>
 public sealed class SamplingLogLevelFilter : ILogLevelFilter
 {
     private readonly Dictionary<string, double> _rates;
@@ -20,16 +24,28 @@ public sealed class SamplingLogLevelFilter : ILogLevelFilter
         _deterministic = deterministic;
     }
 
+    /// <summary>
+    /// Sets the sampling rate for a specific log level.
+    /// </summary>
+    /// <param name="level">The log level to configure.</param>
+    /// <param name="rate">
+    /// Sampling probability between 0.0 and 1.0.
+    /// </param>
     public void SetRate(string level, double rate)
     {
         _rates[level] = rate;
     }
-
+    /// <summary>
+    /// Sets the default sampling rate used when no level-specific rate is defined.
+    /// </summary>
+    /// <param name="rate">
+    /// Sampling probability between 0.0 and 1.0.
+    /// </param>
     public void SetDefaultRate(double rate)
     {
         _defaultRate = rate;
     }
-
+    /// <inheritdoc />
     public bool ShouldSend(LogEntry entry)
     {
         if (_rates.TryGetValue(entry.Level, out var rate))
