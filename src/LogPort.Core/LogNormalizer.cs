@@ -4,6 +4,9 @@ using System.Text.RegularExpressions;
 
 namespace LogPort.Core;
 
+/// <summary>
+/// Provides functionality for normalizing log messages and log levels, enabling grouping, pattern detection, and aggregation.
+/// </summary>
 public sealed partial class LogNormalizer
 {
     private static readonly SHA256 _sha256 = SHA256.Create();
@@ -16,7 +19,11 @@ public sealed partial class LogNormalizer
     public const string DebugLevel = "Debug";
     public const string TraceLevel = "Trace";
     public const string NoneLevel = "None";
-
+    
+    /// <summary>
+    /// Maps various textual representations of log levels to normalized levels.
+    /// The mapping is case-insensitive and cached for performance.
+    /// </summary>
     private readonly ConcurrentDictionary<string, string> _levelMapping = new(StringComparer.OrdinalIgnoreCase)
     {
         ["trace"] = TraceLevel,
@@ -34,6 +41,16 @@ public sealed partial class LogNormalizer
         ["panic"] = FatalLevel
     };
 
+    /// <summary>
+    /// Normalizes a log message by replacing variable values with placeholders
+    /// and removing commonly changing elements such as timestamps, GUIDs,
+    /// file paths, and numbers.
+    /// </summary>
+    /// <param name="message">The original log message.</param>
+    /// <param name="metadata">
+    /// Optional metadata whose values will be replaced by named placeholders.
+    /// </param>
+    /// <returns>The normalized log message.</returns>
     public string NormalizeMessage(string message, Dictionary<string, object>? metadata = null)
     {
         string result = message ?? string.Empty;
@@ -53,6 +70,13 @@ public sealed partial class LogNormalizer
         return result;
     }
 
+    
+    /// <summary>
+    /// Computes a deterministic hash for a normalized log pattern.
+    /// Used for fast comparisons and grouping.
+    /// </summary>
+    /// <param name="text">The normalized message text.</param>
+    /// <returns>An unsigned 64-bit hash value.</returns>
     public static ulong ComputePatternHash(string text)
     {
         const ulong offset = 14695981039346656037;
@@ -68,7 +92,11 @@ public sealed partial class LogNormalizer
         return hash;
     }
 
-
+    /// <summary>
+    /// Normalizes a raw log level string into a known canonical level.
+    /// </summary>
+    /// <param name="level">The raw log level value.</param>
+    /// <returns>A normalized log level.</returns>
     public string NormalizeLevel(string level)
     {
         if (string.IsNullOrWhiteSpace(level))
