@@ -4,6 +4,7 @@ using System.Text;
 
 using LogPort.Internal.Configuration;
 using LogPort.Internal.Services;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 
