@@ -72,7 +72,7 @@ function DashboardPage() {
       <div className="stat-grid">
         <Stat title="Total Logs" value={total} subtitle={`${formatDateTime(range?.from ?? oneDayAgo)} to ${formatDateTime(range?.to ?? now)}`} />
         <Stat title="Error Rate" value={`${percentage(errors, total)}%`} intent="danger" subtitle={`${formatDateTime(range?.from ?? oneDayAgo)} to ${formatDateTime(range?.to ?? now)}`} />
-        <Stat title="Throughput" value={`${liveMetrics.counters["logs.processed"].last10s / 10}/sec`} subtitle="Current throughput" />
+        <Stat title="Throughput" value={`${(liveMetrics.counters?.["logs.processed"]?.last10s ?? 0) / 10}/sec`} subtitle="Current throughput" />
       </div>
 
       <div className='stat-grid'>
