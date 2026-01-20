@@ -1,0 +1,37 @@
+{
+  "Postgres": {
+    "Use": true,
+    "Host": "localhost",
+    "Port": 5432,
+    "Database": "logport",
+    "Username": "postgres",
+    "Password": "postgres",
+    "PartitionLength": 1
+  },
+  "Docker": {
+    "Use": false,
+    "SocketPath": "unix:///var/run/docker.sock",
+    "WatchAllContainers": false
+  },
+  "Cache": {
+    "UseRedis": false,
+    "RedisConnectionString": null,
+    "DefaultExpiration": "00:10:00"
+  },
+  "Metrics": {
+    "BucketDuration": "00:00:10",
+    "MaxWindow": "00:15:00"
+  },
+  "Port": 8080,
+  "UpstreamUrl": null,
+  "BatchSize": 100,
+  "FlushIntervalMs": 250,
+  "AdminLogin": "admin",
+  "AdminPassword": "admin",
+  "ApiSecret": "58924d5585f94805a7b1a21d1bb0de1e",
+  "Extractors": [],
+  "FileTails": [],
+  "Mode": 0,
+  "JwtSecret": "dnjgopnsfnosnfodnfosngsogndonbl\u00E7xdnflnkdlnaksfnksdnjfksjfksdnjfksjnfjsndfdnjsfsdfs",
+  "JwtIssuer": "Softeam-LogPort"
+}

@@ -11,6 +11,7 @@ public static class PatternEndpoints
             .WithTags("Patterns");
 
         group.MapGet("/", GetPatterns)
+            .RequireAuthorization()
             .WithName("GetPatterns")
             .WithSummary("Retrieve log patterns")
             .WithDescription("Retrieves a list of log patterns stored in the system.")

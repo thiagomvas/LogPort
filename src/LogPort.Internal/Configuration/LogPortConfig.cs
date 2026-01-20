@@ -81,6 +81,9 @@ public class LogPortConfig
     /// </summary>
     public LogMode Mode { get; set; } = LogMode.Agent;
 
+    public string JwtSecret { get; set; } = "";
+    public string JwtIssuer { get; set; } = "";
+
     private static bool GetEnvBool(string key, bool defaultValue = false)
     {
         return bool.TryParse(Environment.GetEnvironmentVariable(key), out var val) ? val : defaultValue;
