@@ -4,23 +4,35 @@ const API_BASE_URL = agentUrl
   ? `${useSsl ? 'https' : 'http'}://${agentUrl}`
   : `${window.location.origin}`;
 
-const DEV_USER = import.meta.env.LOGPORT_USER || 'admin';
-const DEV_PASS = import.meta.env.LOGPORT_PASS || 'changeme';
+export async function login(username: string, password: string) {
+  const data = await baseFetch<{ token: string }>('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ username, password })
+  });
 
-export async function baseFetch<T>(
-  endpoint: string,
-  options: RequestInit = {}
-): Promise<T> {
+  sessionStorage.setItem('jwtToken', data.token);
+  return data.token;
+}
+
+export async function baseFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
+  const token = sessionStorage.getItem('jwtToken');
 
-  const headers = new Headers(options.headers);
+  // Use Record<string, string> so TypeScript knows we can index with strings
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string> | undefined)
+  };
 
-  if (!headers.has('Authorization') && DEV_USER && DEV_PASS) {
-    const encoded = btoa(`${DEV_USER}:${DEV_PASS}`);
-    headers.set('Authorization', `Basic ${encoded}`);
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(url, { ...options, headers });
+  const response = await fetch(url, {
+    ...options,
+    headers,
+    credentials: 'include'
+  });
 
   if (!response.ok) {
     const text = await response.text();

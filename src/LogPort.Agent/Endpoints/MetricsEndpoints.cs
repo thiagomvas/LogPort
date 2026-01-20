@@ -6,7 +6,8 @@ public static class MetricsEndpoints
 {
     public static void MapMetricsEndpoints(this WebApplication app)
     {
-        app.MapGet("api/metrics", GetMetricsSnapshotAsync);
+        app.MapGet("api/metrics", GetMetricsSnapshotAsync)
+            .RequireAuthorization();
     }
 
     private static Task<IResult> GetMetricsSnapshotAsync(MetricStore metrics)

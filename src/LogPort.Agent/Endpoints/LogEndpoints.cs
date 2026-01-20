@@ -17,12 +17,17 @@ public static class LogEndpoints
 {
     public static void MapLogEndpoints(this WebApplication app)
     {
-        app.MapPost("api/logs", AddLogAsync);
+        app.MapPost("api/logs", AddLogAsync)
+            .RequireAuthorization();
 
-        app.MapGet("api/logs", GetLogsAsync);
-        app.MapGet("api/logs/count", CountLogsAsync);
-        app.MapGet("api/logs/metadata", GetLogMetadataAsync);
-        app.MapGet("api/logs/query", QueryLogsAsync);
+        app.MapGet("api/logs", GetLogsAsync)
+            .RequireAuthorization();
+        app.MapGet("api/logs/count", CountLogsAsync)
+            .RequireAuthorization();
+        app.MapGet("api/logs/metadata", GetLogMetadataAsync)
+            .RequireAuthorization();
+        app.MapGet("api/logs/query", QueryLogsAsync)
+            .RequireAuthorization();
     }
 
     private static async Task<IResult> AddLogAsync(LogService logRepository, LogEntry log)

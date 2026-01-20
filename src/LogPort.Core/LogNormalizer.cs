@@ -19,7 +19,7 @@ public sealed partial class LogNormalizer
     public const string DebugLevel = "Debug";
     public const string TraceLevel = "Trace";
     public const string NoneLevel = "None";
-    
+
     /// <summary>
     /// Maps various textual representations of log levels to normalized levels.
     /// The mapping is case-insensitive and cached for performance.
@@ -70,7 +70,7 @@ public sealed partial class LogNormalizer
         return result;
     }
 
-    
+
     /// <summary>
     /// Computes a deterministic hash for a normalized log pattern.
     /// Used for fast comparisons and grouping.

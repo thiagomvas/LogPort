@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 
 using Docker.DotNet;
@@ -14,10 +15,14 @@ using LogPort.Internal.Configuration;
 using LogPort.Internal.Docker;
 using LogPort.Internal.Metrics;
 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.WebSockets;
+using Microsoft.IdentityModel.Tokens;
+
 
 using WebSocketManager = LogPort.Internal.Services.WebSocketManager;
+
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
@@ -52,6 +57,32 @@ if (logPortConfig.Docker.Use)
     builder.Services.AddHostedService<DockerLogService>();
 }
 
+
+
+var jwtKey = logPortConfig.JwtSecret;
+var jwtIssuer = logPortConfig.JwtIssuer ?? "LogPort";
+
+builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = false,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtIssuer,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ClockSkew = TimeSpan.Zero
+        };
+    })
+;
+builder.Services.AddAuthorization();
+
 builder.Services.AddSingleton<LogQueue>();
 builder.Services.AddHostedService<LogBatchProcessor>();
 builder.Services.AddSingleton<WebSocketManager>();
@@ -66,11 +97,10 @@ if (logPortConfig.Mode is LogMode.Relay)
     await app.UseLogPortAsync();
 
 app.UseCors("AllowAll");
+app.MapAuthEndpoints(logPortConfig);
+app.UseAuthentication();
+app.UseAuthorization();
 
-app.UseWhen(
-    ctx => !ctx.Request.Path.StartsWithSegments("/agent"),
-    branch => branch.UseMiddleware<BasicAuthMiddleware>()
-);
 
 if (!string.IsNullOrWhiteSpace(logPortConfig.ApiSecret))
 {
@@ -97,6 +127,15 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 
 app.UseWebSockets();
+app.Use(async (context, next) =>
+{
+    if (context.WebSockets.IsWebSocketRequest)
+    {
+        context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+    }
+    await next();
+});
+
 
 if (isAgent)
     app.MapAgentEndpoints();
