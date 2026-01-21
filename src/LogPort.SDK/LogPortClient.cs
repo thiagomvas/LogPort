@@ -279,18 +279,44 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
             }
         }
     }
-
+    
     /// <summary>
-    /// Waits until all queued logs have been sent to the server.
+    /// Asynchronously waits for all queued log messages to be sent to the server,
+    /// up to a default maximum wait time.
     /// </summary>
-    public async Task FlushAsync()
+    /// <remarks>
+    /// This is a convenience overload that uses a default timeout of five seconds.
+    /// If the queue is not fully flushed within that time, the method returns without throwing.
+    /// </remarks>
+    public Task<bool> FlushAsync() => FlushAsync(TimeSpan.FromSeconds(5));
+    
+    /// <summary>
+    /// Asynchronously waits for the internal log queue to be flushed, up to a maximum amount of time.
+    /// </summary>
+    /// <param name="maxWait">
+    /// The maximum duration to wait for all queued log messages to be sent.
+    /// </param>
+    /// <returns>
+    /// <c>true</c> if the log queue was fully flushed before the deadline elapsed;
+    /// <c>false</c> if one or more log entries were still pending when the timeout was reached.
+    /// </returns>
+    /// <remarks>
+    /// This method polls the internal queue at a short interval and returns as soon as the queue
+    /// becomes empty or the specified timeout expires. It does not throw on timeout.
+    /// </remarks>
+    public async Task<bool> FlushAsync(TimeSpan maxWait)
     {
-        _logger?.Debug("Flushing log queue...");
-        while (!_messageQueue.IsEmpty && _isAlive)
-            await Task.Delay(SendDelayMs).ConfigureAwait(false);
+        _logger.Debug($"Flushing log queue with timeout duration of {maxWait.TotalSeconds} seconds");
+        var deadline = DateTime.UtcNow + maxWait;
 
-        _logger?.Debug("Log queue flushed.");
+        while (!_messageQueue.IsEmpty && DateTime.UtcNow < deadline)
+        {
+            await Task.Delay(25);
+        }
+
+        return _messageQueue.IsEmpty;
     }
+
 
     private void SetState(LogPortClientState newState)
     {
