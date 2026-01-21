@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 using LogPort.Core;
 using LogPort.Core.Models;
+using LogPort.SDK.Events;
 using LogPort.SDK.Filters;
 
 namespace LogPort.SDK;
@@ -33,6 +34,9 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     private readonly TimeSpan _heartbeatInterval;
     private readonly ILogPortLogger? _logger;
     private readonly IEnumerable<ILogLevelFilter>? _filters;
+
+    public LogPortClientState State { get; private set; } = LogPortClientState.Disconnected;
+    public event EventHandler<LogPortClientStateChangedEventArgs>? StateChanged;
 
     private readonly LogNormalizer _normalizer;
 
@@ -288,6 +292,17 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
         _logger?.Debug("Log queue flushed.");
     }
 
+    private void SetState(LogPortClientState newState)
+    {
+        if (State == newState)
+            return;
+
+        var old = State;
+        State = newState;
+        StateChanged?.Invoke(this, new(old, newState));
+
+    }
+    
     /// <summary>
     /// Stops background processing, cancels pending sends, and releases all resources.
     /// </summary>
