@@ -18,6 +18,8 @@ public class FakeWebSocketClient : IWebSocketClient
 
     public Task ConnectAsync(Uri uri, CancellationToken cancellationToken)
     {
+        if (!Server.IsOnline)
+            throw new WebSocketException();
         ConnectCalled = true;
         State = WebSocketState.Open;
         return Task.CompletedTask;

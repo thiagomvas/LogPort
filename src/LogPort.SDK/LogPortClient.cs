@@ -394,11 +394,18 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
                 {
                     _logger?.Warn($"Connection failed, retrying: {ex.Message}");
                     SetState(LogPortClientState.Disconnected);
-                    await Task.Delay(delay + TimeSpan.FromMilliseconds(random.Next(0, 500)), token);
-                    delay = TimeSpan.FromSeconds(Math.Min(delay.TotalSeconds * 2, _maxReconnectDelay.TotalSeconds));
                     _isAlive = false;
-
+                    delay = TimeSpan.FromMilliseconds(Math.Min(delay.TotalMilliseconds * 2 + random.Next(0, 500), _maxReconnectDelay.TotalMilliseconds));
+                    try
+                    {
+                        await Task.Delay(delay, token);
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        return;
+                    }
                 }
+
             } while (_webSocket.State != WebSocketState.Open && !token.IsCancellationRequested);
         }
     }

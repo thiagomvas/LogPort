@@ -25,21 +25,27 @@ public sealed class LogPortClient_StateTests
             Assert.That(events[1].NewState, Is.EqualTo(LogPortClientState.Connected));
         });
     }
-
     [Test]
     public async Task EnsureConnectedAsync_WhenServerOffline_ShouldRaise_Disconnected()
     {
         var fakeWebSocket = new Fakes.FakeWebSocketClient();
         fakeWebSocket.Server.IsOnline = false;
 
-        var client = new LogPortClient(new() { AgentUrl = "ws://localhost" }, () => fakeWebSocket);
+        var client = new LogPortClient(
+            new()
+            {
+                AgentUrl = "ws://localhost",
+                ClientMaxReconnectDelay = TimeSpan.FromMilliseconds(50)
+            },
+            () => fakeWebSocket
+        );
 
         LogPortClientStateChangedEventArgs lastEvent = null;
         client.StateChanged += (_, e) => lastEvent = e;
 
-        await client.EnsureConnectedAsync();
+        using var cts = new CancellationTokenSource(50);
 
-        await Utils.WaitUntilAsync(() => lastEvent != null);
+        await client.EnsureConnectedAsync(cts.Token);
 
         Assert.Multiple(() =>
         {
@@ -47,6 +53,7 @@ public sealed class LogPortClient_StateTests
             Assert.That(lastEvent.NewState, Is.EqualTo(LogPortClientState.Disconnected));
         });
     }
+
 
     [Test]
     public async Task Dispose_ShouldRaise_Stopped_State()
