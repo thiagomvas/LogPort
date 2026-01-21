@@ -318,6 +318,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
         _webSocket.Dispose();
         _cts.Dispose();
         _logger?.Debug("LogPortClient disposed.");
+        SetState(LogPortClientState.Stopped);
     }
 
     private async Task<bool> SendHeartbeatAsync(CancellationToken token)
@@ -343,6 +344,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
         }
         catch
         {
+            SetState(LogPortClientState.Degraded);
             return false;
         }
     }
@@ -380,15 +382,18 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
                 _webSocket = _socketFactory?.Invoke() ?? throw new InvalidOperationException();
                 try
                 {
+                    SetState(LogPortClientState.Connecting);
                     _logger?.Debug("Attempting WebSocket connection...");
                     await _webSocket.ConnectAsync(_serverUri, token).ConfigureAwait(false);
                     _logger?.Info("Connected to LogPort Agent");
                     _isAlive = true;
+                    SetState(LogPortClientState.Connected);
                     return;
                 }
                 catch (Exception ex)
                 {
                     _logger?.Warn($"Connection failed, retrying: {ex.Message}");
+                    SetState(LogPortClientState.Disconnected);
                     await Task.Delay(delay + TimeSpan.FromMilliseconds(random.Next(0, 500)), token);
                     delay = TimeSpan.FromSeconds(Math.Min(delay.TotalSeconds * 2, _maxReconnectDelay.TotalSeconds));
                     _isAlive = false;
