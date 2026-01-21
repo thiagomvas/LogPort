@@ -34,7 +34,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     private readonly TimeSpan _heartbeatInterval;
     private readonly ILogPortLogger? _logger;
     private readonly IEnumerable<ILogLevelFilter>? _filters;
-
+    private readonly bool _shouldReconnect;
     public LogPortClientState State { get; private set; } = LogPortClientState.Disconnected;
     public event EventHandler<LogPortClientStateChangedEventArgs>? StateChanged;
 
@@ -63,7 +63,6 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     {
         ArgumentNullException.ThrowIfNull(config);
         ArgumentException.ThrowIfNullOrEmpty(config.AgentUrl);
-
         var baseUrl = config.AgentUrl.Trim('/');
 
         // Remove http or https and convert to ws or wss
@@ -89,6 +88,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
         _maxReconnectDelay = config.ClientMaxReconnectDelay;
         _heartbeatInterval = config.ClientHeartbeatInterval;
         _heartbeatTimeout = config.ClientHeartbeatTimeout;
+        _shouldReconnect = config.AutomaticReconnect;
 
         _normalizer = normalizer ?? new LogNormalizer();
         _logger = logger;
@@ -306,7 +306,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     /// </remarks>
     public async Task<bool> FlushAsync(TimeSpan maxWait)
     {
-        _logger.Debug($"Flushing log queue with timeout duration of {maxWait.TotalSeconds} seconds");
+        _logger?.Debug($"Flushing log queue with timeout duration of {maxWait.TotalSeconds} seconds");
         var deadline = DateTime.UtcNow + maxWait;
 
         while (!_messageQueue.IsEmpty && DateTime.UtcNow < deadline)
@@ -432,7 +432,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
                     }
                 }
 
-            } while (_webSocket.State != WebSocketState.Open && !token.IsCancellationRequested);
+            } while (_webSocket.State != WebSocketState.Open && !token.IsCancellationRequested && _shouldReconnect);
         }
     }
 

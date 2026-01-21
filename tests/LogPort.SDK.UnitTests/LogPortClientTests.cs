@@ -146,5 +146,51 @@ public class LogPortClientTests
 
         Assert.That(client.ServerUri.ToString(), Is.EqualTo(expectedUrl));
     }
+    
+    [Test]
+    public async Task FlushAsync_WhenQueueNotFlushedBeforeTimeout_ShouldReturnFalse()
+    {
+        var fakeWebSocket = new Fakes.FakeWebSocketClient();
+        fakeWebSocket.Server.IsOnline = false;
+
+        var config = new LogPortClientConfig() { AgentUrl = "ws://localhost", AutomaticReconnect = false, };
+
+        var client = new LogPortClient(
+            config,
+            () => fakeWebSocket
+        );
+        await client.EnsureConnectedAsync();
+
+        client.Log("INFO", "will never be sent");
+
+        var result = await client.FlushAsync(TimeSpan.FromMilliseconds(100));
+
+        Assert.That(result, Is.False);
+    }
+
+    [Test]
+    public async Task FlushAsync_WhenQueueFlushedBeforeTimeout_ShouldReturnTrue()
+    {
+        var fakeWebSocket = new Fakes.FakeWebSocketClient();
+        fakeWebSocket.Server.IsOnline = true;
+
+        var client = new LogPortClient(
+            new() { AgentUrl = "ws://localhost" },
+            () => fakeWebSocket
+        );
+
+        await client.EnsureConnectedAsync();
+
+        client.Log("INFO", "will be sent");
+
+        var result = await client.FlushAsync(TimeSpan.FromSeconds(1));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result, Is.True);
+            Assert.That(fakeWebSocket.Server.ReceivedLogs.Count, Is.EqualTo(1));
+        });
+    }
+
 
 }
