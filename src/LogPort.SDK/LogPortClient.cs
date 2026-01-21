@@ -302,7 +302,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
         StateChanged?.Invoke(this, new(old, newState));
 
     }
-    
+
     /// <summary>
     /// Stops background processing, cancels pending sends, and releases all resources.
     /// </summary>

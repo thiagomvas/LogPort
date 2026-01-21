@@ -3,7 +3,8 @@ using LogPort.SDK.Events;
 namespace LogPort.SDK.UnitTests;
 
 public sealed class LogPortClient_StateTests
-{  [Test]
+{
+    [Test]
     public async Task EnsureConnectedAsync_ShouldRaise_Connecting_And_Connected()
     {
         var fakeWebSocket = new Fakes.FakeWebSocketClient();
@@ -79,7 +80,7 @@ public sealed class LogPortClient_StateTests
     {
         var fakeWebSocket = new Fakes.FakeWebSocketClient();
 
-        var client = new LogPortClient(new() { AgentUrl = "ws://localhost", ClientHeartbeatInterval = TimeSpan.FromMilliseconds(10), ClientHeartbeatTimeout = TimeSpan.FromMilliseconds(50)}, () => fakeWebSocket);
+        var client = new LogPortClient(new() { AgentUrl = "ws://localhost", ClientHeartbeatInterval = TimeSpan.FromMilliseconds(10), ClientHeartbeatTimeout = TimeSpan.FromMilliseconds(50) }, () => fakeWebSocket);
 
         var degradedRaised = false;
         client.StateChanged += (_, e) =>
