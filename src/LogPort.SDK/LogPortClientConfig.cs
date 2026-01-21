@@ -25,6 +25,11 @@ public sealed class LogPortClientConfig
     public string? Hostname { get; set; }
 
     /// <summary>
+    /// Gets or sets whether the client should automatically reconnect when it loses connection. Default is <see langword="true"/>.
+    /// </summary>
+    public bool AutomaticReconnect { get; set; } = true;
+
+    /// <summary>
     /// Gets or sets the API secret used to authenticate with the LogPort agent.
     /// </summary>
     public string ApiSecret { get; set; } = null!;
