@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Net.WebSockets;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -155,25 +156,29 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
         }, token);
     }
 
-
     /// <summary>
-    /// Enqueues a <see cref="LogEntry"/> to be sent asynchronously to the server.
+    /// Enqueues a <see cref="LogEntry"/> to be sent asynchronously to the server,
+    /// using <typeparamref name="TCategory"/> as the log category.
     /// </summary>
+    /// <typeparam name="TCategory">
+    /// The category type. When not <see cref="object"/>, the fully qualified type name
+    /// is used as the <c>Category</c> metadata value.
+    /// </typeparam>
     /// <param name="entry">The log entry to send.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="entry"/> is null.</exception>
-    public void Log(LogEntry entry)
+    public void Log<TCategory>(LogEntry entry)
     {
         if (entry is null) throw new ArgumentNullException(nameof(entry));
         if (entry.Timestamp == DateTime.MinValue) entry.Timestamp = DateTime.UtcNow;
         if (string.IsNullOrWhiteSpace(entry.ServiceName)) entry.ServiceName = _serviceName;
 
         entry.Level = _normalizer.NormalizeLevel(entry.Level);
-        
+
+        if (typeof(TCategory) != typeof(object) && !entry.Metadata.ContainsKey("Category"))
+            entry.Metadata["Category"] = typeof(TCategory).FullName!;
 
         if (_filters != null && _filters.Any(filter => !filter.ShouldSend(entry)))
-        {
             return;
-        }
 
         if (string.IsNullOrWhiteSpace(entry.TraceId))
             entry.TraceId = TraceContext.TraceId;
@@ -183,6 +188,18 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
 
         _messageQueue.Enqueue(entry);
     }
+
+    /// <summary>
+    /// Enqueues a <see cref="LogEntry"/> to be sent asynchronously to the server
+    /// without assigning a category automatically.
+    /// </summary>
+    /// <param name="entry">The log entry to send.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="entry"/> is null.</exception>
+    public void Log(LogEntry entry)
+    {
+        Log<object>(entry);
+    }
+
 
     /// <summary>
     /// Enqueues a batch of <see cref="LogEntry"/> items to be sent asynchronously to the server.
