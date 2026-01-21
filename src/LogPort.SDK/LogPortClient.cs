@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 using LogPort.Core;
 using LogPort.Core.Models;
+using LogPort.SDK.Events;
 using LogPort.SDK.Filters;
 
 namespace LogPort.SDK;
@@ -33,6 +34,9 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     private readonly TimeSpan _heartbeatInterval;
     private readonly ILogPortLogger? _logger;
     private readonly IEnumerable<ILogLevelFilter>? _filters;
+
+    public LogPortClientState State { get; private set; } = LogPortClientState.Disconnected;
+    public event EventHandler<LogPortClientStateChangedEventArgs>? StateChanged;
 
     private readonly LogNormalizer _normalizer;
 
@@ -288,6 +292,17 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
         _logger?.Debug("Log queue flushed.");
     }
 
+    private void SetState(LogPortClientState newState)
+    {
+        if (State == newState)
+            return;
+
+        var old = State;
+        State = newState;
+        StateChanged?.Invoke(this, new(old, newState));
+
+    }
+
     /// <summary>
     /// Stops background processing, cancels pending sends, and releases all resources.
     /// </summary>
@@ -303,6 +318,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
         _webSocket.Dispose();
         _cts.Dispose();
         _logger?.Debug("LogPortClient disposed.");
+        SetState(LogPortClientState.Stopped);
     }
 
     private async Task<bool> SendHeartbeatAsync(CancellationToken token)
@@ -328,6 +344,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
         }
         catch
         {
+            SetState(LogPortClientState.Degraded);
             return false;
         }
     }
@@ -365,20 +382,30 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
                 _webSocket = _socketFactory?.Invoke() ?? throw new InvalidOperationException();
                 try
                 {
+                    SetState(LogPortClientState.Connecting);
                     _logger?.Debug("Attempting WebSocket connection...");
                     await _webSocket.ConnectAsync(_serverUri, token).ConfigureAwait(false);
                     _logger?.Info("Connected to LogPort Agent");
                     _isAlive = true;
+                    SetState(LogPortClientState.Connected);
                     return;
                 }
                 catch (Exception ex)
                 {
                     _logger?.Warn($"Connection failed, retrying: {ex.Message}");
-                    await Task.Delay(delay + TimeSpan.FromMilliseconds(random.Next(0, 500)), token);
-                    delay = TimeSpan.FromSeconds(Math.Min(delay.TotalSeconds * 2, _maxReconnectDelay.TotalSeconds));
+                    SetState(LogPortClientState.Disconnected);
                     _isAlive = false;
-
+                    delay = TimeSpan.FromMilliseconds(Math.Min(delay.TotalMilliseconds * 2 + random.Next(0, 500), _maxReconnectDelay.TotalMilliseconds));
+                    try
+                    {
+                        await Task.Delay(delay, token);
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        return;
+                    }
                 }
+
             } while (_webSocket.State != WebSocketState.Open && !token.IsCancellationRequested);
         }
     }

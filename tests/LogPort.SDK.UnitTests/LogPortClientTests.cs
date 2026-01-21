@@ -7,16 +7,6 @@ namespace LogPort.SDK.UnitTests;
 
 public class LogPortClientTests
 {
-    private static async Task WaitUntilAsync(Func<bool> condition, int timeoutMs = 2000, int pollIntervalMs = 25)
-    {
-        var start = DateTime.UtcNow;
-        while (!condition())
-        {
-            if ((DateTime.UtcNow - start).TotalMilliseconds > timeoutMs)
-                throw new TimeoutException("Condition not met within timeout.");
-            await Task.Delay(pollIntervalMs);
-        }
-    }
 
     [Test]
     public async Task LogMessage_ShouldSend_LogEntry()
@@ -30,7 +20,7 @@ public class LogPortClientTests
         await client.EnsureConnectedAsync();
         client.Log(logLevel, logMessage);
 
-        await WaitUntilAsync(() => fakeWebSocket.Server.ReceivedLogs.Count == 1);
+        await Utils.WaitUntilAsync(() => fakeWebSocket.Server.ReceivedLogs.Count == 1);
 
         Assert.Multiple(() =>
         {
@@ -61,7 +51,7 @@ public class LogPortClientTests
         await client.EnsureConnectedAsync();
         client.Log(logEntry);
 
-        await WaitUntilAsync(() => fakeWebSocket.Server.ReceivedLogs.Count == 1);
+        await Utils.WaitUntilAsync(() => fakeWebSocket.Server.ReceivedLogs.Count == 1);
 
         Assert.Multiple(() =>
         {
@@ -75,21 +65,25 @@ public class LogPortClientTests
             Assert.That(receivedLog.Message, Is.EqualTo(logEntry.Message));
         });
     }
-
     [Test]
     public async Task Process_WhenServerIsOffline_ShouldNotThrow()
     {
         var fakeWebSocket = new Fakes.FakeWebSocketClient();
         fakeWebSocket.Server.IsOnline = false;
-        var client = new LogPortClient(new() { AgentUrl = "ws://localhost" }, () => fakeWebSocket);
+
+        var client = new LogPortClient(
+            new() { AgentUrl = "ws://localhost" },
+            () => fakeWebSocket
+        );
 
         const string logMessage = "Test log message while server is offline";
         const string logLevel = "WARN";
 
-        await client.EnsureConnectedAsync();
+        _ = client.EnsureConnectedAsync();
+
         client.Log(logLevel, logMessage);
 
-        await Task.Delay(100); // short delay is fine — no network activity expected
+        await Task.Delay(100);
 
         Assert.Multiple(() =>
         {
@@ -97,6 +91,7 @@ public class LogPortClientTests
             Assert.That(fakeWebSocket.Server.ReceivedLogs.Count, Is.EqualTo(0));
         });
     }
+
 
     [Test]
     public async Task Logs_ShouldBeSent_AfterReconnection()
@@ -119,7 +114,7 @@ public class LogPortClientTests
 
         fakeWebSocket.Server.IsOnline = true;
 
-        await WaitUntilAsync(() => fakeWebSocket.Server.ReceivedLogs.Count == 1);
+        await Utils.WaitUntilAsync(() => fakeWebSocket.Server.ReceivedLogs.Count == 1);
 
         Assert.Multiple(() =>
         {
