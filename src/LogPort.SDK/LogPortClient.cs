@@ -279,7 +279,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
             }
         }
     }
-    
+
     /// <summary>
     /// Asynchronously waits for all queued log messages to be sent to the server,
     /// up to a default maximum wait time.
@@ -289,7 +289,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     /// If the queue is not fully flushed within that time, the method returns without throwing.
     /// </remarks>
     public Task<bool> FlushAsync() => FlushAsync(TimeSpan.FromSeconds(5));
-    
+
     /// <summary>
     /// Asynchronously waits for the internal log queue to be flushed, up to a maximum amount of time.
     /// </summary>

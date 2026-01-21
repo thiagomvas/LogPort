@@ -146,7 +146,7 @@ public class LogPortClientTests
 
         Assert.That(client.ServerUri.ToString(), Is.EqualTo(expectedUrl));
     }
-    
+
     [Test]
     public async Task FlushAsync_WhenQueueNotFlushedBeforeTimeout_ShouldReturnFalse()
     {
