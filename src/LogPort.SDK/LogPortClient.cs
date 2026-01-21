@@ -35,6 +35,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     private readonly ILogPortLogger? _logger;
     private readonly IEnumerable<ILogLevelFilter>? _filters;
     private readonly bool _shouldReconnect;
+    private readonly string _serviceName;
     public LogPortClientState State { get; private set; } = LogPortClientState.Disconnected;
     public event EventHandler<LogPortClientStateChangedEventArgs>? StateChanged;
 
@@ -89,6 +90,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
         _heartbeatInterval = config.ClientHeartbeatInterval;
         _heartbeatTimeout = config.ClientHeartbeatTimeout;
         _shouldReconnect = config.AutomaticReconnect;
+        _serviceName = config.ServiceName;
 
         _normalizer = normalizer ?? new LogNormalizer();
         _logger = logger;
@@ -162,8 +164,11 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     public void Log(LogEntry entry)
     {
         if (entry is null) throw new ArgumentNullException(nameof(entry));
+        if (entry.Timestamp == DateTime.MinValue) entry.Timestamp = DateTime.UtcNow;
+        if (string.IsNullOrWhiteSpace(entry.ServiceName)) entry.ServiceName = _serviceName;
 
         entry.Level = _normalizer.NormalizeLevel(entry.Level);
+        
 
         if (_filters != null && _filters.Any(filter => !filter.ShouldSend(entry)))
         {
