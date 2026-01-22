@@ -3,6 +3,8 @@ using System.Text.Json;
 
 using Docker.DotNet;
 
+using Hangfire;
+
 using LogPort.Agent;
 using LogPort.Agent.Endpoints;
 using LogPort.Agent.HealthChecks;
@@ -124,7 +126,10 @@ else
 
 
 if (app.Environment.IsDevelopment())
+{
     app.MapOpenApi();
+    app.UseHangfireDashboard("/hangfire");
+}
 
 app.UseWebSockets();
 app.Use(async (context, next) =>
