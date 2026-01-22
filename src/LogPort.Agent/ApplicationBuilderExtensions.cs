@@ -20,6 +20,7 @@ public static class ApplicationBuilderExtensions
         app.MapAnalyticsEndpoints();
         app.MapPatternEndpoints();
         app.MapMetricsEndpoints();
+        app.MapJobEndpoints();
         app.MapFallbackToFile("index.html");
         var config = app.Services.GetRequiredService<LogPortConfig>();
         app.ConfigureJobs(config);
