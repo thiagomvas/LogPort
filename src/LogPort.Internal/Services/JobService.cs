@@ -4,15 +4,19 @@ using Hangfire.Storage;
 using LogPort.Internal.Abstractions;
 using LogPort.Internal.Models;
 
+using Microsoft.Extensions.Logging;
+
 namespace LogPort.Internal.Services;
 
 public sealed class JobService
 {
     private readonly IEnumerable<JobBase> _jobs;
+    private readonly ILogger<JobService>? _logger;
 
-    public JobService(IEnumerable<JobBase> jobs)
+    public JobService(IEnumerable<JobBase> jobs, ILogger<JobService>? logger = null)
     {
         _jobs = jobs;
+        _logger = logger;
     }
 
     public IEnumerable<JobMetadata> GetMetadata()
@@ -34,11 +38,37 @@ public sealed class JobService
                     Description = j.Description,
                     LastExecution = recurring?.LastExecution,
                     NextExecution = recurring?.NextExecution,
-                    IsEnabled = recurring is not null,
+                    IsEnabled = j.Enabled,
                     Cron = j.Cron
                 };
             })
             .Where(x => x != null);
     }
+    
+    public void Trigger(string jobId)
+    {
+        var job = _jobs.FirstOrDefault(j => j.Id == jobId);
+        if (job is null)
+            throw new InvalidOperationException($"Job '{jobId}' not found");
+
+        var storage = JobStorage.Current;
+
+        using var connection = storage.GetConnection();
+
+        var recurring = connection
+            .GetRecurringJobs()
+            .Any(r => r.Id == jobId);
+
+        if (recurring)
+        {
+            RecurringJob.TriggerJob(jobId);
+            _logger?.LogInformation("Recurring job '{JobId}' was triggered", jobId);
+            return;
+        }
+
+        BackgroundJob.Enqueue(() => job.ExecuteAsync());
+        _logger?.LogInformation("Job '{JobId}' was triggered", jobId);
+    }
+
 
 }

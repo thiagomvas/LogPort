@@ -13,6 +13,7 @@ public sealed class LogPartitionCleanupJob : JobBase
     private readonly LogRetentionConfig _config;
     private readonly string _connectionString;
     private readonly string _cron;
+    private readonly bool _enabled;
 
     public LogPartitionCleanupJob(
         ILogger<LogPartitionCleanupJob> logger,
@@ -22,9 +23,12 @@ public sealed class LogPartitionCleanupJob : JobBase
         _config = config.Retention;
         _connectionString = config.Postgres.ConnectionString;
         _cron = config.Retention.AutomaticCleanupCron;
+        _enabled = config.Retention.EnableAutomaticCleanupJob;
     }
 
-    public async Task ExecuteAsync()
+    public override bool Enabled => _enabled;
+
+    public override sealed async Task ExecuteAsync()
     {
         var cutoff = DateTime.UtcNow.Date.AddDays(-_config.RetentionDays);
 

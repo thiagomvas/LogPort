@@ -2,14 +2,21 @@ import { useEffect, useState } from 'react';
 import '../styles/jobsPage.css';
 import Stat from '../components/stat';
 import { formatDateTime, timeAgo } from '../lib/utils/date';
-import { getJobMetadata } from '../lib/services/jobs.service';
+import {
+  getJobMetadata,
+  triggerJob
+} from '../lib/services/jobs.service';
 import type { JobMetadata } from '../lib/types/jobs';
 
 function JobsPage() {
   const [jobs, setJobs] = useState<JobMetadata[]>([]);
+  const [triggering, setTriggering] = useState<string | null>(null);
+
+  const refresh = () =>
+    getJobMetadata().then(setJobs).catch(console.error);
 
   useEffect(() => {
-    getJobMetadata().then(setJobs).catch(console.error);
+    refresh();
   }, []);
 
   const now = new Date();
@@ -45,6 +52,7 @@ function JobsPage() {
             <span>Cron</span>
             <span>Last Run</span>
             <span>Next Run</span>
+            <span>Action</span>
             <span>Status</span>
           </div>
 
@@ -53,11 +61,8 @@ function JobsPage() {
               ? new Date(job.nextExecution)
               : null;
 
-            const isOverdue = !!(
-              job.isEnabled &&
-              next &&
-              next < now
-            );
+            const isOverdue =
+              job.isEnabled && next && next < now;
 
             const status = !job.isEnabled
               ? 'disabled'
@@ -75,7 +80,7 @@ function JobsPage() {
               >
                 <div className="job-main">
                   <p className="job-name">{job.name}</p>
-                  <span className="subtitle">
+                  <span className="job-description">
                     {job.description}
                   </span>
                 </div>
@@ -91,6 +96,19 @@ function JobsPage() {
                 <span className="job-time">
                   {next ? formatDateTime(next) : '—'}
                 </span>
+
+                <button
+                  className="job-trigger"
+                  disabled={triggering === job.id}
+                  onClick={async () => {
+                    setTriggering(job.id);
+                    await triggerJob(job.id);
+                    await refresh();
+                    setTriggering(null);
+                  }}
+                >
+                  Run
+                </button>
 
                 <span className={`job-status ${status}`}>
                   {status === 'ok' && 'OK'}

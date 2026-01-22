@@ -15,7 +15,7 @@
 .jobs-header,
 .jobs-row {
   display: grid;
-  grid-template-columns: 2fr 1.2fr 1.2fr 1.2fr 120px;
+  grid-template-columns: 2fr 1.2fr 1.2fr 1.2fr 80px 120px;
   gap: 12px;
   align-items: center;
 }
