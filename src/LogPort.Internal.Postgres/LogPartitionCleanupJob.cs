@@ -1,3 +1,4 @@
+using LogPort.Internal.Abstractions;
 using LogPort.Internal.Configuration;
 
 using Microsoft.Extensions.Logging;
@@ -6,11 +7,13 @@ using Npgsql;
 
 namespace LogPort.Data.Postgres;
 
-public sealed class LogPartitionCleanupJob
+public sealed class LogPartitionCleanupJob : JobBase
 {
     private readonly ILogger<LogPartitionCleanupJob> _logger;
     private readonly LogRetentionConfig _config;
     private readonly string _connectionString;
+    private readonly string _cron;
+    private readonly bool _enabled;
 
     public LogPartitionCleanupJob(
         ILogger<LogPartitionCleanupJob> logger,
@@ -19,9 +22,13 @@ public sealed class LogPartitionCleanupJob
         _logger = logger;
         _config = config.Retention;
         _connectionString = config.Postgres.ConnectionString;
+        _cron = config.Retention.AutomaticCleanupCron;
+        _enabled = config.Retention.EnableAutomaticCleanupJob;
     }
 
-    public async Task ExecuteAsync()
+    public override bool Enabled => _enabled;
+
+    public override sealed async Task ExecuteAsync()
     {
         var cutoff = DateTime.UtcNow.Date.AddDays(-_config.RetentionDays);
 
@@ -41,4 +48,11 @@ public sealed class LogPartitionCleanupJob
             dropped,
             cutoff);
     }
+
+    public override string Id => JobId;
+    public override string Name { get; } = "Log Partition Clean up";
+    public override string Description { get; } = "Clears up log partitions that are past the retention period";
+    public override string Cron => _cron;
+
+    public static readonly string JobId = "LogPartitionCleanupJob";
 }

@@ -1,0 +1,151 @@
+.jobs-page {
+  padding: 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  color: var(--text-main);
+}
+
+.jobs-table {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.jobs-header,
+.jobs-row {
+  display: grid;
+  grid-template-columns: 2fr 1.2fr 1.2fr 1.2fr 80px 120px;
+  gap: 12px;
+  align-items: center;
+}
+
+.jobs-header {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-tertiary);
+  padding: 0 8px;
+}
+
+.jobs-row {
+  background: var(--color-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px 8px;
+  box-shadow: var(--shadow-small);
+}
+
+.jobs-row.ok {
+  border-color: color-mix(in srgb, var(--accent-success) 30%, var(--border-color));
+}
+
+.jobs-row.warn {
+  border-color: color-mix(in srgb, var(--accent-warning) 30%, var(--border-color));
+}
+
+.jobs-row.error {
+  border-color: var(--accent-error);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent-error) 12%, transparent),
+    transparent
+  );
+}
+
+.jobs-row.disabled {
+  opacity: 0.55;
+  background: var(--color-surface-muted);
+  border-style: dashed;
+}
+
+.job-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.job-name {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.job-description {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.job-cron {
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.job-time {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.job-status {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 8px 12px;
+  min-height: 28px;
+  line-height: 1;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+
+.job-status.ok {
+  background: color-mix(in srgb, var(--accent-success) 20%, transparent);
+  color: var(--accent-success);
+}
+
+.job-status.warn {
+  background: color-mix(in srgb, var(--accent-warning) 20%, transparent);
+  color: var(--accent-warning);
+}
+
+.job-status.error {
+  background: color-mix(in srgb, var(--accent-error) 20%, transparent);
+  color: var(--accent-error);
+}
+
+.job-status.disabled {
+  background: color-mix(in srgb, var(--text-tertiary) 15%, transparent);
+  color: var(--text-tertiary);
+}
+.job-trigger {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 6px 12px;
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 6px;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  min-height: 32px; /* ensure it fills vertical space */
+}
+
+
+.job-trigger:hover:not(:disabled) {
+  background: var(--color-surface-hover);
+}
+
+.job-trigger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

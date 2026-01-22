@@ -35,6 +35,12 @@ export default function Layout({ children }: LayoutProps) {
             label="Live Tailing"
             href="/logs/tail"
           />
+          <Divider />
+          <SidebarItem
+            icon={<Icons.BuildOutlined />}
+            label="Jobs"
+            href="/jobs"
+          />
         </nav>
       </aside>
 

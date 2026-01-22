@@ -20,6 +20,7 @@ public static class ApplicationBuilderExtensions
         app.MapAnalyticsEndpoints();
         app.MapPatternEndpoints();
         app.MapMetricsEndpoints();
+        app.MapJobEndpoints();
         app.MapFallbackToFile("index.html");
         var config = app.Services.GetRequiredService<LogPortConfig>();
         app.ConfigureJobs(config);
@@ -30,7 +31,7 @@ public static class ApplicationBuilderExtensions
         if (config.Retention.EnableAutomaticCleanupJob)
         {
             RecurringJob.AddOrUpdate<LogPartitionCleanupJob>(
-                "log-partition-cleanup",
+                LogPartitionCleanupJob.JobId,
                 j => j.ExecuteAsync(),
                 config.Retention.AutomaticCleanupCron);
         }

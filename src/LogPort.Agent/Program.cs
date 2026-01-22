@@ -30,14 +30,16 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("Default", policy =>
     {
         policy
-            .AllowAnyOrigin()
+            .WithOrigins("http://localhost:5173")
             .AllowAnyMethod()
-            .AllowAnyHeader();
+            .AllowAnyHeader()
+            .AllowCredentials();
     });
 });
+
 var logPortConfig = ConfigLoader.Load();
 builder.Services.AddSingleton(logPortConfig);
 builder.Services.AddHttpClient();
@@ -98,7 +100,7 @@ var logger = app.Services.GetRequiredService<ILogger<Program>>();
 if (logPortConfig.Mode is LogMode.Relay)
     await app.UseLogPortAsync();
 
-app.UseCors("AllowAll");
+app.UseCors("Default");
 app.MapAuthEndpoints(logPortConfig);
 app.UseAuthentication();
 app.UseAuthorization();

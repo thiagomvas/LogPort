@@ -79,6 +79,7 @@ public static class ServiceCollectionExtensions
 
     private static void RegisterJobs(this IServiceCollection services)
     {
-        services.AddTransient<LogPartitionCleanupJob>();
+        services.AddTransient<JobService>();
+        services.AddTransient<JobBase, LogPartitionCleanupJob>();
     }
 }
