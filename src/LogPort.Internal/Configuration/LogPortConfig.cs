@@ -19,6 +19,11 @@ public class LogPortConfig
     /// Gets or sets the configuration for the metrics module in the agent.
     /// </summary>
     public MetricsConfig Metrics { get; set; } = new();
+    
+    /// <summary>
+    /// Gets or sets the configuration for the retention module and job in the agent.
+    /// </summary>
+    public LogRetentionConfig Retention { get; set; } = new();
 
     /// <summary>
     /// Gets or sets the port that the agent will listen on.
