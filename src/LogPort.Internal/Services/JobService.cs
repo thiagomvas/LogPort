@@ -44,7 +44,7 @@ public sealed class JobService
             })
             .Where(x => x != null);
     }
-    
+
     public void Trigger(string jobId)
     {
         var job = _jobs.FirstOrDefault(j => j.Id == jobId);

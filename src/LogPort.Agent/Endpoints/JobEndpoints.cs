@@ -12,7 +12,7 @@ public static class JobEndpoints
     {
         app.MapGet("/api/jobs", GetRecurringJobsAsync)
             .RequireAuthorization();
-        
+
         app.MapPost("/api/jobs/{id}/trigger", TriggerJobAsync)
             .RequireAuthorization();
 
@@ -22,7 +22,7 @@ public static class JobEndpoints
     {
         return Task.FromResult(Results.Ok(service.GetMetadata()));
     }
-    
+
     private static Task<IResult> TriggerJobAsync(
         string id,
         JobService service)
