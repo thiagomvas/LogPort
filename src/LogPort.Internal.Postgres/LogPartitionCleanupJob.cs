@@ -42,4 +42,3 @@ public sealed class LogPartitionCleanupJob
             cutoff);
     }
 }
-

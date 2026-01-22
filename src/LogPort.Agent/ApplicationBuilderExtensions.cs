@@ -34,6 +34,6 @@ public static class ApplicationBuilderExtensions
                 j => j.ExecuteAsync(),
                 config.Retention.AutomaticCleanupCron);
         }
-        
+
     }
 }
