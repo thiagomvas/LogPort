@@ -1,3 +1,6 @@
+using Hangfire;
+using Hangfire.PostgreSql;
+
 using LogPort.Agent.HealthChecks;
 using LogPort.Agent.Services;
 using LogPort.AspNetCore;
@@ -8,6 +11,8 @@ using LogPort.Internal.Abstractions;
 using LogPort.Internal.Configuration;
 using LogPort.Internal.Redis;
 using LogPort.Internal.Services;
+
+using Npgsql;
 
 using StackExchange.Redis;
 
@@ -45,9 +50,22 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton<LogEntryExtractionPipeline>();
         services.AddHostedService<FileTailService>();
+
+        services.AddHangfire(options =>
+        {
+            options.UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings()
+                .UsePostgreSqlStorage(
+                    config.Postgres.ConnectionString);
+        });
+        services.AddHangfireServer();
+
+
+        services.RegisterJobs();
     }
 
-    public static void AddLogPortRelay(this IServiceCollection services, LogPortConfig config, WebApplicationBuilder builder)
+    public static void AddLogPortRelay(this IServiceCollection services, LogPortConfig config,
+        WebApplicationBuilder builder)
     {
         builder.AddLogPort(o =>
         {
@@ -57,5 +75,10 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<ILogBatchHandler, RelayLogBatchHandler>();
         services.AddHealthChecks().AddCheck<UpstreamHealthCheck>("upstream_agent");
+    }
+
+    private static void RegisterJobs(this IServiceCollection services)
+    {
+        services.AddTransient<LogPartitionCleanupJob>();
     }
 }

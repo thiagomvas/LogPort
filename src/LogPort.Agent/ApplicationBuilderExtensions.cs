@@ -1,6 +1,10 @@
 using System.Text.Json;
 
+using Hangfire;
+
 using LogPort.Agent.Endpoints;
+using LogPort.Data.Postgres;
+using LogPort.Internal.Configuration;
 
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
@@ -17,5 +21,19 @@ public static class ApplicationBuilderExtensions
         app.MapPatternEndpoints();
         app.MapMetricsEndpoints();
         app.MapFallbackToFile("index.html");
+        var config = app.Services.GetRequiredService<LogPortConfig>();
+        app.ConfigureJobs(config);
+    }
+
+    public static void ConfigureJobs(this WebApplication app, LogPortConfig config)
+    {
+        if (config.Retention.EnableAutomaticCleanupJob)
+        {
+            RecurringJob.AddOrUpdate<LogPartitionCleanupJob>(
+                "log-partition-cleanup",
+                j => j.ExecuteAsync(),
+                config.Retention.AutomaticCleanupCron);
+        }
+
     }
 }
