@@ -2,29 +2,33 @@ import { useEffect, useState } from 'react';
 import '../styles/jobsPage.css';
 import Stat from '../components/stat';
 import { formatDateTime, timeAgo } from '../lib/utils/date';
-import type { Job } from '../lib/types/jobs';
-import { getRecurringJobs } from '../lib/services/jobs.service';
+import { getJobMetadata } from '../lib/services/jobs.service';
+import type { JobMetadata } from '../lib/types/jobs';
 
 function JobsPage() {
-  const [jobs, setJobs] = useState<Job[]>([]);
+  const [jobs, setJobs] = useState<JobMetadata[]>([]);
 
   useEffect(() => {
-    getRecurringJobs().then(setJobs).catch(console.error);
+    getJobMetadata().then(setJobs).catch(console.error);
   }, []);
 
   const now = new Date();
 
-  const overdueJobs = jobs.filter(
+  const enabledJobs = jobs.filter(j => j.isEnabled);
+  const disabledJobs = jobs.filter(j => !j.isEnabled);
+
+  const overdueJobs = enabledJobs.filter(
     j => j.nextExecution && new Date(j.nextExecution) < now
   );
 
-  const activeJobs = jobs.filter(j => j.nextExecution);
+  const activeJobs = enabledJobs.filter(j => j.nextExecution);
 
   return (
     <div className="jobs-page">
       <div className="stat-grid">
         <Stat title="Total Jobs" value={jobs.length} />
         <Stat title="Active Jobs" value={activeJobs.length} />
+        <Stat title="Disabled Jobs" value={disabledJobs.length} />
         <Stat
           title="Overdue Jobs"
           value={overdueJobs.length}
@@ -49,20 +53,32 @@ function JobsPage() {
               ? new Date(job.nextExecution)
               : null;
 
-            const isOverdue = next && next < now;
+            const isOverdue = !!(
+              job.isEnabled &&
+              next &&
+              next < now
+            );
 
-            const status = !job.nextExecution
-              ? 'warn'
-              : isOverdue
-                ? 'error'
-                : 'ok';
+            const status = !job.isEnabled
+              ? 'disabled'
+              : !job.nextExecution
+                ? 'warn'
+                : isOverdue
+                  ? 'error'
+                  : 'ok';
 
             return (
               <div
                 key={job.id}
-                className={`jobs-row ${isOverdue ? 'danger' : ''}`}
+                className={`jobs-row ${status}`}
+                title={job.description}
               >
-                <span className="job-id">{job.id}</span>
+                <div className="job-main">
+                  <p className="job-name">{job.name}</p>
+                  <span className="subtitle">
+                    {job.description}
+                  </span>
+                </div>
 
                 <span className="job-cron">{job.cron}</span>
 
@@ -80,6 +96,7 @@ function JobsPage() {
                   {status === 'ok' && 'OK'}
                   {status === 'warn' && 'Never Run'}
                   {status === 'error' && 'Overdue'}
+                  {status === 'disabled' && 'Disabled'}
                 </span>
               </div>
             );

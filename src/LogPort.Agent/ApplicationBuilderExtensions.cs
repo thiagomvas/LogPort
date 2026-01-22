@@ -31,7 +31,7 @@ public static class ApplicationBuilderExtensions
         if (config.Retention.EnableAutomaticCleanupJob)
         {
             RecurringJob.AddOrUpdate<LogPartitionCleanupJob>(
-                "log-partition-cleanup",
+                LogPartitionCleanupJob.JobId,
                 j => j.ExecuteAsync(),
                 config.Retention.AutomaticCleanupCron);
         }

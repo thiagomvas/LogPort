@@ -36,17 +36,46 @@
   box-shadow: var(--shadow-small);
 }
 
-.jobs-row.danger {
-  border-color: var(--color-error);
+.jobs-row.ok {
+  border-color: color-mix(in srgb, var(--accent-success) 30%, var(--border-color));
+}
+
+.jobs-row.warn {
+  border-color: color-mix(in srgb, var(--accent-warning) 30%, var(--border-color));
+}
+
+.jobs-row.error {
+  border-color: var(--accent-error);
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--color-error) 15%, transparent),
+    color-mix(in srgb, var(--accent-error) 12%, transparent),
     transparent
   );
 }
 
-.job-id {
+.jobs-row.disabled {
+  opacity: 0.55;
+  background: var(--color-surface-muted);
+  border-style: dashed;
+}
+
+.job-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.job-name {
   font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.job-description {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -84,4 +113,9 @@
 .job-status.error {
   background: color-mix(in srgb, var(--accent-error) 20%, transparent);
   color: var(--accent-error);
+}
+
+.job-status.disabled {
+  background: color-mix(in srgb, var(--text-tertiary) 15%, transparent);
+  color: var(--text-tertiary);
 }

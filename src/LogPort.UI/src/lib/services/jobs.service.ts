@@ -1,6 +1,6 @@
 import { baseFetch } from "../api";
-import type { Job } from "../types/jobs";
+import type { JobMetadata } from "../types/jobs";
 
-export function getRecurringJobs(): Promise<Job[]> {
-  return baseFetch<Job[]>('/api/jobs/recurring');
+export function getJobMetadata(): Promise<JobMetadata[]> {
+  return baseFetch<JobMetadata[]>('/api/jobs/');
 }
