@@ -93,12 +93,18 @@
 }
 
 .job-status {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  padding: 4px 8px;
+  padding: 8px 12px;
+  min-height: 28px;
+  line-height: 1;
   border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
 }
+
 
 .job-status.ok {
   background: color-mix(in srgb, var(--accent-success) 20%, transparent);
@@ -118,4 +124,28 @@
 .job-status.disabled {
   background: color-mix(in srgb, var(--text-tertiary) 15%, transparent);
   color: var(--text-tertiary);
+}
+.job-trigger {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 6px 12px;
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 6px;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  min-height: 32px; /* ensure it fills vertical space */
+}
+
+
+.job-trigger:hover:not(:disabled) {
+  background: var(--color-surface-hover);
+}
+
+.job-trigger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
