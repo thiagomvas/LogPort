@@ -45,7 +45,7 @@ public sealed class SqlWhereBuilder
         {
             "and" => $"({left} AND {right})",
             "or" => $"({left} OR {right})",
-            "contains" => $"{left} LIKE {right}",
+            "contains" => $"{left} ILIKE {right}",
             _ => $"{left} {b.Operator} {right}"
         };
     }
