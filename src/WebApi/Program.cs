@@ -13,6 +13,7 @@ builder.AddLogPort(options =>
     options.AgentUrl = "ws://localhost:8080/";
     options.ServiceName = "logport-testapi";
     options.ApiSecret = "secret";
+    options.UseHttpEnrichers();
 });
 
 builder.Logging.SetMinimumLevel(LogLevel.Debug);
@@ -41,7 +42,7 @@ var summaries = new[]
 
 app.MapGet("/weatherforecast", (ILogger<Program> logger) =>
     {
-        logger.LogError("Generating weather forecast");
+        logger.LogInformation("Generating weather forecast");
         var forecast = Enumerable.Range(1, 5).Select(index =>
                 new WeatherForecast
                 (
@@ -50,7 +51,6 @@ app.MapGet("/weatherforecast", (ILogger<Program> logger) =>
                     summaries[Random.Shared.Next(summaries.Length)]
                 ))
             .ToArray();
-        logger.LogWarning("Generated forecast: {@Forecast}", forecast);
         return forecast;
     })
     .WithName("GetWeatherForecast");

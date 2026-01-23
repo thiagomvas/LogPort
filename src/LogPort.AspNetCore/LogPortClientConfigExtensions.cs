@@ -81,4 +81,72 @@ public static class LogPortClientConfigExtensions
     {
         return config.UseSampling(AspNetToLogPortMap[level], rate, deterministic);
     }
+
+    /// <summary>
+    /// Registers the default ASP.NET Core HTTP enrichers.
+    /// </summary>
+    /// <remarks>
+    /// This is a convenience method that adds both <see cref="HttpRequestEnricher"/> and
+    /// <see cref="HttpResponseEnricher"/> to the client configuration.
+    /// These enrichers populate HTTP-related metadata such as request method, path,
+    /// host, and response status code when an active HTTP context is present.
+    /// </remarks>
+    /// <param name="config">The LogPort client configuration to modify.</param>
+    /// <returns>The updated <see cref="LogPortClientConfig"/> instance.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="config"/> is <c>null</c>.
+    /// </exception>
+    public static LogPortClientConfig UseHttpEnrichers(this LogPortClientConfig config)
+    {
+        ArgumentNullException.ThrowIfNull(config);
+
+        config.Enrichers ??= [];
+        config.Enrichers.Add(new HttpRequestEnricher());
+        config.Enrichers.Add(new HttpResponseEnricher());
+        return config;
+    }
+
+    /// <summary>
+    /// Registers an enricher that adds HTTP request metadata to log entries.
+    /// </summary>
+    /// <remarks>
+    /// The <see cref="HttpRequestEnricher"/> enriches log entries with information from
+    /// the current ASP.NET Core <c>HttpContext</c>, such as HTTP method, scheme, host,
+    /// and request path. If no active HTTP context exists, this enricher is a no-op.
+    /// </remarks>
+    /// <param name="config">The LogPort client configuration to modify.</param>
+    /// <returns>The updated <see cref="LogPortClientConfig"/> instance.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="config"/> is <c>null</c>.
+    /// </exception>
+    public static LogPortClientConfig UseHttpRequestEnricher(this LogPortClientConfig config)
+    {
+        ArgumentNullException.ThrowIfNull(config);
+
+        config.Enrichers ??= [];
+        config.Enrichers.Add(new HttpRequestEnricher());
+        return config;
+    }
+
+    /// <summary>
+    /// Registers an enricher that adds HTTP response metadata to log entries.
+    /// </summary>
+    /// <remarks>
+    /// The <see cref="HttpResponseEnricher"/> enriches log entries with response-related
+    /// information from the current ASP.NET Core <c>HttpContext</c>, such as the HTTP
+    /// status code. If no active HTTP context exists, this enricher is a no-op.
+    /// </remarks>
+    /// <param name="config">The LogPort client configuration to modify.</param>
+    /// <returns>The updated <see cref="LogPortClientConfig"/> instance.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="config"/> is <c>null</c>.
+    /// </exception>
+    public static LogPortClientConfig UseHttpResponseEnricher(this LogPortClientConfig config)
+    {
+        ArgumentNullException.ThrowIfNull(config);
+
+        config.Enrichers ??= [];
+        config.Enrichers.Add(new HttpResponseEnricher());
+        return config;
+    }
 }

@@ -10,6 +10,9 @@ await client.EnsureConnectedAsync();
 
 while (Console.ReadKey().Key != ConsoleKey.Escape)
 {
-    client.Log(new LogEntry() { Message = "Hello, world ", Timestamp = DateTime.UtcNow });
+    using (LogContext.Push("Foo", "Bar"))
+    {
+        client.Log(new LogEntry() { Message = "Hello, world ", Timestamp = DateTime.UtcNow });
+    }
     Console.WriteLine("Logged");
 }

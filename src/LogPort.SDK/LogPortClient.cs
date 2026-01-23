@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LogPort.Core;
+using LogPort.Core.Abstractions;
 using LogPort.Core.Models;
 using LogPort.SDK.Events;
 using LogPort.SDK.Filters;
@@ -28,6 +29,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     private IWebSocketClient _webSocket;
     private readonly Func<IWebSocketClient> _socketFactory;
     private readonly ConcurrentQueue<LogEntry> _messageQueue;
+    private readonly IReadOnlyList<ILogEnricher> _enrichers;
     private readonly CancellationTokenSource _cts;
     private Task? _senderTask;
     private readonly TimeSpan _maxReconnectDelay;
@@ -96,6 +98,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
 
         _normalizer = normalizer ?? new LogNormalizer();
         _logger = logger;
+        _enrichers = config.Enrichers?.ToList() ?? [];
     }
 
     public LogPortClient(LogPortClientConfig config, Func<IWebSocketClient>? socketFactory = null)
@@ -181,10 +184,13 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
             return;
 
         if (string.IsNullOrWhiteSpace(entry.TraceId))
-            entry.TraceId = TraceContext.TraceId;
+            entry.TraceId = LogContext.TraceId;
 
         if (string.IsNullOrWhiteSpace(entry.SpanId))
-            entry.SpanId = TraceContext.SpanId;
+            entry.SpanId = LogContext.SpanId;
+
+        foreach (var enricher in _enrichers)
+            enricher.Enrich(entry);
 
         _messageQueue.Enqueue(entry);
     }
@@ -256,7 +262,10 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
 
         Log(new LogEntry()
         {
-            Level = level, Message = messageTemplate, Timestamp = DateTime.UtcNow, Metadata = metadata
+            Level = level,
+            Message = messageTemplate,
+            Timestamp = DateTime.UtcNow,
+            Metadata = metadata
         });
     }
 

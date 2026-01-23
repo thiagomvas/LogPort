@@ -49,7 +49,7 @@ public sealed class QueryCompilerTests
             "message contains \"failed\""
         );
 
-        Assert.That(where, Is.EqualTo("message LIKE @p0"));
+        Assert.That(where, Is.EqualTo("message ILIKE @p0"));
         Assert.That(parameters["@p0"], Is.EqualTo("%failed%"));
     }
 
