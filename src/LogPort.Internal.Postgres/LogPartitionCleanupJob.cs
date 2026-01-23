@@ -28,7 +28,7 @@ public sealed class LogPartitionCleanupJob : JobBase
 
     public override bool Enabled => _enabled;
 
-    public override sealed async Task ExecuteAsync()
+    public override async Task ExecuteAsync()
     {
         var cutoff = DateTime.UtcNow.Date.AddDays(-_config.RetentionDays);
 

@@ -36,5 +36,13 @@ public static class ApplicationBuilderExtensions
                 config.Retention.AutomaticCleanupCron);
         }
 
+        if (config.LevelRetention.EnableAutomaticCleanupJob)
+        {
+            RecurringJob.AddOrUpdate<LogLevelCleanupJob>(
+                LogLevelCleanupJob.JobId,
+                j => j.ExecuteAsync(),
+                config.LevelRetention.AutomaticCleanupCron);
+        }
+
     }
 }

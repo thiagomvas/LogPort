@@ -81,6 +81,7 @@ public class LogPortConfig
     /// </summary>
     public List<FileTailingConfiguration> FileTails { get; set; } = new();
 
+    public LevelRetentionConfig LevelRetention { get; set; } = new();
     /// <summary>
     /// Gets or sets the mode of the agent.
     /// </summary>
