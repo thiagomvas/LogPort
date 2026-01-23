@@ -81,6 +81,7 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
         {
             baseUrl = "ws://" + baseUrl;
         }
+
         _serverUri = new Uri($"{baseUrl}/agent/stream");
         _socketFactory = socketFactory ?? (() => new WebSocketClientAdapter(config.ApiSecret));
         _webSocket = _socketFactory();
@@ -100,7 +101,6 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     public LogPortClient(LogPortClientConfig config, Func<IWebSocketClient>? socketFactory = null)
         : this(config, null, socketFactory)
     {
-
     }
 
     private LogPortClient(string serverUrl, Func<IWebSocketClient>? socketFactory = null)
@@ -217,14 +217,122 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
     }
 
     /// <summary>
-    /// Convenience method to log a simple message with a specified level.
+    /// Logs a structured message using a message template and named variables.
     /// </summary>
-    /// <param name="level">The log level (e.g., "Info", "Error").</param>
-    /// <param name="message">The log message.</param>
-    public void Log(string level, string message)
+    /// <remarks>
+    /// The <paramref name="messageTemplate"/> is treated as a message template, not a rendered string.
+    /// Named placeholders in the template (e.g. <c>{UserId}</c>) are extracted and stored as structured
+    /// metadata entries in <see cref="LogEntry.Metadata"/>. The template itself is preserved verbatim
+    /// in <see cref="LogEntry.Message"/> for downstream rendering and querying.
+    /// </remarks>
+    /// <param name="level">
+    /// The severity level of the log entry (for example: <c>Info</c>, <c>Warn</c>, <c>Error</c>).
+    /// </param>
+    /// <param name="messageTemplate">
+    /// The message template containing named placeholders enclosed in braces.
+    /// </param>
+    /// <param name="variables">
+    /// The values corresponding to the named placeholders in the message template, in the same order
+    /// as they appear in the template.
+    /// </param>
+    /// <exception cref="ArgumentException">
+    /// Thrown when the number of placeholders in the message template does not match
+    /// the number of supplied variables.
+    /// </exception>
+    public void Log(string level, string messageTemplate, params object?[] variables)
     {
-        Log(new LogEntry() { Level = level, Message = message, Timestamp = DateTime.UtcNow });
+        if (string.IsNullOrWhiteSpace(messageTemplate))
+            return;
+
+        var names = LogUtils.ParseTemplateKeys(messageTemplate);
+
+        if (names.Count != variables.Length)
+            throw new ArgumentException(
+                "Template parameter count does not match values count.");
+
+        var metadata = new Dictionary<string, object>(names.Count);
+        for (int i = 0; i < names.Count; i++)
+            metadata[names[i]] = variables[i] ?? DBNull.Value;
+
+        Log(new LogEntry()
+        {
+            Level = level, Message = messageTemplate, Timestamp = DateTime.UtcNow, Metadata = metadata
+        });
     }
+
+
+    /// <summary>
+    /// Logs a structured message with <c>Info</c> severity.
+    /// </summary>
+    /// <param name="messageTemplate">
+    /// The message template containing named placeholders.
+    /// </param>
+    /// <param name="variables">
+    /// The values corresponding to the placeholders in the template.
+    /// </param>
+    public void LogInfo(string messageTemplate, params object?[] variables)
+        => Log(LogNormalizer.InfoLevel, messageTemplate, variables);
+
+    /// <summary>
+    /// Logs a structured message with <c>Warn</c> severity.
+    /// </summary>
+    /// <param name="messageTemplate">
+    /// The message template containing named placeholders.
+    /// </param>
+    /// <param name="variables">
+    /// The values corresponding to the placeholders in the template.
+    /// </param>
+    public void LogWarn(string messageTemplate, params object?[] variables)
+        => Log(LogNormalizer.WarningLevel, messageTemplate, variables);
+
+    /// <summary>
+    /// Logs a structured message with <c>Error</c> severity.
+    /// </summary>
+    /// <param name="messageTemplate">
+    /// The message template containing named placeholders.
+    /// </param>
+    /// <param name="variables">
+    /// The values corresponding to the placeholders in the template.
+    /// </param>
+    public void LogError(string messageTemplate, params object?[] variables)
+        => Log(LogNormalizer.ErrorLevel, messageTemplate, variables);
+
+    /// <summary>
+    /// Logs a structured message with <c>Debug</c> severity.
+    /// </summary>
+    /// <param name="messageTemplate">
+    /// The message template containing named placeholders.
+    /// </param>
+    /// <param name="variables">
+    /// The values corresponding to the placeholders in the template.
+    /// </param>
+    public void LogDebug(string messageTemplate, params object?[] variables)
+        => Log(LogNormalizer.DebugLevel, messageTemplate, variables);
+
+    /// <summary>
+    /// Logs a structured message with <c>Trace</c> severity.
+    /// </summary>
+    /// <param name="messageTemplate">
+    /// The message template containing named placeholders.
+    /// </param>
+    /// <param name="variables">
+    /// The values corresponding to the placeholders in the template.
+    /// </param>
+    public void LogTrace(string messageTemplate, params object?[] variables)
+        => Log(LogNormalizer.TraceLevel, messageTemplate, variables);
+
+    /// <summary>
+    /// Logs a structured message with <c>Fatal</c> severity.
+    /// </summary>
+    /// <param name="messageTemplate">
+    /// The message template containing named placeholders.
+    /// </param>
+    /// <param name="variables">
+    /// The values corresponding to the placeholders in the template.
+    /// </param>
+    public void LogFatal(string messageTemplate, params object?[] variables)
+        => Log(LogNormalizer.FatalLevel, messageTemplate, variables);
+
 
     /// <summary>
     /// Attaches the client to the standard console output and error streams.
@@ -348,7 +456,6 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
         var old = State;
         State = newState;
         StateChanged?.Invoke(this, new(old, newState));
-
     }
 
     /// <summary>
@@ -443,7 +550,8 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
                     _logger?.Warn($"Connection failed, retrying: {ex.Message}");
                     SetState(LogPortClientState.Disconnected);
                     _isAlive = false;
-                    delay = TimeSpan.FromMilliseconds(Math.Min(delay.TotalMilliseconds * 2 + random.Next(0, 500), _maxReconnectDelay.TotalMilliseconds));
+                    delay = TimeSpan.FromMilliseconds(Math.Min(delay.TotalMilliseconds * 2 + random.Next(0, 500),
+                        _maxReconnectDelay.TotalMilliseconds));
                     try
                     {
                         await Task.Delay(delay, token);
@@ -453,7 +561,6 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
                         return;
                     }
                 }
-
             } while (_webSocket.State != WebSocketState.Open && !token.IsCancellationRequested && _shouldReconnect);
         }
     }
