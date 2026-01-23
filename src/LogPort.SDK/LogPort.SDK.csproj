@@ -6,6 +6,20 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <PropertyGroup>
+  <IsPackable>true</IsPackable>
+  <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+
+  <PackageId>LogPort.SDK</PackageId>
+  <Authors>thiagomvas</Authors>
+  <Company>LogPort</Company>
+  <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  <RepositoryUrl>https://github.com/thiagomvas/LogPort</RepositoryUrl>
+  <RepositoryType>git</RepositoryType>
+  <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
+
     <ItemGroup>
       <ProjectReference Include="..\LogPort.Core\LogPort.Core.csproj" />
     </ItemGroup>
