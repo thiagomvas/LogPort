@@ -188,8 +188,8 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
 
         if (string.IsNullOrWhiteSpace(entry.SpanId))
             entry.SpanId = LogContext.SpanId;
-        
-        foreach(var enricher in _enrichers)
+
+        foreach (var enricher in _enrichers)
             enricher.Enrich(entry);
 
         _messageQueue.Enqueue(entry);
@@ -262,7 +262,10 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
 
         Log(new LogEntry()
         {
-            Level = level, Message = messageTemplate, Timestamp = DateTime.UtcNow, Metadata = metadata
+            Level = level,
+            Message = messageTemplate,
+            Timestamp = DateTime.UtcNow,
+            Metadata = metadata
         });
     }
 

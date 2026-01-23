@@ -1,4 +1,5 @@
 namespace LogPort.SDK;
+
 public static class LogContext
 {
     internal static string? TraceId => System.Diagnostics.Activity.Current?.TraceId.ToString();
