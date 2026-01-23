@@ -1,3 +1,4 @@
+using LogPort.Core;
 using LogPort.Internal.Abstractions;
 using LogPort.Internal.Configuration;
 
@@ -12,6 +13,7 @@ public sealed class LogLevelCleanupJob : JobBase
     private const int BatchSize = 10_000;
 
     private readonly ILogger<LogLevelCleanupJob> _logger;
+    private readonly LogNormalizer _normalizer;
     private readonly Dictionary<string, TimeSpan> _retentions;
     private readonly string _connectionString;
     private readonly string _cron;
@@ -19,9 +21,10 @@ public sealed class LogLevelCleanupJob : JobBase
 
     public LogLevelCleanupJob(
         ILogger<LogLevelCleanupJob> logger,
-        LogPortConfig config)
+        LogPortConfig config, LogNormalizer normalizer)
     {
         _logger = logger;
+        _normalizer = normalizer;
         _retentions = config.LevelRetention.Retentions; 
         _connectionString = config.Postgres.ConnectionString;
         _cron = config.Retention.AutomaticCleanupCron;
@@ -44,6 +47,8 @@ public sealed class LogLevelCleanupJob : JobBase
     {
         var cutoff = DateTime.UtcNow - retention;
         int totalDeleted = 0;
+
+        level = _normalizer.NormalizeLevel(level);
 
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
