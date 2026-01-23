@@ -35,9 +35,6 @@ public static class IServiceCollectionExtensions
             return new MicrosoftLoggerAdapter<LogPortClient>(msLogger);
         });
 
-
-
-
         builder.Services.AddSingleton<LogPortClient>(sp =>
         {
             var logPortLogger = sp.GetRequiredService<ILogPortLogger>();
@@ -64,9 +61,9 @@ public static class IServiceCollectionExtensions
     public static async Task<IApplicationBuilder> UseLogPortAsync(this IApplicationBuilder app, CancellationToken cancellationToken = default)
     {
         var client = app.ApplicationServices.GetRequiredService<LogPortClient>();
-        _ = Task.Run(() => client.EnsureConnectedAsync(cancellationToken)); // non-blocking
+        _ = Task.Run(() => client.EnsureConnectedAsync(cancellationToken), cancellationToken);
 
-        app.UseMiddleware<LogPortHttpRequestMiddleware>();
+        app.UseMiddleware<LogPortAspNetMiddleware>();
 
         var lifetime = app.ApplicationServices.GetRequiredService<IHostApplicationLifetime>();
         lifetime.ApplicationStopping.Register(() =>
