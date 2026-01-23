@@ -25,7 +25,7 @@ public sealed class LogLevelCleanupJob : JobBase
     {
         _logger = logger;
         _normalizer = normalizer;
-        _retentions = config.LevelRetention.Retentions; 
+        _retentions = config.LevelRetention.Retentions;
         _connectionString = config.Postgres.ConnectionString;
         _cron = config.Retention.AutomaticCleanupCron;
         _enabled = config.Retention.EnableAutomaticCleanupJob;
@@ -37,7 +37,7 @@ public sealed class LogLevelCleanupJob : JobBase
     {
         if (_retentions.Count == 0)
             _logger.LogWarning("Level Clean up Job tried to run but could not find any retention rules.");
-        
+
         foreach (var kvp in _retentions)
         {
             string level = kvp.Key;
