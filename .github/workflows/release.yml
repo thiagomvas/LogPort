@@ -93,12 +93,7 @@ jobs:
         run: npm run build
 
       - name: Pack SDKs
-        run: dotnet pack LogPort.slnx \
-             --configuration Release \
-             --no-build \
-             /p:Version=${{ env.CLEAN_VERSION }} \
-             /p:PackageVersion=${{ env.CLEAN_VERSION }} \
-             -o ./artifacts
+        run: dotnet pack -c Release --no-build /p:Version=${{ env.CLEAN_VERSION }}  /p:PackageVersion=${{ env.CLEAN_VERSION }} -o ./artifacts
 
 
       - name: Push SDK to NuGet
