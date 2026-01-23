@@ -34,7 +34,7 @@ public sealed class SqlWhereBuilderTests
         var builder = new SqlWhereBuilder();
         var (where, parameters) = builder.Build(expr);
 
-        Assert.That(where, Is.EqualTo("message LIKE @p0"));
+        Assert.That(where, Is.EqualTo("message ILIKE @p0"));
         Assert.That(parameters["@p0"], Is.EqualTo("%error%"));
     }
 }
