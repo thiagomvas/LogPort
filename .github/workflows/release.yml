@@ -92,13 +92,14 @@ jobs:
         working-directory: src/LogPort.UI
         run: npm run build
 
-      - name: Pack SDK
-        run: dotnet pack \
+      - name: Pack SDKs
+        run: dotnet pack LogPort.slnx \
              --configuration Release \
              --no-build \
              /p:Version=${{ env.CLEAN_VERSION }} \
              /p:PackageVersion=${{ env.CLEAN_VERSION }} \
              -o ./artifacts
+
 
       - name: Push SDK to NuGet
         if: ${{ env.PUSH_NUGET == 'true' }}
