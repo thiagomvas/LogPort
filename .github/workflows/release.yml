@@ -93,7 +93,7 @@ jobs:
         run: npm run build
 
       - name: Pack SDK
-        run: dotnet pack src/LogPort.SDK/LogPort.SDK.csproj \
+        run: dotnet pack \
              --configuration Release \
              --no-build \
              /p:Version=${{ env.CLEAN_VERSION }} \
