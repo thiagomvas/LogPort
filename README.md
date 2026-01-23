@@ -50,7 +50,8 @@ at the same time, allowing more complex extractions through Log Extractors which
 ![Live Tail](./assets/live-tail.png)
 *Live Tail page getting logs in real time. Logs are randomly generated.*
 
-
+## Installation
+For info on how to use LogPort see the [wiki](https://github.com/thiagomvas/LogPort/wiki/Getting-Started)
 
 ## Development
 
