@@ -188,6 +188,7 @@ VALUES {string.Join(", ", values)};";
                     new NpgsqlParameter(kv.Key.TrimStart('@'), kv.Value)
                 );
         }
+        
 
         sql.Append(" ORDER BY timestamp DESC");
         sql.Append(" LIMIT @limit OFFSET @offset");

@@ -53,14 +53,26 @@ public sealed class Parser
 
     private Expr ParsePrimary()
     {
+        Expr expr;
+
         if (Match(TokenType.Property))
-            return new IdentifierExpr(Previous().Lexeme);
+            expr = new IdentifierExpr(Previous().Lexeme);
+        else if (Match(TokenType.Value))
+            expr = new ValueExpr(Previous().Lexeme);
+        else
+            throw new InvalidOperationException("Unexpected token");
 
-        if (Match(TokenType.Value))
-            return new ValueExpr(Previous().Lexeme);
+        while (Match(TokenType.Operator, "."))
+        {
+            if (!Match(TokenType.Value))
+                throw new InvalidOperationException("Expected member name");
 
-        throw new InvalidOperationException("Unexpected token");
+            expr = new MemberExpr(expr, Previous().Lexeme);
+        }
+
+        return expr;
     }
+
 
     private bool Match(TokenType type, string? lexeme = null)
     {

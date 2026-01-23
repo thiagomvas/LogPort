@@ -68,17 +68,29 @@ public sealed class Tokenizer
                 destination.Add(new(TokenType.Property, word));
             else
                 destination.Add(new(TokenType.Value, word));
+
+            if (i < query.Length && query[i] == '.')
+            {
+                destination.Add(new(TokenType.Operator, "."));
+                i++;
+            }
+
         }
     }
 
     private static string ReadWord(string input, ref int i)
     {
         var start = i;
-        while (i < input.Length && !char.IsWhiteSpace(input[i]))
+        while (i < input.Length &&
+               !char.IsWhiteSpace(input[i]) &&
+               input[i] != '.')
+        {
             i++;
+        }
 
         return input[start..i];
     }
+
 
     private static string? TryReadOperator(string input, ref int i)
     {
