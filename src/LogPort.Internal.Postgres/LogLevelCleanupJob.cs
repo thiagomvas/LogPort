@@ -35,6 +35,9 @@ public sealed class LogLevelCleanupJob : JobBase
 
     public override async Task ExecuteAsync()
     {
+        if (_retentions.Count == 0)
+            _logger.LogWarning("Level Clean up Job tried to run but could not find any retention rules.");
+        
         foreach (var kvp in _retentions)
         {
             string level = kvp.Key;
