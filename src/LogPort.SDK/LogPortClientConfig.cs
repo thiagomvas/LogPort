@@ -1,3 +1,6 @@
+using System.Text.Json.Serialization;
+
+using LogPort.Core.Abstractions;
 using LogPort.SDK.Filters;
 
 namespace LogPort.SDK;
@@ -48,6 +51,9 @@ public sealed class LogPortClientConfig
     /// Gets or sets the interval at which heartbeat messages are sent.
     /// </summary>
     public TimeSpan ClientHeartbeatInterval { get; set; } = TimeSpan.FromSeconds(10);
+    
+    [JsonIgnore]
+    public List<ILogEnricher>? Enrichers { get; set; }
 
     /// <summary>
     /// Gets or sets the timeout for heartbeat responses before the connection is considered dead.
