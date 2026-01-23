@@ -184,10 +184,10 @@ public sealed class LogPortClient : IDisposable, IAsyncDisposable
             return;
 
         if (string.IsNullOrWhiteSpace(entry.TraceId))
-            entry.TraceId = TraceContext.TraceId;
+            entry.TraceId = LogContext.TraceId;
 
         if (string.IsNullOrWhiteSpace(entry.SpanId))
-            entry.SpanId = TraceContext.SpanId;
+            entry.SpanId = LogContext.SpanId;
         
         foreach(var enricher in _enrichers)
             enricher.Enrich(entry);
