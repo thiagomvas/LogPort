@@ -28,6 +28,9 @@
 Just like a real port connects ships from around the world, Logport connects logs from every corner of your system 
 from lightweight services to enterprise-scale applications and brings them together in one place for analysis and insight.
 
+It's being designed to centralize logs from all service in one places with multiple "plug and play" ingestion sources, while,
+at the same time, allowing more complex extractions through Log Extractors which act as pre-processor before storing the logs.
+
 ## Features
 
 - Centralized log aggregation  
