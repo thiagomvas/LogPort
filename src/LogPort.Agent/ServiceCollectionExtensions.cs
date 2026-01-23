@@ -81,5 +81,6 @@ public static class ServiceCollectionExtensions
     {
         services.AddTransient<JobService>();
         services.AddTransient<JobBase, LogPartitionCleanupJob>();
+        services.AddTransient<JobBase, LogLevelCleanupJob>();
     }
 }
