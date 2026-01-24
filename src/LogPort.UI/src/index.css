@@ -106,6 +106,17 @@ button:focus-visible {
   padding: 0;
 }
 
+
+input,
+select {
+    background-color: var(--color-surface-alt);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 8px;
+    font-size: 0.9rem;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;

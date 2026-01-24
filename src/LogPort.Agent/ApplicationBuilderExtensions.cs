@@ -21,6 +21,7 @@ public static class ApplicationBuilderExtensions
         app.MapPatternEndpoints();
         app.MapMetricsEndpoints();
         app.MapJobEndpoints();
+        app.MapConfigEndpoints();
         app.MapFallbackToFile("index.html");
         var config = app.Services.GetRequiredService<LogPortConfig>();
         app.ConfigureJobs(config);

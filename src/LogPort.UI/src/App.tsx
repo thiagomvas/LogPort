@@ -6,6 +6,7 @@ import DashboardPage from './pages/DashboardPage';
 import AuthGuard from './components/authGuard';
 import LoginPage from './pages/LoginPage';
 import JobsPage from './pages/JobsPage';
+import ConfigurationPage from './pages/ConfigurationPage';
 
 export default function App() {
   return (
@@ -15,7 +16,8 @@ export default function App() {
         <Route path="/" element={<AuthGuard><DashboardPage /></AuthGuard>} />
         <Route path="/logs" element={<AuthGuard><LogExplorer /></AuthGuard>} />
         <Route path="/logs/tail" element={<AuthGuard><LogTailPage /></AuthGuard>} />
-        <Route path="/jobs" element={<JobsPage />} />
+        <Route path="/jobs" element={<AuthGuard><JobsPage /></AuthGuard>} />
+        <Route path="/config" element={<AuthGuard><ConfigurationPage /></AuthGuard>} />
       </Routes>
     </Layout>
   );

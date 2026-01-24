@@ -1,0 +1,47 @@
+.labeled-input {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.labeled-input label {
+  display: flex;
+  flex-direction: column; 
+  gap: 2px;
+}
+
+.labeled-input input[type="text"],
+.labeled-input input[type="number"],
+.labeled-input input[type="password"] {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--color-surface);
+  color: var(--text-main);
+}
+
+.labeled-input input[type="checkbox"] {
+  margin-right: 6px;
+}
+
+.labeled-input.checkbox label {
+  flex-direction: row;
+  align-items: center;
+}
+
+.input-label {
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.checkbox-label {
+  font-weight: 500;
+  color: var(--text-main);
+}
+
+.input-description {
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+}

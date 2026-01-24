@@ -1,0 +1,86 @@
+.config-page {
+  padding: 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  color: var(--text-main);
+}
+
+.config-page h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.config-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.config-card {
+  background: var(--color-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: var(--shadow-small);
+}
+
+.config-card label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.config-card input[type="number"] {
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--color-surface-alt);
+  color: var(--text-main);
+}
+
+.config-card input[type="checkbox"] {
+  margin-right: 8px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.dashboard-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.dashboard-actions .btn {
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  background: var(--color-surface);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+}
+
+.dashboard-actions .btn:hover {
+  background: var(--bg-hover);
+}
+
+.dashboard-actions .btn-primary {
+  background: var(--color-primary);
+  border-color: var(--color-primary-dark);
+  color: var(--text-inverse);
+}
+
+.dashboard-actions .btn-primary:hover {
+  background: var(--color-primary-dark);
+}
+
+@media (max-width: 600px) {
+  .config-grid {
+    grid-template-columns: 1fr;
+  }
+}
