@@ -26,7 +26,7 @@ export interface DockerConfig {
 export interface CacheConfig {
   useRedis: boolean;
   redisConnectionString?: string;
-  defaultExpiration: number; // ms
+  defaultExpiration: string; 
 }
 
 export interface LogRetentionConfig {
@@ -47,9 +47,24 @@ export interface FileTailingConfiguration {
 }
 
 export interface BaseLogEntryExtractorConfig {
-  type: string;
-  options?: Record<string, any>;
+  extractionMode: 'json' | 'regex';
+  serviceName: string;
 }
+
+export type JsonLogEntryExtractorConfig = BaseLogEntryExtractorConfig & {
+  extractionMode: 'json';
+  messageProperty: string;
+  levelProperty: string;
+  timestampProperty: string;
+};
+
+export type RegexLogEntryExtractorConfig = BaseLogEntryExtractorConfig & {
+  extractionMode: 'regex';
+  pattern: string;
+  messageGroup: string;
+  levelGroup: string;
+  timestampGroup: string;
+};
 
 export interface LogPortConfig {
   postgres: PostgresConfig;
@@ -69,7 +84,7 @@ export interface LogPortConfig {
   adminPassword: string;
   apiSecret: string;
 
-  extractors: BaseLogEntryExtractorConfig[];
+  extractors: (JsonLogEntryExtractorConfig | RegexLogEntryExtractorConfig)[];
   fileTails: FileTailingConfiguration[];
 
   mode: LogMode;
@@ -78,7 +93,6 @@ export interface LogPortConfig {
   jwtIssuer: string;
 }
 
-// Default config helper
 export const defaultLogPortConfig: LogPortConfig = {
   postgres: {
     use: true,
@@ -97,7 +111,7 @@ export const defaultLogPortConfig: LogPortConfig = {
   cache: {
     useRedis: false,
     redisConnectionString: undefined,
-    defaultExpiration: 10 * 60 * 1000, // 10 minutes
+    defaultExpiration: "00:10:00"
   },
   metrics: {
     bucketDuration: 10 * 1000, // 10s

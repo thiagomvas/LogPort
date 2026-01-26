@@ -4,21 +4,30 @@ import Grid from '../components/grid';
 import Section from '../components/section';
 import LabeledInput from '../components/labeledInput';
 import type { LogPortConfig } from '../lib/types/config';
-import { getConfig } from '../lib/services/config.service';
+import { getConfig, saveConfig } from '../lib/services/config.service';
+import ExtractorInput from '../components/extractorInput';
 
 export default function ConfigurationPage() {
   const [config, setConfig] = useState<LogPortConfig>();
   const [status, setStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
 
-  useEffect(() => {
-    setStatus('idle');
-    getConfig()
-      .then(data => setConfig(data))
-      .catch(err => {
-        console.error('Failed to fetch config', err);
-        setStatus('error');
-      });
-  }, []);
+useEffect(() => {
+  setStatus('idle');
+  getConfig()
+    .then(data => {
+      // normalize extractors
+      const normalizedExtractors = data.extractors.map(ext => ({
+        ...ext,
+        extractionMode: ext.extractionMode.toLowerCase() as 'json' | 'regex',
+      })) as (typeof data.extractors);
+      setConfig({ ...data, extractors: normalizedExtractors });
+    })
+    .catch(err => {
+      console.error('Failed to fetch config', err);
+      setStatus('error');
+    });
+}, []);
+
 
   const handleChange = <K extends keyof LogPortConfig>(key: K, value: LogPortConfig[K]) => {
     setConfig(prev => prev ? { ...prev, [key]: value } : undefined);
@@ -39,8 +48,13 @@ export default function ConfigurationPage() {
 
   const handleSave = () => {
     setStatus('saving');
-    console.log('Saving config to server (mock)...', config);
-    setTimeout(() => setStatus('success'), 800);
+    saveConfig(config!)
+      .then(() => setStatus('success'))
+      .catch(err => {
+        console.error('Failed to save config', err);
+        setStatus('error');
+      });
+
   };
 
   if (!config) {
@@ -49,7 +63,8 @@ export default function ConfigurationPage() {
 
   return (
     <div className="config-page">
-      <h2>Agent Configuration (Mock)</h2>
+      <h2>Agent Configuration</h2>
+      <p>Some changes are applied immediately, while some require a restart. To ensure your new configuration is applied, restart the agent, since it is not guaranteed that the changes will be applied without an actual restart.</p>
 
       <Section title="General Settings">
         <Grid>
@@ -83,6 +98,55 @@ export default function ConfigurationPage() {
           />
         </Grid>
       </Section>
+
+      <Section title="Log Extractors">
+  {config.extractors.map((ext, idx) => (
+    <ExtractorInput
+      key={idx}
+      index={idx}
+      extractor={ext}
+      onChange={(i, newVal) => {
+        const newExtractors = [...config.extractors];
+        newExtractors[i] = newVal;
+        setConfig(prev => prev ? ({ ...prev, extractors: newExtractors }) : undefined);
+      }}
+      onRemove={i => {
+        const newExtractors = config.extractors.filter((_, index) => index !== i);
+        setConfig(prev => prev ? ({ ...prev, extractors: newExtractors }) : undefined);
+      }}
+    />
+  ))}
+
+  <button
+    className="btn btn-primary"
+    onClick={() =>
+      setConfig(prev => prev ? ({
+        ...prev,
+        extractors: [
+          ...prev.extractors,
+          { type: 'json', messageProperty: '', levelProperty: '', timestampProperty: '', extractionMode: 'json', serviceName: '' },
+        ],
+      }) : undefined)
+    }
+  >
+    Add JSON Extractor
+  </button>
+  <button
+    className="btn btn-primary"
+    style={{ marginLeft: '8px' }}
+    onClick={() =>
+      setConfig(prev => prev ? ({
+        ...prev,
+        extractors: [
+          ...prev.extractors,
+          { type: 'regex', pattern: '', messageGroup: '', levelGroup: '', timestampGroup: '', extractionMode: 'regex', serviceName: '' },
+        ],
+      }) : undefined)
+    }
+  >
+    Add Regex Extractor
+  </button>
+</Section>
 
       <Section title="Authentication">
         <Grid>
@@ -208,10 +272,10 @@ export default function ConfigurationPage() {
           />
           <LabeledInput
             label="Default Expiration (ms)"
-            type="number"
+            type="text"
             value={config.cache.defaultExpiration}
             description="Default expiration time for cached entries."
-            onChange={v => handleNestedChange('cache', 'defaultExpiration', v as number)}
+            onChange={v => handleNestedChange('cache', 'defaultExpiration', v as string)}
           />
         </Grid>
       </Section>

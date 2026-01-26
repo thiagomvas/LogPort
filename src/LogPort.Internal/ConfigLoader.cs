@@ -13,6 +13,16 @@ public static class ConfigLoader
     /// <returns>A <see cref="LogPortConfig"/> obtained from the configuration file and environment variables.</returns>
     public static LogPortConfig Load()
     {
+        var opt = new JsonSerializerOptions()
+        {
+            WriteIndented = true, 
+            PropertyNameCaseInsensitive = true,
+            Converters =
+            {
+                new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, allowIntegerValues: false),
+                new BaseLogEntryExtractorConfigJsonConverter(),
+            }
+        };
         var path = GetEnvString(EnvVars.ConfigPath, "/conf/config.json");
         var dir = Path.GetDirectoryName(path);
         if (!string.IsNullOrWhiteSpace(dir) && !Directory.Exists(dir))
@@ -24,12 +34,11 @@ public static class ConfigLoader
         if (fileExists)
         {
             var config = File.ReadAllText(path);
-            result = JsonSerializer.Deserialize<LogPortConfig>(config);
+            result = JsonSerializer.Deserialize<LogPortConfig>(config, opt);
         }
 
         result ??= new LogPortConfig();
 
-        var opt = new JsonSerializerOptions() { WriteIndented = true, };
         File.WriteAllText(path, JsonSerializer.Serialize(result, opt));
 
         LoadFromEnvironment(result);
@@ -44,8 +53,8 @@ public static class ConfigLoader
             PropertyNameCaseInsensitive = true,
             Converters =
             {
-                new JsonStringEnumConverter(),
-                new BaseLogEntryExtractorConfigJsonConverter()
+                new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, allowIntegerValues: false),
+                new BaseLogEntryExtractorConfigJsonConverter(),
             }
         };
 
@@ -96,6 +105,30 @@ public static class ConfigLoader
     }
 
 
+    /// <summary>
+    /// Saves a given LogPortConfig instance to the specified file path (or default path if none provided).
+    /// </summary>
+    public static void SaveToFile(LogPortConfig config, string? path = null)
+    {
+        path ??= GetEnvString(EnvVars.ConfigPath, "/conf/config.json");
+        var dir = Path.GetDirectoryName(path);
+        if (!string.IsNullOrWhiteSpace(dir) && !Directory.Exists(dir))
+            Directory.CreateDirectory(dir);
+
+        var opt = new JsonSerializerOptions()
+        {
+            WriteIndented = true, 
+            PropertyNameCaseInsensitive = true,
+            Converters =
+            {
+                new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, allowIntegerValues: false),
+                new BaseLogEntryExtractorConfigJsonConverter(),
+            }
+        };
+
+        File.WriteAllText(path, JsonSerializer.Serialize(config, opt));
+    }
+    
     private static string GetEnvString(string key, string? defaultValue = "")
         => Environment.GetEnvironmentVariable(key) ?? defaultValue ?? string.Empty;
 

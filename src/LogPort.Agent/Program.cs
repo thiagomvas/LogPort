@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 
 using Docker.DotNet;
+using Docker.DotNet.Models;
 
 using Hangfire;
 
@@ -40,8 +41,8 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddSingleton<LogPortConfig>(sp => ConfigLoader.Load());
 var logPortConfig = ConfigLoader.Load();
-builder.Services.AddSingleton(logPortConfig);
 builder.Services.AddHttpClient();
 bool isAgent = logPortConfig.Mode is LogMode.Agent;
 
