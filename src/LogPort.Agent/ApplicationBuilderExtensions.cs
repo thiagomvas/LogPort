@@ -23,7 +23,6 @@ public static class ApplicationBuilderExtensions
         app.MapJobEndpoints();
         app.MapFallbackToFile("index.html");
         var config = app.Services.GetRequiredService<LogPortConfig>();
-        app.ConfigureJobs(config);
     }
 
     public static void ConfigureJobs(this WebApplication app, LogPortConfig config)

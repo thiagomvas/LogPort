@@ -22,16 +22,26 @@
     "BucketDuration": "00:00:10",
     "MaxWindow": "00:15:00"
   },
+  "Retention": {
+    "AutomaticCleanupCron": "0 3 * * *",
+    "RetentionDays": 14,
+    "EnableAutomaticCleanupJob": true
+  },
   "Port": 8080,
   "UpstreamUrl": null,
   "BatchSize": 100,
   "FlushIntervalMs": 250,
   "AdminLogin": "admin",
-  "AdminPassword": "admin",
-  "ApiSecret": "58924d5585f94805a7b1a21d1bb0de1e",
+  "AdminPassword": "changeme",
+  "ApiSecret": "789cf4177ee54162a8f79bab56afd6b8",
   "Extractors": [],
   "FileTails": [],
+  "LevelRetention": {
+    "AutomaticCleanupCron": "0 3 * * *",
+    "Retentions": {},
+    "EnableAutomaticCleanupJob": true
+  },
   "Mode": 0,
-  "JwtSecret": "dnjgopnsfnosnfodnfosngsogndonbl\u00E7xdnflnkdlnaksfnksdnjfksjfksdnjfksjnfjsndfdnjsfsdfs",
-  "JwtIssuer": "Softeam-LogPort"
+  "JwtSecret": "lsgopidsgonlddlgknlngdlknfldnlgkndlkgfndlfngdklngdklngfldgfdkngldnhkldfnlgndkln",
+  "JwtIssuer": ""
 }

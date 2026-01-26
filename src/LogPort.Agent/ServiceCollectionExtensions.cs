@@ -59,9 +59,8 @@ public static class ServiceCollectionExtensions
                     config.Postgres.ConnectionString);
         });
         services.AddHangfireServer();
-
-
         services.RegisterJobs();
+        services.AddHostedService<HangfireJobSchedulerHostedService>();
     }
 
     public static void AddLogPortRelay(this IServiceCollection services, LogPortConfig config,
