@@ -38,7 +38,7 @@ public sealed class PostgresLogPatternStore : ILogPatternStore
     {
         var normalizedMessage = _normalizer.NormalizeMessage(message);
 
-        await using var session = new DbSession(_connectionString);
+        await using var session = _sessionFactory.Create();
         await session.OpenAsync(cancellationToken);
         await session.BeginTransactionAsync(cancellationToken);
 

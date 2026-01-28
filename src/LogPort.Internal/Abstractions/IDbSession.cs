@@ -1,7 +1,7 @@
 namespace LogPort.Internal.Abstractions;
 
 
-public interface IDbSession
+public interface IDbSession : IAsyncDisposable
 {
     /// <summary>
     /// Opens the underlying database connection if it is not already open.

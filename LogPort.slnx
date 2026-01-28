@@ -13,6 +13,7 @@
     <Project Path="src/WebApi/WebApi.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/LogPort.Internal.Postgres.UnitTests/LogPort.Internal.Postgres.UnitTests.csproj" />
     <Project Path="tests\LogPort.Core.UnitTests\LogPort.Core.UnitTests.csproj" />
     <Project Path="tests\LogPort.Internal.UnitTests\LogPort.Internal.UnitTests.csproj" />
     <Project Path="tests\LogPort.SDK.UnitTests\LogPort.SDK.UnitTests.csproj" />
