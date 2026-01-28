@@ -11,23 +11,17 @@ namespace LogPort.Data.Postgres;
 
 public sealed class PostgresLogPatternStore : ILogPatternStore
 {
-    private readonly string _connectionString;
     private readonly LogNormalizer _normalizer;
     private readonly ILogger<PostgresLogPatternStore>? _logger;
     private readonly IDbSessionFactory _sessionFactory;
 
 
-    public PostgresLogPatternStore(string connectionString, LogNormalizer normalizer, IDbSessionFactory sessionFactory, ILogger<PostgresLogPatternStore>? logger = null)
+    public PostgresLogPatternStore(LogNormalizer normalizer, IDbSessionFactory sessionFactory, ILogger<PostgresLogPatternStore>? logger = null)
     {
-        _connectionString = connectionString;
         _normalizer = normalizer;
         _sessionFactory = sessionFactory;
         _logger = logger;
     }
-    
-    public PostgresLogPatternStore(LogPortConfig config, LogNormalizer normalizer, IDbSessionFactory sessionFactory, ILogger<PostgresLogPatternStore>? logger = null) 
-        : this(config.Postgres.ConnectionString, normalizer, sessionFactory, logger)
-    {}
 
     public async Task<long> UpsertAsync(
         string message,

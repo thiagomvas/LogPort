@@ -1,18 +1,19 @@
 ﻿using LogPort.Core.Models;
+using LogPort.Data.Postgres;
+using LogPort.Internal.Configuration;
 using LogPort.Internal.DSL;
 using LogPort.SDK;
 
-
-var config = new LogPortClientConfig { AgentUrl = "localhost:8080", ServiceName = "ConsoleApp", ApiSecret = "123" };
-var client = new LogPortClient(config, null, null, new LogPortConsoleLogger());
-
-await client.EnsureConnectedAsync();
-
-while (Console.ReadKey().Key != ConsoleKey.Escape)
+var fac = new DbSessionFactory("Host=localhost;Port=5432;Database=logport;Username=postgres;Password=postgres;");
+var store = new PostgresLogStore(new() {Postgres = new() { PartitionLength = 1}},
+    fac,
+    new PostgresLogPatternStore(new(), fac),
+    new());
+    
+await store.AddBatchAsync([new()
 {
-    using (LogContext.Push("Foo", "Bar"))
-    {
-        client.Log(new LogEntry() { Message = "Hello, world ", Timestamp = DateTime.UtcNow });
-    }
-    Console.WriteLine("Logged");
-}
+    Message = "Hello World!",
+    Level = "Info",
+    Timestamp = DateTime.UtcNow,
+    ServiceName = "Foobar"
+}]);
