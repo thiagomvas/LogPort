@@ -2,6 +2,8 @@ using System.Text;
 
 using Dapper;
 
+using LogPort.Internal;
+
 namespace LogPort.Data.Postgres;
 
 public sealed class SqlBuilder

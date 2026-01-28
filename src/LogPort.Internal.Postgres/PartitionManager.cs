@@ -1,3 +1,5 @@
+using LogPort.Internal;
+
 namespace LogPort.Data.Postgres;
 
 public sealed class PartitionManager

@@ -1,4 +1,4 @@
-namespace LogPort.Data.Postgres;
+namespace LogPort.Internal;
 
 public sealed class SqlCommand
 {
