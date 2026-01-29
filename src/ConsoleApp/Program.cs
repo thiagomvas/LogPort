@@ -17,4 +17,4 @@ var metadataStore = new PostgresLogMetadataStore(fac);
 
 var meta = await metadataStore.GetAsync();
 
-Console.WriteLine(JsonSerializer.Serialize(meta));
+Console.WriteLine(JsonSerializer.Serialize(meta, new  JsonSerializerOptions { WriteIndented = true }));

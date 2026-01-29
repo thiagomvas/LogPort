@@ -41,7 +41,8 @@ public sealed class SqlBuilder
     {
         if (value == null)
             return;
-
+        if (_sql.ToString().Contains("WHERE") == false)
+            _sql.Append(" WHERE 1=1");
         var name = Next();
         _sql.Append($" AND {column} = @{name}");
         _parameters.Add(name, value);
@@ -54,6 +55,8 @@ public sealed class SqlBuilder
     /// <param name="value">The pattern to bind as a parameter.</param>
     public void AndLike(string column, string value)
     {
+        if (_sql.ToString().Contains("WHERE") == false)
+            _sql.Append(" WHERE 1=1");
         var name = Next();
         _sql.Append($" AND {column} ILIKE @{name}");
         _parameters.Add(name, value);
@@ -67,6 +70,8 @@ public sealed class SqlBuilder
     /// <param name="to">The inclusive upper bound, if specified.</param>
     public void AndRange(string column, DateTime? from, DateTime? to)
     {
+        if (_sql.ToString().Contains("WHERE") == false)
+            _sql.Append(" WHERE 1=1");
         if (from.HasValue)
         {
             var n = Next();

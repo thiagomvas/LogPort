@@ -113,12 +113,15 @@ public sealed class PostgresLogStore : ILogStore
         int batchSize = 100,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
+        await using var session = _sessionFactory.Create();
+        await session.OpenAsync(cancellationToken);
+        
         int offset = 0;
 
         while (!cancellationToken.IsCancellationRequested)
         {
             var command = GetBatchesCommand.Create(query, batchSize, offset);
-            var result = (await _sessionFactory.Create().QueryAsync<LogEntryDto>(command, cancellationToken))
+            var result = (await session.QueryAsync<LogEntryDto>(command, cancellationToken))
                 .Select(dto => dto.ToLogEntry()).ToList();
 
             if (result.Count == 0)
