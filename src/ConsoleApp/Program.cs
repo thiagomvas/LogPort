@@ -9,11 +9,11 @@ var store = new PostgresLogStore(new() {Postgres = new() { PartitionLength = 1}}
     fac,
     new PostgresLogPatternStore(new(), fac),
     new());
-    
-await store.AddBatchAsync([new()
+
+
+int index = 0;
+await foreach (var batch in store.GetBatchesAsync(batchSize: 1000))
 {
-    Message = "Hello World!",
-    Level = "Info",
-    Timestamp = DateTime.UtcNow,
-    ServiceName = "Foobar"
-}]);
+    Console.WriteLine($"Batch {index}: {batch.Count} logs");
+    index++;
+}

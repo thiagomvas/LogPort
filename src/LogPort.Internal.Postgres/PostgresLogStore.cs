@@ -104,15 +104,33 @@ public sealed class PostgresLogStore : ILogStore
         await session.BeginTransactionAsync(cancellationToken);
 
         var command = GetLogsCommand.Create(query, _jsonOptions);
-        var result = await session.QueryAsync<LogEntry>(command, cancellationToken);
-        return result.ToList();
+        var result = await session.QueryAsync<LogEntryDto>(command, cancellationToken);
+        return result.Select(dto => dto.ToLogEntry()).ToList();
+    }
+    
+    public async IAsyncEnumerable<IReadOnlyList<LogEntry>> GetBatchesAsync(
+        LogQueryParameters? query = null,
+        int batchSize = 100,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        int offset = 0;
+
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            var command = GetBatchesCommand.Create(query, batchSize, offset);
+            var result = (await _sessionFactory.Create().QueryAsync<LogEntryDto>(command, cancellationToken))
+                .Select(dto => dto.ToLogEntry()).ToList();
+
+            if (result.Count == 0)
+                yield break;
+
+            yield return result;
+
+            offset += batchSize;
+        }
     }
 
-    public IAsyncEnumerable<IReadOnlyList<LogEntry>> GetBatchesAsync(LogQueryParameters query, int batchSize,
-        CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
-    }
+
 
     public Task<long> CountAsync(LogQueryParameters query, CancellationToken cancellationToken = default)
     {

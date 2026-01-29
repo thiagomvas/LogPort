@@ -11,55 +11,9 @@ public sealed class GetLogsCommand
         LogQueryParameters query,
         JsonSerializerOptions jsonOptions)
     {
-        var builder = new SqlBuilder(@"
-SELECT
-    timestamp,
-    service_name,
-    level,
-    message,
-    metadata,
-    trace_id,
-    span_id,
-    hostname,
-    environment
-FROM logs
-WHERE 1 = 1
-");
+        var builder = new SqlBuilder(BaseSqlStrings.SelectLogs);
 
-        builder.AndEquals("service_name", query.ServiceName);
-        builder.AndEquals("level", query.Level);
-        builder.AndEquals("hostname", query.Hostname);
-        builder.AndEquals("environment", query.Environment);
-        builder.AndEquals("trace_id", query.TraceId);
-        builder.AndEquals("span_id", query.SpanId);
-
-        builder.AndRange("timestamp", query.From, query.To);
-
-        if (!string.IsNullOrWhiteSpace(query.Search))
-        {
-            if (query.SearchExact == true)
-                builder.AndEquals("message", query.Search);
-            else
-                builder.AndLike("message", $"%{query.Search}%");
-        }
-
-        if (!string.IsNullOrWhiteSpace(query.Metadata))
-        {
-            var metadata =
-                JsonSerializer.Deserialize<Dictionary<string, object>>(
-                    query.Metadata,
-                    jsonOptions);
-
-            if (metadata != null)
-            {
-                foreach (var kvp in metadata)
-                {
-                    var key = kvp.Key.Replace("'", "''");
-                    builder.Append($" AND metadata ->> '{key}' = ");
-                    builder.AndEquals("", kvp.Value?.ToString() ?? "");
-                }
-            }
-        }
+        builder.BuildFilters(query, jsonOptions);
 
         var pageSize = query.PageSize ?? 100;
         var page = query.Page ?? 1;

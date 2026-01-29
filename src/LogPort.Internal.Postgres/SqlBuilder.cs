@@ -1,8 +1,10 @@
 using System.Data;
 using System.Text;
+using System.Text.Json;
 
 using Dapper;
 
+using LogPort.Core.Models;
 using LogPort.Internal;
 
 namespace LogPort.Data.Postgres;
@@ -100,6 +102,44 @@ public sealed class SqlBuilder
         _parameters.Add(name, value ?? DBNull.Value, DbType.Object);
     }
 
+    public void BuildFilters(LogQueryParameters query, JsonSerializerOptions? jsonOptions = null)
+    {
+        AndEquals("service_name", query.ServiceName);
+        AndEquals("level", query.Level);
+        AndEquals("hostname", query.Hostname);
+        AndEquals("environment", query.Environment);
+        AndEquals("trace_id", query.TraceId);
+        AndEquals("span_id", query.SpanId);
+
+        AndRange("timestamp", query.From, query.To);
+
+        if (!string.IsNullOrWhiteSpace(query.Search))
+        {
+            if (query.SearchExact == true)
+                AndEquals("message", query.Search);
+            else
+                AndLike("message", $"%{query.Search}%");
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.Metadata))
+        {
+            jsonOptions ??= new();
+            var metadata =
+                JsonSerializer.Deserialize<Dictionary<string, object>>(
+                    query.Metadata,
+                    jsonOptions);
+
+            if (metadata != null)
+            {
+                foreach (var kvp in metadata)
+                {
+                    var key = kvp.Key.Replace("'", "''");
+                    Append($" AND metadata ->> '{key}' = ");
+                    AndEquals("", kvp.Value?.ToString() ?? "");
+                }
+            }
+        }
+    }
 
     private string Next() => $"p{_counter++}";
 }
