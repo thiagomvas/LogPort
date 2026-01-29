@@ -127,8 +127,8 @@ public sealed class PostgresLogStoreTests
 
         sessionMock.QueryAsync<LogEntryDto>(Arg.Any<SqlCommand>(), Arg.Any<CancellationToken>())
             .Returns(
-                Task.FromResult((IEnumerable<LogEntryDto>)dtos1),
-                Task.FromResult((IEnumerable<LogEntryDto>)dtos2)
+                Task.FromResult<IEnumerable<LogEntryDto>>(dtos1),
+                Task.FromResult<IEnumerable<LogEntryDto>>(dtos2)
             );
 
         _sessionFactory.Create().Returns(sessionMock);
