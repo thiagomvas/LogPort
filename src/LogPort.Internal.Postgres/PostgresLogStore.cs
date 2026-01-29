@@ -134,6 +134,7 @@ public sealed class PostgresLogStore : ILogStore
 
     public Task<long> CountAsync(LogQueryParameters query, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var command = CountLogsCommand.Create(query);
+        return _sessionFactory.Create().ExecuteScalarAsync<long>(command, cancellationToken);
     }
 }

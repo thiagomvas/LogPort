@@ -11,9 +11,6 @@ var store = new PostgresLogStore(new() {Postgres = new() { PartitionLength = 1}}
     new());
 
 
-int index = 0;
-await foreach (var batch in store.GetBatchesAsync(batchSize: 1000))
-{
-    Console.WriteLine($"Batch {index}: {batch.Count} logs");
-    index++;
-}
+var count = await store.CountAsync(new());
+
+Console.WriteLine($"Found {count} logs");
