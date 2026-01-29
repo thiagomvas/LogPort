@@ -1,4 +1,6 @@
-﻿using LogPort.Core.Models;
+﻿using System.Text.Json;
+
+using LogPort.Core.Models;
 using LogPort.Data.Postgres;
 using LogPort.Internal.Configuration;
 using LogPort.Internal.DSL;
@@ -11,6 +13,8 @@ var store = new PostgresLogStore(new() {Postgres = new() { PartitionLength = 1}}
     new());
 
 
-var count = await store.CountAsync(new());
+var metadataStore = new PostgresLogMetadataStore(fac);
 
-Console.WriteLine($"Found {count} logs");
+var meta = await metadataStore.GetAsync();
+
+Console.WriteLine(JsonSerializer.Serialize(meta));
