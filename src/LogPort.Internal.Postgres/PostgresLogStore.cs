@@ -24,12 +24,12 @@ public sealed class PostgresLogStore : ILogStore
         LogPortConfig config,
         IDbSessionFactory sessionFactory,
         ILogPatternStore patternStore,
-        LogNormalizer normalizer,
-        JsonSerializerOptions? jsonOptions = null)
+        LogNormalizer normalizer, ILogger<PostgresLogStore>? logger = null, JsonSerializerOptions? jsonOptions = null)
     {
         _sessionFactory = sessionFactory;
         _patternStore = patternStore;
         _normalizer = normalizer;
+        _logger = logger;
         _partitionManager = new PartitionManager(config.Postgres.PartitionLength);
         _jsonOptions = jsonOptions ?? new JsonSerializerOptions();
     }

@@ -31,7 +31,6 @@ public sealed class PostgresLogPatternStoreTests
             .Returns(Task.CompletedTask);
 
         _store = new PostgresLogPatternStore(
-            "cs",
             _normalizer,
             _sessionFactory,
             Substitute.For<ILogger<PostgresLogPatternStore>>());
